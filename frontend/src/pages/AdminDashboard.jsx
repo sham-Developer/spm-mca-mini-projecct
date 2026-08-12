@@ -74,7 +74,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
       </div>
     );
   }
@@ -82,38 +82,38 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Overview Analytics Banner without card grouping */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-[#18181b] p-6 rounded-xl border border-[#27272a]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 bg-white p-6 rounded-xl border border-slate-400 shadow-md">
         <div className="space-y-1">
-          <span className="text-[12px] font-bold text-zinc-500 uppercase tracking-widest">Total Clients</span>
+          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Total Clients</span>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-[28px] font-extrabold text-zinc-100 tracking-tight">{stats.totalClients}</h3>
-            <span className="text-[12px] font-semibold text-emerald-500 flex items-center gap-0.5">
-              <TrendingUp size={12} />
+            <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.totalClients}</h3>
+            <span className="text-[12px] font-bold text-emerald-700 flex items-center gap-0.5">
+              <TrendingUp size={12} className="stroke-[2]" />
               +12%
             </span>
           </div>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-[#27272a] md:pl-6">
-          <span className="text-[12px] font-bold text-zinc-500 uppercase tracking-widest">Active Projects</span>
+        <div className="space-y-1 sm:border-l sm:border-slate-400 sm:pl-6">
+          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Active Projects</span>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-[28px] font-extrabold text-zinc-100 tracking-tight">{stats.activeProjects}</h3>
-            <span className="text-[12px] text-zinc-400">On Track</span>
+            <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.activeProjects}</h3>
+            <span className="text-[12px] font-bold text-emerald-700">On Track</span>
           </div>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-[#27272a] md:pl-6">
-          <span className="text-[12px] font-bold text-zinc-500 uppercase tracking-widest">Headcount (HR)</span>
+        <div className="space-y-1 md:border-l md:border-slate-400 md:pl-6">
+          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Headcount (HR)</span>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-[28px] font-extrabold text-zinc-100 tracking-tight">{stats.totalEmployees}</h3>
-            <span className="text-[12px] text-zinc-400">Employees</span>
+            <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.totalEmployees}</h3>
+            <span className="text-[12px] font-semibold text-slate-700">Employees</span>
           </div>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-[#27272a] md:pl-6">
-          <span className="text-[12px] font-bold text-zinc-500 uppercase tracking-widest">Total Portfolio Budget</span>
+        <div className="space-y-1 md:border-l md:border-slate-400 md:pl-6">
+          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Total Portfolio Budget</span>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-[24px] font-extrabold text-emerald-400 tracking-tight">
+            <h3 className="text-[24px] font-bold text-emerald-700 tracking-tight">
               {formatRupee(stats.totalBudget)}
             </h3>
           </div>
@@ -124,34 +124,29 @@ export default function AdminDashboard() {
         {/* Chart View */}
         <div className="lg:col-span-2 space-y-4">
           <div>
-            <h3 className="text-[18px] font-bold text-zinc-100 tracking-tight">Portfolio Budget Evolution</h3>
-            <p className="text-[13px] text-zinc-500">Visual trend of budget allocations across onboarded projects</p>
+            <h3 className="text-[18px] font-bold text-slate-950 tracking-tight">Portfolio Budget Evolution</h3>
+            <p className="text-[13px] text-slate-700 font-medium">Visual trend of budget allocations across onboarded projects</p>
           </div>
-          <div className="h-80 bg-[#18181b] p-6 rounded-xl border border-[#27272a]">
+          <div className="h-80 bg-white p-6 rounded-xl border border-slate-400 shadow-md">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorBudget" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                <XAxis dataKey="name" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="name" stroke="#475569" fontSize={12} tickLine={false} axisLine={false} style={{ fontWeight: '600' }} />
                 <YAxis 
-                  stroke="#71717a" 
+                  stroke="#475569" 
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
+                  style={{ fontWeight: '600' }}
                   tickFormatter={(val) => `₹${val/100000}L`} 
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px' }}
-                  labelStyle={{ color: '#a1a1aa', fontWeight: 'bold' }}
-                  itemStyle={{ color: '#e4e4e7' }}
+                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', borderWidth: '1px' }}
+                  labelStyle={{ color: '#0f172a', fontWeight: 'bold' }}
+                  itemStyle={{ color: '#0f172a', fontWeight: 'medium' }}
                   formatter={(val) => [formatRupee(val), 'Budget']}
                 />
-                <Area type="monotone" dataKey="budget" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorBudget)" />
+                <Area type="monotone" dataKey="budget" stroke="#ea580c" strokeWidth={2.5} fillOpacity={0.4} fill="#fed7aa" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -160,30 +155,30 @@ export default function AdminDashboard() {
         {/* Client onboard summaries */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-[18px] font-bold text-zinc-100 tracking-tight">Recent Client Enquiries</h3>
-            <p className="text-[13px] text-zinc-500">Quick view of sales funnel statuses</p>
+            <h3 className="text-[18px] font-bold text-slate-950 tracking-tight">Recent Client Enquiries</h3>
+            <p className="text-[13px] text-slate-700 font-medium">Quick view of sales funnel statuses</p>
           </div>
 
-          <div className="bg-[#18181b] rounded-xl border border-[#27272a] divide-y divide-[#27272a]">
+          <div className="bg-white rounded-xl border border-slate-400 divide-y divide-slate-300 shadow-md">
             {clients.slice(0, 4).map((client) => (
               <div key={client.id} className="p-4 flex items-center justify-between">
                 <div>
-                  <h4 className="text-[14px] font-semibold text-zinc-200">{client.name}</h4>
-                  <span className="text-[12px] text-zinc-500">{client.company || 'Private Lead'}</span>
+                  <h4 className="text-[14px] font-bold text-slate-900">{client.name}</h4>
+                  <span className="text-[12px] text-slate-700 font-medium">{client.company || 'Private Lead'}</span>
                 </div>
-                <span className={`text-[11px] font-semibold uppercase px-2.5 py-1 rounded-full ${
+                <span className={`text-[11px] font-bold uppercase px-2.5 py-1 rounded-full ${
                   client.status === 'onboarded' 
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    ? 'bg-emerald-100 text-emerald-950 border border-emerald-400' 
                     : client.status === 'follow_up'
-                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                    : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
+                    ? 'bg-blue-100 text-blue-950 border border-blue-400'
+                    : 'bg-slate-200 text-slate-950 border border-slate-400'
                 }`}>
                   {client.status}
                 </span>
               </div>
             ))}
             {clients.length === 0 && (
-              <div className="p-8 text-center text-zinc-500 text-[14px]">No clients registered.</div>
+              <div className="p-8 text-center text-slate-800 font-medium text-[14px]">No clients registered.</div>
             )}
           </div>
         </div>

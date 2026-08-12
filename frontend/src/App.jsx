@@ -28,6 +28,8 @@ export default function App() {
 
   // Helper route wrapper for layouts
   const ProtectedLayout = ({ children, allowedRoles, title }) => {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
     if (!user) {
       return <Navigate to="/login" replace />;
     }
@@ -38,11 +40,17 @@ export default function App() {
     }
 
     return (
-      <div className="flex min-h-screen bg-[#121214] text-[#e4e4e7] font-sans">
-        <Sidebar user={user} onLogout={handleLogout} />
+      <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans">
+        <Sidebar user={user} onLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
         <div className="flex-1 flex flex-col min-w-0">
-          <Header user={user} title={title} />
-          <main className="p-8 flex-grow">
+          <Header user={user} title={title} onMenuClick={() => setSidebarOpen(true)} />
+          <main className="p-4 sm:p-8 flex-grow">
             {children}
           </main>
         </div>

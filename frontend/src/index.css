@@ -2,24 +2,24 @@
 
 @layer base {
   body {
-    background-color: #121214;
-    color: #e4e4e7;
+    background-color: #f8fafc;
+    color: #0f172a;
     font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
   }
 }
 
-/* Custom Scrollbar for premium dark feel */
+/* Custom Scrollbar for premium light feel */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #18181b;
+  background: #f8fafc;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #cbd5e1;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #94a3b8;
 }

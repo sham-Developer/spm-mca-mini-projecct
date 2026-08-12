@@ -86,7 +86,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
       </div>
     );
   }
@@ -94,30 +94,30 @@ export default function ProjectHeadDashboard({ currentUserId }) {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Project head overview stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-[#18181b] p-6 rounded-xl border border-[#27272a]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 bg-white p-6 rounded-xl border border-slate-400 shadow-md">
         <div className="space-y-1">
-          <span className="text-[12px] font-bold text-zinc-500 uppercase tracking-widest">Managed Workspaces</span>
-          <h3 className="text-[28px] font-extrabold text-zinc-100 tracking-tight">{stats.managedProjectsCount}</h3>
+          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Managed Workspaces</span>
+          <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.managedProjectsCount}</h3>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-[#27272a] md:pl-6">
-          <span className="text-[12px] font-bold text-zinc-500 uppercase tracking-widest">Tasks Allocated</span>
-          <h3 className="text-[28px] font-extrabold text-zinc-100 tracking-tight">{stats.allocatedTasksCount}</h3>
+        <div className="space-y-1 sm:border-l sm:border-slate-400 sm:pl-6">
+          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Tasks Allocated</span>
+          <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.allocatedTasksCount}</h3>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-[#27272a] md:pl-6">
-          <span className="text-[12px] font-bold text-zinc-500 uppercase tracking-widest">Pending Extensions</span>
+        <div className="space-y-1 md:border-l md:border-slate-400 md:pl-6">
+          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Pending Extensions</span>
           <div className="flex items-baseline gap-2">
-            <h3 className={`text-[28px] font-extrabold tracking-tight ${stats.pendingDeadlineRequestsCount > 0 ? 'text-amber-400' : 'text-zinc-100'}`}>
+            <h3 className={`text-[28px] font-bold tracking-tight ${stats.pendingDeadlineRequestsCount > 0 ? 'text-amber-700' : 'text-slate-950'}`}>
               {stats.pendingDeadlineRequestsCount}
             </h3>
-            {stats.pendingDeadlineRequestsCount > 0 && <span className="text-[12px] text-amber-500 font-semibold">Action Required</span>}
+            {stats.pendingDeadlineRequestsCount > 0 && <span className="text-[12px] text-amber-700 font-semibold">Action Required</span>}
           </div>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-[#27272a] md:pl-6">
-          <span className="text-[12px] font-bold text-zinc-500 uppercase tracking-widest">Tasks Completed</span>
-          <h3 className="text-[28px] font-extrabold text-emerald-400 tracking-tight">{stats.completedTasksCount}</h3>
+        <div className="space-y-1 md:border-l md:border-slate-400 md:pl-6">
+          <span className="text-[12px] font-bold text-slate-800 tracking-tight uppercase tracking-widest">Tasks Completed</span>
+          <h3 className="text-[28px] font-bold text-emerald-700 tracking-tight">{stats.completedTasksCount}</h3>
         </div>
       </div>
 
@@ -125,39 +125,39 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         {/* Active project head task allocation board */}
         <div className="lg:col-span-2 space-y-4">
           <div>
-            <h3 className="text-[18px] font-bold text-zinc-100 tracking-tight">Active Work Allocations</h3>
-            <p className="text-[13px] text-zinc-500">Live operational review of team progress metrics</p>
+            <h3 className="text-[18px] font-bold text-slate-950 tracking-tight">Active Work Allocations</h3>
+            <p className="text-[13px] text-slate-700 font-medium">Live operational review of team progress metrics</p>
           </div>
 
-          <div className="bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden">
+          <div className="bg-white border border-slate-400 rounded-xl overflow-hidden shadow-md">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#27272a] bg-[#141416]/50">
-                    <th className="p-4 text-[14px] font-bold text-zinc-400">Task Title</th>
-                    <th className="p-4 text-[14px] font-bold text-zinc-400">Assignee</th>
-                    <th className="p-4 text-[14px] font-bold text-zinc-400">Deadline</th>
-                    <th className="p-4 text-[14px] font-bold text-zinc-400">Status</th>
+                  <tr className="border-b border-slate-400 bg-slate-100">
+                    <th className="p-4 text-[13px] font-bold text-slate-950 uppercase tracking-wider">Task Title</th>
+                    <th className="p-4 text-[13px] font-bold text-slate-900 uppercase tracking-wider">Assignee</th>
+                    <th className="p-4 text-[13px] font-bold text-slate-900 uppercase tracking-wider">Deadline</th>
+                    <th className="p-4 text-[13px] font-bold text-slate-900 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#27272a]">
+                <tbody className="divide-y divide-slate-300">
                   {tasks.map((task) => (
-                    <tr key={task.id} className="hover:bg-[#202024]/50 transition-colors">
+                    <tr key={task.id} className="hover:bg-slate-50 transition-colors">
                       <td className="p-4">
-                        <span className="block text-[15px] font-semibold text-zinc-200">{task.title}</span>
-                        <span className="block text-[12px] text-zinc-500">{task.project?.name}</span>
+                        <span className="block text-[15px] font-bold text-slate-950">{task.title}</span>
+                        <span className="block text-[12px] text-slate-705 font-semibold">{task.project?.name}</span>
                       </td>
-                      <td className="p-4 text-[14px] text-zinc-300">
+                      <td className="p-4 text-[14px] text-slate-900 font-medium">
                         {task.assigned_user?.full_name || 'Unallocated'}
                       </td>
-                      <td className="p-4 text-[14px] text-zinc-400">{task.end_date}</td>
+                      <td className="p-4 text-[14px] text-slate-900 font-medium">{task.end_date}</td>
                       <td className="p-4">
                         <span className={`inline-block text-[11px] font-bold uppercase px-2.5 py-1 rounded-full ${
                           task.status === 'completed' 
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                            ? 'bg-emerald-100 text-emerald-950 border border-emerald-400' 
                             : task.status === 'review'
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            : 'bg-zinc-700/30 text-zinc-400'
+                            ? 'bg-blue-100 text-blue-950 border border-blue-400'
+                            : 'bg-slate-200 text-slate-950 border border-slate-400'
                         }`}>
                           {task.status}
                         </span>
@@ -166,7 +166,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                   ))}
                   {tasks.length === 0 && (
                     <tr>
-                      <td colSpan="4" className="p-8 text-center text-zinc-500 text-[14px]">No operational allocations found.</td>
+                      <td colSpan="4" className="p-8 text-center text-slate-700 text-[14px] font-medium">No operational allocations found.</td>
                     </tr>
                   )}
                 </tbody>
@@ -178,26 +178,26 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         {/* Pending task reviews and progression reports */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-[18px] font-bold text-zinc-100 tracking-tight">Pending Report Evaluations</h3>
-            <p className="text-[13px] text-zinc-500">Sign-off reports submitted by team members</p>
+            <h3 className="text-[18px] font-bold text-slate-955 tracking-tight">Pending Report Evaluations</h3>
+            <p className="text-[13px] text-slate-700 font-medium">Sign-off reports submitted by team members</p>
           </div>
 
           <div className="space-y-3">
             {reports.filter(r => r.status === 'submitted').map((report) => (
-              <div key={report.id} className="bg-[#18181b] border border-[#27272a] rounded-xl p-4 space-y-3">
+              <div key={report.id} className="bg-white border border-slate-400 rounded-xl p-4 space-y-3 shadow-md">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h5 className="text-[14px] font-bold text-zinc-200">{report.task?.title}</h5>
-                    <span className="text-[12px] text-zinc-500">Submitted by: {report.user?.full_name}</span>
+                    <h5 className="text-[14px] font-bold text-slate-950">{report.task?.title}</h5>
+                    <span className="text-[12px] text-slate-700 font-semibold">Submitted by: {report.user?.full_name}</span>
                   </div>
-                  <span className="text-[13px] font-semibold text-indigo-400">{report.hours_spent} Hrs</span>
+                  <span className="text-[13px] font-bold text-slate-950">{report.hours_spent} Hrs</span>
                 </div>
-                <p className="text-[13px] text-zinc-400 italic">" {report.content} "</p>
+                <p className="text-[13px] text-slate-900 font-medium italic">" {report.content} "</p>
 
-                <div className="pt-2 border-t border-[#27272a] flex justify-end">
+                <div className="pt-2 border-t border-slate-200 flex justify-end">
                   <button
                     onClick={() => handleApproveReport(report.id, report.task_id)}
-                    className="px-3 py-1.5 bg-emerald-600/15 text-emerald-400 hover:bg-emerald-600/25 rounded-lg text-[12px] font-bold transition-all"
+                    className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 rounded-lg text-[12px] font-bold border border-emerald-400 transition-all shadow-sm cursor-pointer"
                   >
                     Sign Off & Complete Task
                   </button>
@@ -205,7 +205,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
               </div>
             ))}
             {reports.filter(r => r.status === 'submitted').length === 0 && (
-              <div className="p-8 text-center bg-[#18181b] border border-[#27272a] rounded-xl text-zinc-500 text-[14px]">
+              <div className="p-8 text-center bg-white border border-slate-400 rounded-xl text-slate-700 text-[14px] font-semibold shadow-md">
                 All clear! No pending task completions to review.
               </div>
             )}

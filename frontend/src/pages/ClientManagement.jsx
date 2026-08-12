@@ -103,62 +103,62 @@ export default function ClientManagement() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-[20px] font-bold text-zinc-100 tracking-tight">Clients Pipeline</h2>
-          <p className="text-[13px] text-zinc-500">Nurture leads, log follow ups, and onboard projects</p>
+          <h2 className="text-[20px] font-bold text-slate-950 tracking-tight">Clients Pipeline</h2>
+          <p className="text-[13px] text-slate-700 font-medium">Nurture leads, log follow ups, and onboard projects</p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-[14px] font-semibold transition-all shadow-md shadow-indigo-600/15"
+          className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-[14px] font-semibold transition-all shadow-md shadow-orange-600/15 self-start sm:self-auto cursor-pointer"
         >
-          <Plus size={16} />
+          <Plus size={16} className="stroke-[2]" />
           <span>New Lead</span>
         </button>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
         </div>
       ) : (
-        <div className="bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden">
+        <div className="bg-white border border-slate-400 rounded-xl overflow-hidden shadow-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#27272a] bg-[#141416]/50">
-                  <th className="p-4 text-[14px] font-bold text-zinc-400">Client / Company</th>
-                  <th className="p-4 text-[14px] font-bold text-zinc-400">Contact</th>
-                  <th className="p-4 text-[14px] font-bold text-zinc-400">Status</th>
-                  <th className="p-4 text-[14px] font-bold text-zinc-400">Last Action</th>
-                  <th className="p-4 text-[14px] font-bold text-zinc-400 text-right">Actions</th>
+                <tr className="border-b border-slate-400 bg-slate-100">
+                  <th className="p-4 text-[13px] font-bold text-slate-950 uppercase tracking-wider">Client / Company</th>
+                  <th className="p-4 text-[13px] font-bold text-slate-900 uppercase tracking-wider">Contact</th>
+                  <th className="p-4 text-[13px] font-bold text-slate-900 uppercase tracking-wider">Status</th>
+                  <th className="p-4 text-[13px] font-bold text-slate-900 uppercase tracking-wider">Last Action</th>
+                  <th className="p-4 text-[13px] font-bold text-slate-900 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#27272a]">
+              <tbody className="divide-y divide-slate-300">
                 {clients.map((client) => {
                   const lastNote = client.follow_up_notes?.length > 0 
                     ? client.follow_up_notes[client.follow_up_notes.length - 1] 
                     : null;
 
                   return (
-                    <tr key={client.id} className="hover:bg-[#202024]/50 transition-colors">
+                    <tr key={client.id} className="hover:bg-slate-50 transition-colors">
                       <td className="p-4">
-                        <span className="block text-[15px] font-bold text-zinc-200">{client.name}</span>
-                        <span className="block text-[13px] text-zinc-500">{client.company || 'Private Client'}</span>
+                        <span className="block text-[15px] font-bold text-slate-950">{client.name}</span>
+                        <span className="block text-[13px] text-slate-700 font-semibold">{client.company || 'Private Client'}</span>
                       </td>
                       <td className="p-4">
-                        <span className="block text-[14px] text-zinc-300">{client.email}</span>
-                        <span className="block text-[12px] text-zinc-500">{client.phone || '--'}</span>
+                        <span className="block text-[14px] text-slate-900 font-semibold">{client.email}</span>
+                        <span className="block text-[12px] text-slate-700 font-medium">{client.phone || '--'}</span>
                       </td>
                       <td className="p-4">
                         <span className={`inline-block text-[11px] font-bold uppercase px-2.5 py-1 rounded-full ${
                           client.status === 'onboarded' 
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                            ? 'bg-emerald-100 text-emerald-950 border border-emerald-400' 
                             : client.status === 'follow_up'
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                            ? 'bg-blue-100 text-blue-950 border border-blue-400'
+                            : 'bg-slate-200 text-slate-950 border border-slate-400'
                         }`}>
                           {client.status}
                         </span>
@@ -166,38 +166,38 @@ export default function ClientManagement() {
                       <td className="p-4 max-w-xs truncate">
                         {lastNote ? (
                           <div>
-                            <span className="block text-[12px] text-zinc-500">{lastNote.date}</span>
-                            <span className="text-[13px] text-zinc-300 italic">"{lastNote.note}"</span>
+                            <span className="block text-[12px] text-slate-700 font-bold">{lastNote.date}</span>
+                            <span className="text-[13px] text-slate-900 font-medium italic">"{lastNote.note}"</span>
                           </div>
                         ) : (
-                          <span className="text-zinc-600 text-[13px]">No interaction logged</span>
+                          <span className="text-slate-600 text-[13px] font-medium">No interaction logged</span>
                         )}
                       </td>
-                      <td className="p-4 text-right space-x-2">
+                      <td className="p-4 text-right space-y-1.5 sm:space-y-0 sm:space-x-2">
                         {client.status !== 'onboarded' && (
-                          <>
+                          <div className="inline-flex flex-col sm:flex-row gap-1.5 justify-end">
                             <button
-                              onClick={() => {
-                                setSelectedClient(client);
-                                setIsFollowupModalOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#202024] hover:bg-[#27272a] text-zinc-300 rounded-lg text-[13px] font-medium transition-colors"
+                               onClick={() => {
+                                 setSelectedClient(client);
+                                 setIsFollowupModalOpen(true);
+                               }}
+                               className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-950 rounded-lg text-[13px] font-bold transition-colors border border-slate-400 shadow-sm cursor-pointer"
                             >
-                              <MessageSquare size={14} />
+                              <MessageSquare size={14} className="text-slate-800 stroke-[2]" />
                               <span>Follow Up</span>
                             </button>
                             <button
                               onClick={() => handleOnboardClient(client)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 rounded-lg text-[13px] font-medium transition-colors border border-emerald-500/20"
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 rounded-lg text-[13px] font-bold transition-colors border border-emerald-400 shadow-sm cursor-pointer"
                             >
-                              <UserCheck size={14} />
+                              <UserCheck size={14} className="stroke-[2]" />
                               <span>Onboard</span>
                             </button>
-                          </>
+                          </div>
                         )}
                         {client.status === 'onboarded' && (
-                          <span className="text-[13px] text-emerald-500 font-semibold flex items-center justify-end gap-1">
-                            <Check size={14} /> Onboarded
+                          <span className="text-[13px] text-emerald-800 font-bold flex items-center justify-end gap-1">
+                            <Check size={14} className="stroke-[2]" /> Onboarded
                           </span>
                         )}
                       </td>
@@ -206,7 +206,7 @@ export default function ClientManagement() {
                 })}
                 {clients.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="p-8 text-center text-zinc-500 text-[14px]">No clients pipeline records found. Add a lead above.</td>
+                    <td colSpan="5" className="p-8 text-center text-slate-700 text-[14px] font-medium">No clients pipeline records found. Add a lead above.</td>
                   </tr>
                 )}
               </tbody>
@@ -217,50 +217,50 @@ export default function ClientManagement() {
 
       {/* NEW LEAD MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-[#18181b] border border-[#27272a] rounded-2xl p-6 space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white border border-slate-300 rounded-2xl p-6 space-y-6 shadow-xl">
             <div>
-              <h3 className="text-[18px] font-bold text-zinc-100">Add New Sales Lead</h3>
-              <p className="text-[13px] text-zinc-500">Initiate a new client profile in pipeline</p>
+              <h3 className="text-[18px] font-bold text-slate-900">Add New Sales Lead</h3>
+              <p className="text-[13px] text-slate-800 font-medium">Initiate a new client profile in pipeline</p>
             </div>
             <form onSubmit={handleCreateClient} className="space-y-4">
               <div>
-                <label className="block text-[13px] font-semibold text-zinc-400 mb-1.5">Client Full Name</label>
+                <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Client Full Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-[#202024] border border-[#27272a] rounded-xl px-3.5 py-2.5 text-zinc-200 text-[16px] focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-semibold text-zinc-400 mb-1.5">Company Name</label>
+                <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Company Name</label>
                 <input
                   type="text"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
-                  className="w-full bg-[#202024] border border-[#27272a] rounded-xl px-3.5 py-2.5 text-zinc-200 text-[16px] focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[13px] font-semibold text-zinc-400 mb-1.5">Email</label>
+                  <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Email</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#202024] border border-[#27272a] rounded-xl px-3.5 py-2.5 text-zinc-200 text-[16px] focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-semibold text-zinc-400 mb-1.5">Phone</label>
+                  <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Phone</label>
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-[#202024] border border-[#27272a] rounded-xl px-3.5 py-2.5 text-zinc-200 text-[16px] focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
               </div>
@@ -268,13 +268,13 @@ export default function ClientManagement() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 bg-[#202024] hover:bg-[#27272a] text-zinc-300 rounded-xl text-[14px] font-semibold"
+                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-[14px] font-bold border border-slate-300 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[14px] font-semibold shadow-md shadow-indigo-600/15"
+                  className="px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[14px] font-semibold shadow-md shadow-orange-600/15 cursor-pointer"
                 >
                   Save Lead
                 </button>
@@ -286,35 +286,35 @@ export default function ClientManagement() {
 
       {/* FOLLOW UP MODAL */}
       {isFollowupModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-[#18181b] border border-[#27272a] rounded-2xl p-6 space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white border border-slate-300 rounded-2xl p-6 space-y-6 shadow-xl">
             <div>
-              <h3 className="text-[18px] font-bold text-zinc-100">Log Follow Up Discussion</h3>
-              <p className="text-[13px] text-zinc-500">Record note for {selectedClient?.name}</p>
+              <h3 className="text-[18px] font-bold text-slate-900">Log Follow Up Discussion</h3>
+              <p className="text-[13px] text-slate-800 font-medium">Record note for {selectedClient?.name}</p>
             </div>
             <form onSubmit={handleAddFollowup} className="space-y-4">
               <div>
-                <label className="block text-[13px] font-semibold text-zinc-400 mb-1.5">Interaction Summary</label>
+                <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Interaction Summary</label>
                 <textarea
                   required
                   rows="3"
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   placeholder="e.g. Sent draft service scope agreement; requested review by Friday."
-                  className="w-full bg-[#202024] border border-[#27272a] rounded-xl px-3.5 py-2.5 text-zinc-200 text-[16px] focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 ></textarea>
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsFollowupModalOpen(false)}
-                  className="px-4 py-2.5 bg-[#202024] hover:bg-[#27272a] text-zinc-300 rounded-xl text-[14px] font-semibold"
+                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-[14px] font-bold border border-slate-300 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[14px] font-semibold shadow-md shadow-indigo-600/15"
+                  className="px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[14px] font-semibold shadow-md shadow-orange-600/15 cursor-pointer"
                 >
                   Log Action
                 </button>

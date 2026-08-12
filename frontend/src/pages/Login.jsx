@@ -58,34 +58,34 @@ export default function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0e0e10] flex items-center justify-center px-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 relative overflow-hidden font-sans">
       {/* Decorative premium gradients */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-900/10 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-emerald-950/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-slate-200/40 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-slate-200/40 rounded-full blur-[120px] pointer-events-none"></div>
 
-      <div className="w-full max-w-md bg-[#18181b] border border-[#27272a] rounded-2xl shadow-xl overflow-hidden relative z-10 transition-all duration-300">
+      <div className="w-full max-w-md bg-white border border-slate-400 rounded-2xl shadow-xl overflow-hidden relative z-10 transition-all duration-300">
         <div className="p-8">
           <div className="flex justify-center mb-6">
-            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center font-extrabold text-2xl text-white shadow-lg shadow-indigo-600/20">
+            <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center font-extrabold text-2xl text-white shadow-lg shadow-orange-600/20">
               N
             </div>
           </div>
 
-          <h2 className="text-[24px] font-bold text-center text-zinc-100 mb-1 tracking-tight">Welcome back</h2>
-          <p className="text-zinc-500 text-center text-[14px] mb-8">Sign in to access your NexTask workspace</p>
+          <h2 className="text-[24px] font-extrabold text-center text-slate-905 mb-1 tracking-tight">Welcome back</h2>
+          <p className="text-slate-800 text-center text-[14px] font-semibold mb-8">Sign in to access your NexTask workspace</p>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-950/20 border border-red-500/30 rounded-xl flex items-start gap-3">
-              <AlertCircle className="text-red-400 shrink-0 mt-0.5" size={18} />
-              <span className="text-[14px] text-red-300 leading-snug">{error}</span>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+              <AlertCircle className="text-red-600 shrink-0 mt-0.5" size={18} />
+              <span className="text-[14px] text-red-700 leading-snug">{error}</span>
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-[14px] font-medium text-zinc-400 mb-2">Email Address</label>
+              <label className="block text-[14px] font-semibold text-slate-800 mb-2">Email Address</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-500 pointer-events-none">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-700 pointer-events-none">
                   <Mail size={18} />
                 </span>
                 <input
@@ -93,16 +93,16 @@ export default function Login({ onLoginSuccess }) {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#202024] border border-[#27272a] rounded-xl py-3 pl-11 pr-4 text-zinc-200 placeholder-zinc-600 text-[16px] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  className="w-full bg-white border border-slate-400 rounded-xl py-3 pl-11 pr-4 text-slate-900 placeholder-slate-400 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   placeholder="name@company.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[14px] font-medium text-zinc-400 mb-2">Password</label>
+              <label className="block text-[14px] font-semibold text-slate-800 mb-2">Password</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-500 pointer-events-none">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-700 pointer-events-none">
                   <Lock size={18} />
                 </span>
                 <input
@@ -110,7 +110,7 @@ export default function Login({ onLoginSuccess }) {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#202024] border border-[#27272a] rounded-xl py-3 pl-11 pr-4 text-zinc-200 placeholder-zinc-600 text-[16px] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  className="w-full bg-white border border-slate-400 rounded-xl py-3 pl-11 pr-4 text-slate-900 placeholder-slate-400 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -119,31 +119,31 @@ export default function Login({ onLoginSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-3 text-[16px] font-semibold transition-all duration-200 shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-3 text-[16px] font-bold transition-all duration-200 shadow-lg shadow-orange-600/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? 'Authenticating...' : 'Sign In'}
             </button>
           </form>
 
           {/* Quick Demo Logins Helper */}
-          <div className="mt-8 pt-6 border-t border-[#27272a]">
-            <h4 className="text-[12px] font-bold text-zinc-500 uppercase tracking-wider text-center mb-3">Quick Demo Logins</h4>
+          <div className="mt-8 pt-6 border-t border-slate-300">
+            <h4 className="text-[12px] font-bold text-orange-600 uppercase tracking-wider text-center mb-3">Quick Demo Logins</h4>
             <div className="grid grid-cols-3 gap-2">
               <button 
                 onClick={() => setDemoRole('admin')}
-                className="py-2 bg-[#202024] hover:bg-[#27272a] text-[13px] text-zinc-300 rounded-lg font-medium transition-all"
+                className="py-2 bg-slate-50 hover:bg-slate-100 border border-slate-400 text-[13px] text-slate-800 rounded-lg font-bold transition-all"
               >
                 Admin
               </button>
               <button 
                 onClick={() => setDemoRole('project_head')}
-                className="py-2 bg-[#202024] hover:bg-[#27272a] text-[13px] text-zinc-300 rounded-lg font-medium transition-all"
+                className="py-2 bg-slate-50 hover:bg-slate-100 border border-slate-400 text-[13px] text-slate-800 rounded-lg font-bold transition-all"
               >
                 Project Head
               </button>
               <button 
                 onClick={() => setDemoRole('team_member')}
-                className="py-2 bg-[#202024] hover:bg-[#27272a] text-[13px] text-zinc-300 rounded-lg font-medium transition-all"
+                className="py-2 bg-slate-50 hover:bg-slate-100 border border-slate-400 text-[13px] text-slate-800 rounded-lg font-bold transition-all"
               >
                 Member
               </button>
