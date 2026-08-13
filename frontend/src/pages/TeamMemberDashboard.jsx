@@ -62,116 +62,156 @@ export default function TeamMemberDashboard({ currentUserId }) {
   const totalPages = Math.ceil(tasks.length / itemsPerPage);
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in text-slate-955 font-sans">
+      {/* Page Header */}
+      <div>
+        <h2 className="text-[22px] font-black text-slate-955 tracking-tight">Developer Workspace</h2>
+        <p className="text-[13px] text-slate-700 font-semibold">Track your active allocations, submit progress reports, and review completed deliverables</p>
+      </div>
+
       {/* Team member KPI overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 bg-white p-6 rounded-xl border border-slate-400 shadow-md">
-        <div className="space-y-1">
-          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">My Assigned Tasks</span>
-          <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.myTasksCount}</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        {/* My Assigned Tasks */}
+        <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-widest block">Total Assigned</span>
+            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.myTasksCount}</h3>
+          </div>
+          <div className="p-3 bg-slate-700 rounded-xl text-white shadow-md shadow-slate-700/10">
+            <ClipboardList size={20} className="stroke-[2.5]" />
+          </div>
         </div>
 
-        <div className="space-y-1 sm:border-l sm:border-slate-400 sm:pl-6">
-          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">To Do / In Progress</span>
-          <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.todoTasksCount}</h3>
+        {/* To Do / In Progress */}
+        <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-orange-950 uppercase tracking-widest block">In Progress</span>
+            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.todoTasksCount}</h3>
+          </div>
+          <div className="p-3 bg-orange-600 rounded-xl text-white shadow-md shadow-orange-600/10">
+            <Clock size={20} className="stroke-[2.5]" />
+          </div>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-slate-400 md:pl-6">
-          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Submitted (In Review)</span>
-          <h3 className="text-[28px] font-bold text-blue-700 tracking-tight">{stats.reviewTasksCount}</h3>
+        {/* Submitted (In Review) */}
+        <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-blue-900 uppercase tracking-widest block">Pending Review</span>
+            <h3 className="text-[30px] font-black text-blue-900 tracking-tight">{stats.reviewTasksCount}</h3>
+          </div>
+          <div className="p-3 bg-blue-600 rounded-xl text-white shadow-md shadow-blue-600/10">
+            <Calendar size={20} className="stroke-[2.5]" />
+          </div>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-slate-400 md:pl-6">
-          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Tasks Approved</span>
-          <h3 className="text-[28px] font-bold text-emerald-700 tracking-tight">{stats.completedTasksCount}</h3>
+        {/* Tasks Approved */}
+        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Tasks Completed</span>
+            <h3 className="text-[30px] font-black text-emerald-800 tracking-tight">{stats.completedTasksCount}</h3>
+          </div>
+          <div className="p-3 bg-emerald-600 rounded-xl text-white shadow-md shadow-emerald-600/10">
+            <CheckCircle2 size={20} className="stroke-[2.5]" />
+          </div>
         </div>
       </div>
 
       {/* Task progression list */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-[18px] font-bold text-slate-950 tracking-tight">My Work Deliverables</h3>
-          <p className="text-[13px] text-slate-700 font-medium">Review specifications and report progressions of assigned workflows</p>
+          <h3 className="text-[17px] font-extrabold text-slate-955 tracking-tight">My Deliverables</h3>
+          <p className="text-[12px] text-slate-600 font-medium">Review specifications and report progressions of assigned workflows</p>
         </div>
 
-        <div className="bg-white border border-slate-400 rounded-xl overflow-hidden shadow-md">
+        <div className="bg-white border border-slate-300 rounded-2xl overflow-hidden shadow-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-400 bg-slate-100">
-                  <th className="border border-slate-300 p-4 text-[13px] font-bold text-slate-950 uppercase tracking-wider w-16 text-center">S.No.</th>
-                  <th className="border border-slate-300 p-4 text-[13px] font-bold text-slate-955 uppercase tracking-wider">Deliverable / Project</th>
-                  <th className="border border-slate-300 p-4 text-[13px] font-bold text-slate-955 uppercase tracking-wider">Duration Limits</th>
-                  <th className="border border-slate-300 p-4 text-[13px] font-bold text-slate-955 uppercase tracking-wider">Status</th>
-                  <th className="border border-slate-300 p-4 text-[13px] font-bold text-slate-955 uppercase tracking-wider">Instructions</th>
+                <tr className="bg-[#334155] text-white">
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-[#5f5f5f] w-16">S.No.</th>
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Deliverable / Project</th>
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Duration limits</th>
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Progress</th>
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-300">
                 {currentTasks.map((task, index) => (
-                  <tr key={task.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="border border-slate-300 p-4 text-[14px] font-bold text-slate-950 text-center">
+                  <tr key={task.id} className="hover:bg-slate-50 transition-colors text-slate-955 font-medium">
+                    <td className="px-4 py-3 text-[13px] font-bold text-slate-900 border border-slate-300 text-center">
                       {indexOfFirstItem + index + 1}
                     </td>
-                    <td className="border border-slate-300 p-4">
-                      <span className="block text-[15px] font-bold text-slate-955">{task.title}</span>
-                      <span className="block text-[12px] text-slate-700 font-medium">{task.project?.name}</span>
+                    <td className="px-4 py-3 border border-slate-300">
+                      <span className="block text-[14px] font-bold text-slate-955">{task.title}</span>
+                      <span className="block text-[11px] text-slate-600 font-bold mt-0.5">{task.project?.name}</span>
                     </td>
-                    <td className="border border-slate-300 p-4 text-[14px] text-slate-900 font-medium">
-                      <div>{task.start_date} <span className="text-slate-600 text-[12px] font-bold">to</span> {task.end_date}</div>
+                    <td className="px-4 py-3 border border-slate-300 text-[13px] text-slate-900 font-bold whitespace-nowrap">
+                      <div>{task.start_date} <span className="text-slate-500 font-bold text-[10px] uppercase">to</span> {task.end_date}</div>
                     </td>
-                    <td className="border border-slate-300 p-4">
-                      <span className={`inline-block text-[11px] font-bold uppercase px-2.5 py-1 rounded-full ${
+                    <td className="px-4 py-3 border border-slate-300">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-slate-200 rounded-full h-1.5 overflow-hidden border border-slate-300">
+                          <div 
+                            className="bg-orange-600 h-full rounded-full transition-all duration-300"
+                            style={{ width: `${task.progress || 0}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-[11px] font-extrabold text-slate-800">{task.progress || 0}%</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border border-slate-300">
+                      <span className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
                         task.status === 'completed' 
-                          ? 'bg-emerald-100 text-emerald-950 border border-emerald-400' 
+                          ? 'bg-emerald-100 text-emerald-955 border border-emerald-400' 
                           : task.status === 'review'
-                          ? 'bg-blue-100 text-blue-950 border border-blue-400'
+                          ? 'bg-purple-100 text-purple-955 border border-purple-400'
+                          : task.status === 'in_progress'
+                          ? 'bg-blue-100 text-blue-955 border border-blue-400'
                           : 'bg-slate-200 text-slate-950 border border-slate-400'
                       }`}>
-                        {task.status}
+                        {task.status === 'in_progress' ? 'In Progress' : task.status === 'todo' ? 'To Do' : task.status}
                       </span>
-                    </td>
-                    <td className="border border-slate-300 p-4 text-[13px] text-slate-800 font-medium max-w-sm whitespace-normal break-words">
-                      {task.description || 'No special requirements.'}
                     </td>
                   </tr>
                 ))}
                 {tasks.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="border border-slate-300 p-8 text-center text-slate-700 text-[14px] font-medium">No deliverables currently assigned. Enjoy the light day!</td>
+                    <td colSpan="5" className="px-4 py-8 text-center text-slate-700 text-[13px] font-semibold border border-slate-300">No deliverables currently assigned. Enjoy the light day!</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 bg-slate-100 border-t border-slate-400 sm:px-6">
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-t border-slate-300 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-slate-400 text-sm font-bold rounded-md text-slate-900 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-xs font-bold rounded-xl text-slate-900 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-400 text-sm font-bold rounded-md text-slate-900 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-xs font-bold rounded-xl text-slate-900 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-slate-900 font-bold">
+                  <p className="text-[12px] text-slate-800 font-bold">
                     Showing <span className="font-extrabold">{indexOfFirstItem + 1}</span> to <span className="font-extrabold">{Math.min(indexOfLastItem, tasks.length)}</span> of <span className="font-extrabold">{tasks.length}</span> results
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <nav className="relative z-0 inline-flex rounded-full shadow-sm -space-x-px" aria-label="Pagination">
                     <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-400 bg-white text-sm font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      className="relative inline-flex items-center px-3 py-1.5 rounded-l-full border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Previous
                     </button>
@@ -179,19 +219,19 @@ export default function TeamMemberDashboard({ currentUserId }) {
                       <button
                         key={i + 1}
                         onClick={() => setCurrentPage(i + 1)}
-                        className={`relative inline-flex items-center px-4 py-2 border border-slate-400 text-sm font-bold ${
+                        className={`relative inline-flex items-center px-3.5 py-1.5 border-t border-b border-slate-300 text-xs font-extrabold transition-colors cursor-pointer ${
                           currentPage === i + 1
                             ? 'z-10 bg-orange-600 text-white'
-                            : 'bg-white text-slate-900 hover:bg-slate-50'
+                            : 'bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                       >
                         {i + 1}
                       </button>
                     ))}
                     <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-400 bg-white text-sm font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      className="relative inline-flex items-center px-3 py-1.5 rounded-r-full border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Next
                     </button>

@@ -346,8 +346,8 @@ export default function HRManagement() {
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-[20px] font-bold text-orange-600 tracking-tight">HR & Personnel Directory</h2>
-          <p className="text-[13px] text-slate-805">Manage employee profile details, credentials, and document deposits</p>
+          <h2 className="text-[22px] font-black text-slate-955 tracking-tight">Personnel & HR Management</h2>
+          <p className="text-[13px] text-slate-700 font-semibold">Manage employee profile details, credentials, and document deposits</p>
         </div>
 
         <button
@@ -357,6 +357,61 @@ export default function HRManagement() {
           <UserPlus size={16} className="stroke-[2.5]" />
           <span>Add Employee</span>
         </button>
+      </div>
+
+      {/* HR ANALYTICS STATS ROW (4 detailed counters) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-fast">
+        {/* Total Directory Count */}
+        <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Total Directory</span>
+            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">
+              {employees.length}
+            </h3>
+          </div>
+          <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/10">
+            <Users size={20} className="stroke-[2.5]" />
+          </div>
+        </div>
+
+        {/* On-Role Staff */}
+        <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-orange-955 uppercase tracking-widest block">On Role Staff</span>
+            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">
+              {employees.filter(e => e.employment_type === 'on role' || e.employment_type === 'on_role' || !e.employment_type).length}
+            </h3>
+          </div>
+          <div className="p-3 bg-orange-600 rounded-xl text-white shadow-md shadow-orange-600/10">
+            <Briefcase size={20} className="stroke-[2.5]" />
+          </div>
+        </div>
+
+        {/* Active Engineers */}
+        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-emerald-955 uppercase tracking-widest block">Active Engineers</span>
+            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">
+              {employees.filter(e => e.role === 'team_member' && e.status === 'active').length}
+            </h3>
+          </div>
+          <div className="p-3 bg-emerald-600 rounded-xl text-white shadow-md shadow-emerald-600/10">
+            <UserPlus size={20} className="stroke-[2.5]" />
+          </div>
+        </div>
+
+        {/* Leadership & Admins */}
+        <div className="bg-gradient-to-br from-violet-50 to-white border border-violet-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-violet-900 uppercase tracking-widest block">Admins & Heads</span>
+            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">
+              {employees.filter(e => e.role === 'admin' || e.role === 'project_head').length}
+            </h3>
+          </div>
+          <div className="p-3 bg-violet-600 rounded-xl text-white shadow-md shadow-violet-600/10">
+            <Shield size={20} className="stroke-[2.5]" />
+          </div>
+        </div>
       </div>
 
       {/* SEARCH AND FILTERS BAR */}
@@ -414,68 +469,71 @@ export default function HRManagement() {
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
         </div>
       ) : (
-        <div className="bg-white border border-slate-400 rounded-xl overflow-hidden shadow-md">
+        <div className="bg-white border border-slate-300 rounded-2xl overflow-hidden shadow-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-400 bg-slate-100 text-slate-955">
-                  <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider w-16 text-center">S.No.</th>
-                  <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Employee Name</th>
-                  <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Email ID</th>
-                  <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Designation</th>
-                  <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Date of Joining</th>
-                  <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider text-right">Actions</th>
+                <tr className="bg-[#334155] text-white">
+                  <th className="px-4 py-3 text-[12px] font-bold text-center border border-[#5f5f5f] w-16">S.No.</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Employee Name</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Email ID</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Designation</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Date of Joining</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-center border border-[#5f5f5f]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-300 text-slate-950 font-medium">
-                {currentEmployees.map((employee, index) => (
-                  <tr key={employee.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="border border-slate-300 p-4 text-[14px] font-bold text-center">
-                      {indexOfFirstItem + index + 1}
-                    </td>
-                    <td className="border border-slate-300 p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-orange-50 rounded-full flex items-center justify-center text-[13px] font-bold uppercase text-orange-755 border border-orange-205">
-                          {employee.full_name?.substring(0, 2)}
+                {currentEmployees.map((employee, index) => {
+                  const empInitials = employee.full_name ? employee.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'E';
+                  return (
+                    <tr key={employee.id} className="hover:bg-slate-50 transition-colors text-slate-955">
+                      <td className="px-4 py-3.5 text-[13px] font-bold text-slate-900 border border-slate-300 text-center">
+                        {indexOfFirstItem + index + 1}
+                      </td>
+                      <td className="px-4 py-3.5 border border-slate-300">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-700 border border-orange-200 flex items-center justify-center font-bold text-[12px]">
+                            {empInitials}
+                          </div>
+                          <div>
+                            <span className="block text-[14px] font-extrabold text-slate-950 leading-tight">{employee.full_name}</span>
+                            <span className="inline-block text-[10px] font-bold uppercase px-2 py-0.5 bg-slate-100 border border-slate-300 rounded mt-1.5 text-slate-900">
+                              {employee.employment_type || 'on role'}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="block text-[14px] font-bold text-slate-955 leading-tight">{employee.full_name}</span>
-                          <span className="inline-block text-[10px] font-bold uppercase px-1.5 py-0.2 bg-slate-100 border border-slate-300 rounded mt-1.5 text-slate-955">
-                            {employee.employment_type || 'on role'}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="border border-slate-300 p-4 text-[13px] text-slate-955">
-                      {employee.email}
-                    </td>
-                    <td className="border border-slate-300 p-4 text-[13px] text-slate-955">
-                      {employee.designation || 'Unspecified'}
-                    </td>
-                    <td className="border border-slate-300 p-4 text-[13px] text-slate-955">
-                      {formatDateToDMY(employee.joins_date)}
-                    </td>
-                    <td className="border border-slate-300 p-4 text-right">
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => openEditModal(employee)}
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-900 border border-slate-400 rounded-xl text-[12px] font-bold shadow-sm cursor-pointer transition-all"
-                        >
-                          <Edit size={13} />
-                          <span>View / Edit Profile</span>
-                        </button>
-                        {employee.email !== 'admin@saas.com' && (
+                      </td>
+                      <td className="px-4 py-3.5 text-[13px] text-slate-900 font-bold border border-slate-300">
+                        {employee.email}
+                      </td>
+                      <td className="px-4 py-3.5 text-[13px] text-slate-900 font-semibold border border-slate-300">
+                        {employee.designation || 'Unspecified'}
+                      </td>
+                      <td className="px-4 py-3.5 text-[13px] text-slate-900 font-semibold border border-slate-300 whitespace-nowrap">
+                        {formatDateToDMY(employee.joins_date)}
+                      </td>
+                      <td className="px-4 py-3.5 border border-slate-300">
+                        <div className="flex gap-2 justify-center">
                           <button
-                            onClick={() => handleDeleteEmployee(employee.id)}
-                            className="inline-flex items-center justify-center p-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 rounded-xl cursor-pointer transition-colors"
+                            onClick={() => openEditModal(employee)}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-900 border border-slate-400 rounded-xl text-[12px] font-bold shadow-sm cursor-pointer transition-all"
                           >
-                            <Trash2 size={13} />
+                            <Edit size={13} />
+                            <span>View / Edit Profile</span>
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {employee.email !== 'admin@saas.com' && (
+                            <button
+                              onClick={() => handleDeleteEmployee(employee.id)}
+                              className="inline-flex items-center justify-center p-2 bg-red-50 hover:bg-red-100 text-red-750 border border-red-300 rounded-xl cursor-pointer transition-colors"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {filteredEmployees.length === 0 && (
                   <tr>
                     <td colSpan="6" className="border border-slate-300 p-8 text-center text-slate-700 italic text-[13px] font-medium">No matching employee records found.</td>

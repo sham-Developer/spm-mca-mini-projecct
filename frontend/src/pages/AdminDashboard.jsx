@@ -80,69 +80,75 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in text-slate-955">
+      {/* Page Header */}
+      <div>
+        <h2 className="text-[22px] font-black text-slate-950 tracking-tight">Executive Dashboard</h2>
+        <p className="text-[13px] text-slate-700 font-semibold">Real-time overview of client onboarding, workspace portfolio, and capital resources</p>
+      </div>
+
       {/* Overview Analytics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {/* Total Clients */}
-        <div className="bg-white border border-slate-400 rounded-xl shadow-md p-6 flex items-start justify-between">
+        <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[12px] font-extrabold text-slate-900 uppercase tracking-widest block">Total Clients</span>
+            <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Total Clients</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[28px] font-extrabold text-slate-950 tracking-tight">{stats.totalClients}</h3>
-              <span className="text-[12px] font-extrabold text-emerald-700 flex items-center gap-0.5 bg-emerald-50 border border-emerald-300 px-1.5 py-0.5 rounded">
-                <TrendingUp size={12} className="stroke-[2.5]" />
+              <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.totalClients}</h3>
+              <span className="text-[11px] font-extrabold text-emerald-800 flex items-center gap-0.5 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded-full">
+                <TrendingUp size={10} className="stroke-[3]" />
                 +12%
               </span>
             </div>
           </div>
-          <div className="p-3 bg-slate-100 rounded-lg border border-slate-300 text-slate-900">
+          <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/10">
             <UserCheck size={20} className="stroke-[2.5]" />
           </div>
         </div>
 
         {/* Active Projects */}
-        <div className="bg-white border border-slate-400 rounded-xl shadow-md p-6 flex items-start justify-between">
+        <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[12px] font-extrabold text-slate-900 uppercase tracking-widest block">Active Projects</span>
+            <span className="text-[11px] font-bold text-orange-950 uppercase tracking-widest block">Active Projects</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[28px] font-extrabold text-slate-950 tracking-tight">{stats.activeProjects}</h3>
-              <span className="text-[12px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-300 px-1.5 py-0.5 rounded">
+              <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.activeProjects}</h3>
+              <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
                 On Track
               </span>
             </div>
           </div>
-          <div className="p-3 bg-slate-100 rounded-lg border border-slate-300 text-slate-900">
+          <div className="p-3 bg-orange-600 rounded-xl text-white shadow-md shadow-orange-600/10">
             <FolderKanban size={20} className="stroke-[2.5]" />
           </div>
         </div>
 
         {/* Headcount */}
-        <div className="bg-white border border-slate-400 rounded-xl shadow-md p-6 flex items-start justify-between">
+        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[12px] font-extrabold text-slate-900 uppercase tracking-widest block">Headcount (HR)</span>
+            <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Headcount (HR)</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[28px] font-extrabold text-slate-950 tracking-tight">{stats.totalEmployees}</h3>
-              <span className="text-[12px] font-semibold text-slate-900 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded">
-                Employees
+              <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.totalEmployees}</h3>
+              <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+                Resourceful
               </span>
             </div>
           </div>
-          <div className="p-3 bg-slate-100 rounded-lg border border-slate-300 text-slate-900">
+          <div className="p-3 bg-emerald-600 rounded-xl text-white shadow-md shadow-emerald-600/10">
             <Users size={20} className="stroke-[2.5]" />
           </div>
         </div>
 
         {/* Portfolio Budget */}
-        <div className="bg-white border border-slate-400 rounded-xl shadow-md p-6 flex items-start justify-between">
+        <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[12px] font-extrabold text-slate-900 uppercase tracking-widest block">Total Portfolio Budget</span>
+            <span className="text-[11px] font-bold text-amber-950 uppercase tracking-widest block">Portfolio Budget</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[24px] font-extrabold text-emerald-800 tracking-tight">
+              <h3 className="text-[22px] font-black text-amber-950 tracking-tight">
                 {formatRupee(stats.totalBudget)}
               </h3>
             </div>
           </div>
-          <div className="p-3 bg-slate-100 rounded-lg border border-slate-300 text-slate-900">
+          <div className="p-3 bg-amber-600 rounded-xl text-white shadow-md shadow-amber-600/10">
             <DollarSign size={20} className="stroke-[2.5]" />
           </div>
         </div>
@@ -152,35 +158,35 @@ export default function AdminDashboard() {
         {/* Chart View */}
         <div className="lg:col-span-2 space-y-4">
           <div>
-            <h3 className="text-[18px] font-bold text-slate-950 tracking-tight">Portfolio Budget Evolution</h3>
-            <p className="text-[13px] text-slate-700 font-medium">Visual trend of budget allocations across onboarded projects</p>
+            <h3 className="text-[17px] font-extrabold text-slate-950 tracking-tight">Portfolio Budget Evolution</h3>
+            <p className="text-[12px] text-slate-600 font-medium">Visual trend of budget allocations across onboarded projects</p>
           </div>
-          <div className="h-80 bg-white p-6 rounded-xl border border-slate-400 shadow-md">
+          <div className="h-80 bg-white p-5 rounded-2xl border border-slate-300 shadow-md">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorBudget" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ea580c" stopOpacity={0.4}/>
+                    <stop offset="5%" stopColor="#ea580c" stopOpacity={0.25}/>
                     <stop offset="95%" stopColor="#ea580c" stopOpacity={0.0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="name" stroke="#475569" fontSize={12} tickLine={false} axisLine={false} style={{ fontWeight: '600' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} style={{ fontWeight: '700' }} />
                 <YAxis 
-                  stroke="#475569" 
-                  fontSize={12} 
+                  stroke="#64748b" 
+                  fontSize={11} 
                   tickLine={false} 
                   axisLine={false} 
-                  style={{ fontWeight: '600' }}
+                  style={{ fontWeight: '700' }}
                   tickFormatter={(val) => `₹${val/100000}L`} 
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '8px', borderWidth: '1px' }}
-                  labelStyle={{ color: '#0f172a', fontWeight: 'bold' }}
-                  itemStyle={{ color: '#0f172a', fontWeight: 'medium' }}
+                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', borderWidth: '1px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}
+                  labelStyle={{ color: '#0f172a', fontWeight: '800', fontSize: '12px' }}
+                  itemStyle={{ color: '#ea580c', fontWeight: '700', fontSize: '12px' }}
                   formatter={(val) => [formatRupee(val), 'Budget']}
                 />
-                <Area type="monotone" dataKey="budget" stroke="#ea580c" strokeWidth={2.5} fillOpacity={1} fill="url(#colorBudget)" />
+                <Area type="monotone" dataKey="budget" stroke="#ea580c" strokeWidth={3} fillOpacity={1} fill="url(#colorBudget)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -189,30 +195,38 @@ export default function AdminDashboard() {
         {/* Client onboard summaries */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-[18px] font-bold text-slate-950 tracking-tight">Recent Client Enquiries</h3>
-            <p className="text-[13px] text-slate-700 font-medium">Quick view of sales funnel statuses</p>
+            <h3 className="text-[17px] font-extrabold text-slate-955 tracking-tight">Recent Enquiries</h3>
+            <p className="text-[12px] text-slate-600 font-medium">Quick view of sales funnel statuses</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-400 divide-y divide-slate-300 shadow-md">
-            {clients.slice(0, 4).map((client) => (
-              <div key={client.id} className="p-4 flex items-center justify-between">
-                <div>
-                  <h4 className="text-[14px] font-bold text-slate-900">{client.name}</h4>
-                  <span className="text-[12px] text-slate-700 font-medium">{client.company || 'Private Lead'}</span>
+          <div className="bg-white rounded-2xl border border-slate-300 divide-y divide-slate-200 shadow-md overflow-hidden">
+            {clients.slice(0, 4).map((client) => {
+              const initials = client.name ? client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'C';
+              return (
+                <div key={client.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-700 border border-orange-200 flex items-center justify-center font-bold text-[12px]">
+                      {initials}
+                    </div>
+                    <div>
+                      <h4 className="text-[13.5px] font-bold text-slate-900 leading-tight">{client.name}</h4>
+                      <span className="text-[11px] text-slate-600 font-bold block mt-0.5">{client.company || 'Private Partner'}</span>
+                    </div>
+                  </div>
+                  <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border ${
+                    client.status === 'onboarded' 
+                      ? 'bg-emerald-100 text-emerald-950 border-emerald-400' 
+                      : client.status === 'follow_up'
+                      ? 'bg-blue-100 text-blue-950 border-blue-400'
+                      : 'bg-slate-100 text-slate-950 border-slate-300'
+                  }`}>
+                    {client.status === 'follow_up' ? 'Follow Up' : client.status}
+                  </span>
                 </div>
-                <span className={`text-[11px] font-bold uppercase px-2.5 py-1 rounded-full ${
-                  client.status === 'onboarded' 
-                    ? 'bg-emerald-100 text-emerald-950 border border-emerald-400' 
-                    : client.status === 'follow_up'
-                    ? 'bg-blue-100 text-blue-950 border border-blue-400'
-                    : 'bg-slate-200 text-slate-950 border border-slate-400'
-                }`}>
-                  {client.status}
-                </span>
-              </div>
-            ))}
+              );
+            })}
             {clients.length === 0 && (
-              <div className="p-8 text-center text-slate-800 font-medium text-[14px]">No clients registered.</div>
+              <div className="p-8 text-center text-slate-700 font-semibold text-[13px]">No clients registered.</div>
             )}
           </div>
         </div>

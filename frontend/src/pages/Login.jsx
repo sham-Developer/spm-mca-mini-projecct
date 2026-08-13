@@ -59,12 +59,15 @@ export default function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 relative overflow-hidden font-sans">
-      {/* Decorative premium gradients */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-slate-200/40 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-slate-200/40 rounded-full blur-[120px] pointer-events-none"></div>
-
-      <div className="w-full max-w-md bg-white border border-slate-400 rounded-2xl shadow-xl overflow-hidden relative z-10 transition-all duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] flex items-center justify-center px-4 relative overflow-hidden font-sans">
+      {/* Dynamic blueprint grid overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#3b82f60d_1px,transparent_1px),linear-gradient(to_bottom,#3b82f60d_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+      
+      {/* Glowing atmospheric orbs */}
+      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-gradient-to-tr from-orange-600/25 to-amber-500/10 rounded-full blur-[130px] pointer-events-none animate-pulse" style={{ animationDuration: '8s' }}></div>
+      <div className="absolute -bottom-52 -right-20 w-[700px] h-[700px] bg-gradient-to-bl from-blue-600/20 to-indigo-500/10 rounded-full blur-[150px] pointer-events-none animate-pulse" style={{ animationDuration: '10s' }}></div>
+      
+      <div className="w-full max-w-md bg-white/95 backdrop-blur-md border border-slate-200 rounded-3xl shadow-2xl overflow-hidden relative z-10 transition-all duration-300 hover:shadow-orange-500/10">
         <div className="p-8">
           <div className="flex justify-center mb-6">
             <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center font-extrabold text-2xl text-white shadow-lg shadow-orange-600/20">
