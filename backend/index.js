@@ -5,7 +5,8 @@ const { pool, isDbConfigured, initializeDatabase } = require('./db');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // IN-MEMORY DATABASE FALLBACK (For visual demonstrations if connection string isn't provided yet)
 let usersStore = [
@@ -29,6 +30,9 @@ let tasksStore = [
 
 let deadlineRequestsStore = [];
 let reportsStore = [];
+let projectHistoryStore = [
+  { id: 'h1', project_id: 'p1', action: 'created', description: 'Project created with initial budget of ₹15,00,000.', performed_by: 'Admin', created_at: new Date().toISOString() }
+];
 
 // Helper db wrapper to route requests
 const executeQuery = async (queryText, params, memoryAction) => {
@@ -75,14 +79,17 @@ app.get('/api/users', async (req, res) => {
 });
 
 app.post('/api/users', async (req, res) => {
-  const { email, password_hash, full_name, role, department, designation, phone } = req.body;
-  const newUser = { id: Math.random().toString(36).substr(2, 9), joins_date: new Date().toISOString().split('T')[0], status: 'active', documents: [], ...req.body };
+  const { email, password_hash, full_name, role, department, designation, phone, joins_date, status, employment_type, dob, gender, address } = req.body;
+  const activeJoinsDate = joins_date || new Date().toISOString().split('T')[0];
+  const activeStatus = status || 'active';
+  const activeEmpType = employment_type || 'on role';
+  const newUser = { id: Math.random().toString(36).substr(2, 9), joins_date: activeJoinsDate, status: activeStatus, employment_type: activeEmpType, dob: dob || null, gender: gender || null, address: address || null, documents: [], ...req.body };
   
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query(
-        'INSERT INTO users (email, password_hash, full_name, role, department, designation, phone) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [email, password_hash || 'member123', full_name, role, department, designation, phone]
+        'INSERT INTO users (email, password_hash, full_name, role, department, designation, phone, joins_date, status, employment_type, dob, gender, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
+        [email, password_hash || 'member123', full_name, role, department, designation, phone, activeJoinsDate, activeStatus, activeEmpType, dob || null, gender || null, address || null]
       );
       return res.json(result.rows[0]);
     } catch (err) {
@@ -95,13 +102,33 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:id', async (req, res) => {
   const { id } = req.params;
-  const { documents } = req.body;
+  const { full_name, email, password_hash, role, department, designation, phone, joins_date, status, employment_type, dob, gender, address, documents } = req.body;
   
   if (isDbConfigured && pool) {
     try {
+      const currentResult = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+      if (currentResult.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+      const current = currentResult.rows[0];
+
       const result = await pool.query(
-        'UPDATE users SET documents = $1 WHERE id = $2 RETURNING *',
-        [JSON.stringify(documents), id]
+        'UPDATE users SET full_name = $1, email = $2, password_hash = $3, role = $4, department = $5, designation = $6, phone = $7, joins_date = $8, status = $9, employment_type = $10, dob = $11, gender = $12, address = $13, documents = $14 WHERE id = $15 RETURNING *',
+        [
+          full_name !== undefined ? full_name : current.full_name,
+          email !== undefined ? email : current.email,
+          password_hash !== undefined && password_hash !== '' ? password_hash : current.password_hash,
+          role !== undefined ? role : current.role,
+          department !== undefined ? department : current.department,
+          designation !== undefined ? designation : current.designation,
+          phone !== undefined ? phone : current.phone,
+          joins_date !== undefined ? joins_date : current.joins_date,
+          status !== undefined ? status : current.status,
+          employment_type !== undefined ? employment_type : current.employment_type,
+          dob !== undefined ? dob : current.dob,
+          gender !== undefined ? gender : current.gender,
+          address !== undefined ? address : current.address,
+          documents !== undefined ? JSON.stringify(documents) : JSON.stringify(current.documents || []),
+          id
+        ]
       );
       return res.json(result.rows[0]);
     } catch (err) {
@@ -143,13 +170,27 @@ app.post('/api/clients', async (req, res) => {
 
 app.put('/api/clients/:id', async (req, res) => {
   const { id } = req.params;
-  const { follow_up_notes, status, onboarded_at } = req.body;
+  const { name, email, phone, company, status, follow_up_notes, onboarded_at, next_followup_date } = req.body;
   
   if (isDbConfigured && pool) {
     try {
+      const currentRes = await pool.query('SELECT * FROM clients WHERE id = $1', [id]);
+      if (currentRes.rows.length === 0) return res.status(404).json({ error: 'Client not found' });
+      const current = currentRes.rows[0];
+
       const result = await pool.query(
-        'UPDATE clients SET follow_up_notes = $1, status = $2, onboarded_at = $3 WHERE id = $4 RETURNING *',
-        [JSON.stringify(follow_up_notes), status, onboarded_at, id]
+        'UPDATE clients SET name = $1, email = $2, phone = $3, company = $4, status = $5, follow_up_notes = $6, onboarded_at = $7, next_followup_date = $8 WHERE id = $9 RETURNING *',
+        [
+          name !== undefined ? name : current.name,
+          email !== undefined ? email : current.email,
+          phone !== undefined ? phone : current.phone,
+          company !== undefined ? company : current.company,
+          status !== undefined ? status : current.status,
+          follow_up_notes !== undefined ? JSON.stringify(follow_up_notes) : JSON.stringify(current.follow_up_notes || []),
+          onboarded_at !== undefined ? onboarded_at : current.onboarded_at,
+          next_followup_date !== undefined ? next_followup_date : current.next_followup_date,
+          id
+        ]
       );
       return res.json(result.rows[0]);
     } catch (err) {
@@ -158,6 +199,20 @@ app.put('/api/clients/:id', async (req, res) => {
   }
   clientsStore = clientsStore.map(c => c.id === id ? { ...c, ...req.body } : c);
   res.json(clientsStore.find(c => c.id === id));
+});
+
+app.delete('/api/clients/:id', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConfigured && pool) {
+    try {
+      await pool.query('DELETE FROM clients WHERE id = $1', [id]);
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+  clientsStore = clientsStore.filter(c => c.id !== id);
+  res.json({ success: true });
 });
 
 // Projects API
@@ -187,7 +242,7 @@ app.get('/api/projects', async (req, res) => {
 });
 
 app.post('/api/projects', async (req, res) => {
-  const { name, client_id, description, start_date, end_date, budget, project_head_id } = req.body;
+  const { name, client_id, description, start_date, end_date, budget, project_head_id, performed_by } = req.body;
   const newProject = { id: 'p' + (projectsStore.length + 1), status: 'planning', ...req.body };
   
   if (isDbConfigured && pool) {
@@ -196,29 +251,136 @@ app.post('/api/projects', async (req, res) => {
         'INSERT INTO projects (name, client_id, description, start_date, end_date, budget, project_head_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
         [name, client_id, description, start_date, end_date, budget, project_head_id]
       );
-      return res.json(result.rows[0]);
+      const createdProj = result.rows[0];
+      const performedByVal = performed_by || 'System';
+      await pool.query(
+        'INSERT INTO project_history (project_id, action, description, performed_by) VALUES ($1, $2, $3, $4)',
+        [createdProj.id, 'created', `Project created with initial budget of ₹${budget || 0}.`, performedByVal]
+      );
+      return res.json(createdProj);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
   projectsStore.push(newProject);
+  const performedByVal = performed_by || 'System';
+  projectHistoryStore.push({
+    id: 'h' + (projectHistoryStore.length + 1),
+    project_id: newProject.id,
+    action: 'created',
+    description: `Project created with initial budget of ₹${newProject.budget || 0}.`,
+    performed_by: performedByVal,
+    created_at: new Date().toISOString()
+  });
   res.json(newProject);
 });
 
 app.put('/api/projects/:id', async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const performedBy = req.body.performed_by || 'System';
   
   if (isDbConfigured && pool) {
     try {
-      const result = await pool.query('UPDATE projects SET status = $1 WHERE id = $2 RETURNING *', [status, id]);
-      return res.json(result.rows[0]);
+      // 1. Get existing project to compare
+      const prevResult = await pool.query('SELECT * FROM projects WHERE id = $1', [id]);
+      const prev = prevResult.rows[0];
+
+      // 2. Build dynamic update query
+      const fields = [];
+      const values = [];
+      let paramIndex = 1;
+      for (const [key, value] of Object.entries(req.body)) {
+        if (['name', 'client_id', 'description', 'start_date', 'end_date', 'budget', 'project_head_id', 'status'].includes(key)) {
+          fields.push(`${key} = $${paramIndex}`);
+          values.push(value);
+          paramIndex++;
+        }
+      }
+      values.push(id);
+      const queryText = `UPDATE projects SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+      const result = await pool.query(queryText, values);
+      const updated = result.rows[0];
+
+      // 3. Log history
+      if (prev) {
+        if (req.body.status && prev.status !== req.body.status) {
+          await pool.query(
+            'INSERT INTO project_history (project_id, action, description, performed_by) VALUES ($1, $2, $3, $4)',
+            [id, 'status_changed', `Status updated from ${prev.status} to ${req.body.status}.`, performedBy]
+          );
+        }
+        if (req.body.budget && Number(prev.budget) !== Number(req.body.budget)) {
+          await pool.query(
+            'INSERT INTO project_history (project_id, action, description, performed_by) VALUES ($1, $2, $3, $4)',
+            [id, 'budget_updated', `Budget updated from ₹${prev.budget} to ₹${req.body.budget}.`, performedBy]
+          );
+        }
+      }
+
+      return res.json(updated);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
+
+  const prev = projectsStore.find(p => p.id === id);
   projectsStore = projectsStore.map(p => p.id === id ? { ...p, ...req.body } : p);
-  res.json(projectsStore.find(p => p.id === id));
+  const updated = projectsStore.find(p => p.id === id);
+
+  if (prev) {
+    if (req.body.status && prev.status !== req.body.status) {
+      projectHistoryStore.push({
+        id: 'h' + (projectHistoryStore.length + 1),
+        project_id: id,
+        action: 'status_changed',
+        description: `Status updated from ${prev.status} to ${req.body.status}.`,
+        performed_by: performedBy,
+        created_at: new Date().toISOString()
+      });
+    }
+    if (req.body.budget && Number(prev.budget) !== Number(req.body.budget)) {
+      projectHistoryStore.push({
+        id: 'h' + (projectHistoryStore.length + 1),
+        project_id: id,
+        action: 'budget_updated',
+        description: `Budget updated from ₹${prev.budget} to ₹${req.body.budget}.`,
+        performed_by: performedBy,
+        created_at: new Date().toISOString()
+      });
+    }
+  }
+
+  res.json(updated);
+});
+
+app.delete('/api/projects/:id', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConfigured && pool) {
+    try {
+      await pool.query('DELETE FROM projects WHERE id = $1', [id]);
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+  projectsStore = projectsStore.filter(p => p.id !== id);
+  res.json({ success: true });
+});
+
+app.get('/api/projects/:id/history', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConfigured && pool) {
+    try {
+      const result = await pool.query('SELECT * FROM project_history WHERE project_id = $1 ORDER BY created_at DESC', [id]);
+      return res.json(result.rows);
+    } catch (err) {
+      console.warn("Project history query failed, falling back to memory:", err);
+    }
+  }
+  const filtered = projectHistoryStore
+    .filter(h => h.project_id === id)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  res.json(filtered);
 });
 
 // Tasks API
@@ -268,18 +430,20 @@ app.post('/api/tasks', async (req, res) => {
 
 app.put('/api/tasks/:id', async (req, res) => {
   const { id } = req.params;
-  const { status, end_date } = req.body;
+  const fields = req.body;
   
   if (isDbConfigured && pool) {
     try {
-      let result;
-      if (status && end_date) {
-        result = await pool.query('UPDATE tasks SET status = $1, end_date = $2 WHERE id = $3 RETURNING *', [status, end_date, id]);
-      } else if (status) {
-        result = await pool.query('UPDATE tasks SET status = $1 WHERE id = $2 RETURNING *', [status, id]);
-      } else {
-        result = await pool.query('UPDATE tasks SET end_date = $1 WHERE id = $2 RETURNING *', [end_date, id]);
+      const keys = Object.keys(fields).filter(k => fields[k] !== undefined);
+      if (keys.length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
       }
+      const setClause = keys.map((key, i) => `"${key}" = $${i + 1}`).join(', ');
+      const values = keys.map(key => fields[key]);
+      values.push(id);
+      
+      const query = `UPDATE tasks SET ${setClause} WHERE id = $${values.length} RETURNING *`;
+      const result = await pool.query(query, values);
       return res.json(result.rows[0]);
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -287,6 +451,20 @@ app.put('/api/tasks/:id', async (req, res) => {
   }
   tasksStore = tasksStore.map(t => t.id === id ? { ...t, ...req.body } : t);
   res.json(tasksStore.find(t => t.id === id));
+});
+
+app.delete('/api/tasks/:id', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConfigured && pool) {
+    try {
+      await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+  tasksStore = tasksStore.filter(t => t.id !== id);
+  res.json({ success: true });
 });
 
 // Deadline Requests API

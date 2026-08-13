@@ -9,6 +9,7 @@ import TeamMemberDashboard from './pages/TeamMemberDashboard';
 import ClientManagement from './pages/ClientManagement';
 import HRManagement from './pages/HRManagement';
 import Projects from './pages/Projects';
+import UIProvider from './components/UIProvider';
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -59,87 +60,89 @@ export default function App() {
   };
 
   return (
-    <Router>
-      <Routes>
-        {/* Public Login Route */}
-        <Route 
-          path="/login" 
-          element={user ? <Navigate to={user.role === 'admin' ? '/admin' : user.role === 'project_head' ? '/head' : '/member'} replace /> : <Login onLoginSuccess={handleLoginSuccess} />} 
-        />
+    <UIProvider>
+      <Router>
+        <Routes>
+          {/* Public Login Route */}
+          <Route 
+            path="/login" 
+            element={user ? <Navigate to={user.role === 'admin' ? '/admin' : user.role === 'project_head' ? '/head' : '/member'} replace /> : <Login onLoginSuccess={handleLoginSuccess} />} 
+          />
 
-        {/* ADMIN WORKSPACE */}
-        <Route 
-          path="/admin" 
-          element={
-            <ProtectedLayout allowedRoles={['admin']} title="Executive Admin Dashboard">
-              <AdminDashboard />
-            </ProtectedLayout>
-          } 
-        />
-        <Route 
-          path="/admin/clients" 
-          element={
-            <ProtectedLayout allowedRoles={['admin']} title="Client Relationship Pipelines">
-              <ClientManagement />
-            </ProtectedLayout>
-          } 
-        />
-        <Route 
-          path="/admin/hr" 
-          element={
-            <ProtectedLayout allowedRoles={['admin']} title="Personnel & HR Management">
-              <HRManagement />
-            </ProtectedLayout>
-          } 
-        />
-        <Route 
-          path="/admin/projects" 
-          element={
-            <ProtectedLayout allowedRoles={['admin']} title="Corporate Projects Analytics">
-              <Projects userRole="admin" currentUserId={user?.id} />
-            </ProtectedLayout>
-          } 
-        />
+          {/* ADMIN WORKSPACE */}
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedLayout allowedRoles={['admin']} title="Executive Admin Dashboard">
+                <AdminDashboard />
+              </ProtectedLayout>
+            } 
+          />
+          <Route 
+            path="/admin/clients" 
+            element={
+              <ProtectedLayout allowedRoles={['admin']} title="Client Relationship Pipelines">
+                <ClientManagement />
+              </ProtectedLayout>
+            } 
+          />
+          <Route 
+            path="/admin/hr" 
+            element={
+              <ProtectedLayout allowedRoles={['admin']} title="Personnel & HR Management">
+                <HRManagement />
+              </ProtectedLayout>
+            } 
+          />
+          <Route 
+            path="/admin/projects" 
+            element={
+              <ProtectedLayout allowedRoles={['admin']} title="Corporate Projects Analytics">
+                <Projects userRole="admin" currentUserId={user?.id} />
+              </ProtectedLayout>
+            } 
+          />
 
-        {/* PROJECT HEAD WORKSPACE */}
-        <Route 
-          path="/head" 
-          element={
-            <ProtectedLayout allowedRoles={['project_head']} title="Operational Project Head Dashboard">
-              <ProjectHeadDashboard currentUserId={user?.id} />
-            </ProtectedLayout>
-          } 
-        />
-        <Route 
-          path="/head/projects" 
-          element={
-            <ProtectedLayout allowedRoles={['project_head']} title="Workspace Boards & Allocations">
-              <Projects userRole="project_head" currentUserId={user?.id} />
-            </ProtectedLayout>
-          } 
-        />
+          {/* PROJECT HEAD WORKSPACE */}
+          <Route 
+            path="/head" 
+            element={
+              <ProtectedLayout allowedRoles={['project_head']} title="Operational Project Head Dashboard">
+                <ProjectHeadDashboard currentUserId={user?.id} />
+              </ProtectedLayout>
+            } 
+          />
+          <Route 
+            path="/head/projects" 
+            element={
+              <ProtectedLayout allowedRoles={['project_head']} title="Workspace Boards & Allocations">
+                <Projects userRole="project_head" currentUserId={user?.id} />
+              </ProtectedLayout>
+            } 
+          />
 
-        {/* TEAM MEMBER WORKSPACE */}
-        <Route 
-          path="/member" 
-          element={
-            <ProtectedLayout allowedRoles={['team_member']} title="Team Member Performance Workspace">
-              <TeamMemberDashboard currentUserId={user?.id} />
-            </ProtectedLayout>
-          } 
-        />
-        <Route 
-          path="/member/projects" 
-          element={
-            <ProtectedLayout allowedRoles={['team_member']} title="My Tasks & Activity Board">
-              <Projects userRole="team_member" currentUserId={user?.id} />
-            </ProtectedLayout>
-          } 
-        />
+          {/* TEAM MEMBER WORKSPACE */}
+          <Route 
+            path="/member" 
+            element={
+              <ProtectedLayout allowedRoles={['team_member']} title="Team Member Performance Workspace">
+                <TeamMemberDashboard currentUserId={user?.id} />
+              </ProtectedLayout>
+            } 
+          />
+          <Route 
+            path="/member/projects" 
+            element={
+              <ProtectedLayout allowedRoles={['team_member']} title="My Tasks & Activity Board">
+                <Projects userRole="team_member" currentUserId={user?.id} />
+              </ProtectedLayout>
+            } 
+          />
 
-        {/* Catch-all Redirect */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </Router>
+          {/* Catch-all Redirect */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
+    </UIProvider>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Server, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Lock, Mail, Server, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import API_URL from '../config';
 
 export default function Login({ onLoginSuccess }) {
@@ -8,6 +8,7 @@ export default function Login({ onLoginSuccess }) {
   const [password, setPassword] = useState('admin123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -71,7 +72,7 @@ export default function Login({ onLoginSuccess }) {
             </div>
           </div>
 
-          <h2 className="text-[24px] font-extrabold text-center text-slate-905 mb-1 tracking-tight">Welcome back</h2>
+          <h2 className="text-[24px] font-extrabold text-center text-slate-900 mb-1 tracking-tight">Welcome back</h2>
           <p className="text-slate-800 text-center text-[14px] font-semibold mb-8">Sign in to access your NexTask workspace</p>
 
           {error && (
@@ -99,20 +100,28 @@ export default function Login({ onLoginSuccess }) {
               </div>
             </div>
 
-            <div>
+             <div>
               <label className="block text-[14px] font-semibold text-slate-800 mb-2">Password</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-700 pointer-events-none">
                   <Lock size={18} />
                 </span>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white border border-slate-400 rounded-xl py-3 pl-11 pr-4 text-slate-900 placeholder-slate-400 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  className="w-full bg-white border border-slate-400 rounded-xl py-3 pl-11 pr-11 text-slate-900 placeholder-slate-400 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-700 hover:text-slate-950 cursor-pointer"
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 

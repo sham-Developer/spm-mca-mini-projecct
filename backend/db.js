@@ -37,9 +37,22 @@ const initializeDatabase = async () => {
           status TEXT CHECK (status IN ('active', 'inactive')) DEFAULT 'active',
           phone TEXT,
           documents JSONB DEFAULT '[]'::jsonb,
+          employment_type TEXT DEFAULT 'on role',
+          dob DATE,
+          gender TEXT,
+          address TEXT,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
       );
     `);
+
+    try {
+      await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS employment_type TEXT DEFAULT 'on role';`);
+      await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS dob TEXT;`);
+      await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT;`);
+      await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;`);
+    } catch (e) {
+      console.warn("Could not alter users table:", e);
+    }
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS clients (
@@ -48,12 +61,25 @@ const initializeDatabase = async () => {
           email TEXT NOT NULL,
           phone TEXT,
           company TEXT,
-          status TEXT CHECK (status IN ('lead', 'follow_up', 'onboarded')) DEFAULT 'lead',
+          status TEXT DEFAULT 'initiated',
           follow_up_notes JSONB DEFAULT '[]'::jsonb,
           onboarded_at TIMESTAMP WITH TIME ZONE,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
       );
     `);
+
+    try {
+      await client.query(`ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_status_check;`);
+      await client.query(`ALTER TABLE clients ADD CONSTRAINT clients_status_check CHECK (status IN ('initiated', 'inprogress', 'budgetary', 'proposal', 'lead', 'onboard', 'onboarded', 'follow_up'));`);
+    } catch (e) {
+      console.warn("Could not update clients status check constraint:", e);
+    }
+
+    try {
+      await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS next_followup_date TEXT;`);
+    } catch (e) {
+      console.warn("Could not add next_followup_date column:", e);
+    }
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS projects (
@@ -105,6 +131,17 @@ const initializeDatabase = async () => {
           content TEXT NOT NULL,
           hours_spent NUMERIC(5, 2) DEFAULT 0.00,
           status TEXT CHECK (status IN ('submitted', 'approved')) DEFAULT 'submitted',
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS project_history (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+          action TEXT NOT NULL,
+          description TEXT NOT NULL,
+          performed_by TEXT NOT NULL,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
       );
     `);

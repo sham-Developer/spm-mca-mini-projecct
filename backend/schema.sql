@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     status TEXT CHECK (status IN ('active', 'inactive')) DEFAULT 'active',
     phone TEXT,
     documents JSONB DEFAULT '[]'::jsonb, -- e.g., [{"name": "Aadhar.pdf", "url": "..."}]
+    employment_type TEXT DEFAULT 'on role',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -77,6 +78,16 @@ CREATE TABLE IF NOT EXISTS reports (
     content TEXT NOT NULL,
     hours_spent NUMERIC(5, 2) DEFAULT 0.00,
     status TEXT CHECK (status IN ('submitted', 'approved')) DEFAULT 'submitted',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 7. Project History Table (Logs auditing status, updates, allocations, etc.)
+CREATE TABLE IF NOT EXISTS project_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    action TEXT NOT NULL,
+    description TEXT NOT NULL,
+    performed_by TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 

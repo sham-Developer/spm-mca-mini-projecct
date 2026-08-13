@@ -81,41 +81,69 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Overview Analytics Banner without card grouping */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 bg-white p-6 rounded-xl border border-slate-400 shadow-md">
-        <div className="space-y-1">
-          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Total Clients</span>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.totalClients}</h3>
-            <span className="text-[12px] font-bold text-emerald-700 flex items-center gap-0.5">
-              <TrendingUp size={12} className="stroke-[2]" />
-              +12%
-            </span>
+      {/* Overview Analytics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        {/* Total Clients */}
+        <div className="bg-white border border-slate-400 rounded-xl shadow-md p-6 flex items-start justify-between">
+          <div className="space-y-2">
+            <span className="text-[12px] font-extrabold text-slate-900 uppercase tracking-widest block">Total Clients</span>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[28px] font-extrabold text-slate-950 tracking-tight">{stats.totalClients}</h3>
+              <span className="text-[12px] font-extrabold text-emerald-700 flex items-center gap-0.5 bg-emerald-50 border border-emerald-300 px-1.5 py-0.5 rounded">
+                <TrendingUp size={12} className="stroke-[2.5]" />
+                +12%
+              </span>
+            </div>
+          </div>
+          <div className="p-3 bg-slate-100 rounded-lg border border-slate-300 text-slate-900">
+            <UserCheck size={20} className="stroke-[2.5]" />
           </div>
         </div>
 
-        <div className="space-y-1 sm:border-l sm:border-slate-400 sm:pl-6">
-          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Active Projects</span>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.activeProjects}</h3>
-            <span className="text-[12px] font-bold text-emerald-700">On Track</span>
+        {/* Active Projects */}
+        <div className="bg-white border border-slate-400 rounded-xl shadow-md p-6 flex items-start justify-between">
+          <div className="space-y-2">
+            <span className="text-[12px] font-extrabold text-slate-900 uppercase tracking-widest block">Active Projects</span>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[28px] font-extrabold text-slate-950 tracking-tight">{stats.activeProjects}</h3>
+              <span className="text-[12px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-300 px-1.5 py-0.5 rounded">
+                On Track
+              </span>
+            </div>
+          </div>
+          <div className="p-3 bg-slate-100 rounded-lg border border-slate-300 text-slate-900">
+            <FolderKanban size={20} className="stroke-[2.5]" />
           </div>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-slate-400 md:pl-6">
-          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Headcount (HR)</span>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-[28px] font-bold text-slate-900 tracking-tight">{stats.totalEmployees}</h3>
-            <span className="text-[12px] font-semibold text-slate-700">Employees</span>
+        {/* Headcount */}
+        <div className="bg-white border border-slate-400 rounded-xl shadow-md p-6 flex items-start justify-between">
+          <div className="space-y-2">
+            <span className="text-[12px] font-extrabold text-slate-900 uppercase tracking-widest block">Headcount (HR)</span>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[28px] font-extrabold text-slate-950 tracking-tight">{stats.totalEmployees}</h3>
+              <span className="text-[12px] font-semibold text-slate-900 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded">
+                Employees
+              </span>
+            </div>
+          </div>
+          <div className="p-3 bg-slate-100 rounded-lg border border-slate-300 text-slate-900">
+            <Users size={20} className="stroke-[2.5]" />
           </div>
         </div>
 
-        <div className="space-y-1 md:border-l md:border-slate-400 md:pl-6">
-          <span className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">Total Portfolio Budget</span>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-[24px] font-bold text-emerald-700 tracking-tight">
-              {formatRupee(stats.totalBudget)}
-            </h3>
+        {/* Portfolio Budget */}
+        <div className="bg-white border border-slate-400 rounded-xl shadow-md p-6 flex items-start justify-between">
+          <div className="space-y-2">
+            <span className="text-[12px] font-extrabold text-slate-900 uppercase tracking-widest block">Total Portfolio Budget</span>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-[24px] font-extrabold text-emerald-800 tracking-tight">
+                {formatRupee(stats.totalBudget)}
+              </h3>
+            </div>
+          </div>
+          <div className="p-3 bg-slate-100 rounded-lg border border-slate-300 text-slate-900">
+            <DollarSign size={20} className="stroke-[2.5]" />
           </div>
         </div>
       </div>
@@ -130,6 +158,12 @@ export default function AdminDashboard() {
           <div className="h-80 bg-white p-6 rounded-xl border border-slate-400 shadow-md">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorBudget" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ea580c" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#ea580c" stopOpacity={0.0}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis dataKey="name" stroke="#475569" fontSize={12} tickLine={false} axisLine={false} style={{ fontWeight: '600' }} />
                 <YAxis 
@@ -146,7 +180,7 @@ export default function AdminDashboard() {
                   itemStyle={{ color: '#0f172a', fontWeight: 'medium' }}
                   formatter={(val) => [formatRupee(val), 'Budget']}
                 />
-                <Area type="monotone" dataKey="budget" stroke="#ea580c" strokeWidth={2.5} fillOpacity={0.4} fill="#fed7aa" />
+                <Area type="monotone" dataKey="budget" stroke="#ea580c" strokeWidth={2.5} fillOpacity={1} fill="url(#colorBudget)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
