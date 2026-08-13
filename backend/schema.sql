@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     description TEXT,
     assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
     status TEXT CHECK (status IN ('todo', 'in_progress', 'completed', 'review')) DEFAULT 'todo',
+    progress INT DEFAULT 0,
     start_date DATE,
     end_date DATE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -77,6 +78,7 @@ CREATE TABLE IF NOT EXISTS reports (
     submitted_by UUID REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     hours_spent NUMERIC(5, 2) DEFAULT 0.00,
+    progress INT DEFAULT 0,
     status TEXT CHECK (status IN ('submitted', 'approved')) DEFAULT 'submitted',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );

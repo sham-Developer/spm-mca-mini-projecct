@@ -21,7 +21,8 @@ import {
   Sliders,
   PieChart,
   Info,
-  BookOpen
+  BookOpen,
+  X
 } from 'lucide-react';
 import API_URL from '../config';
 
@@ -31,6 +32,7 @@ export default function Projects({ userRole, currentUserId }) {
   const [projectHeads, setProjectHeads] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // New features state
@@ -45,7 +47,7 @@ export default function Projects({ userRole, currentUserId }) {
   // Inner-page full view navigation states
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'detail'
   const [projectInnerTab, setProjectInnerTab] = useState('overview'); // 'overview' or 'resources'
-  const [projectViewTab, setProjectViewTab] = useState('timeline'); // 'timeline', 'list', 'reports'
+  const [projectViewTab, setProjectViewTab] = useState('list'); // 'list', 'reports'
 
   // Modal control states
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -90,6 +92,41 @@ export default function Projects({ userRole, currentUserId }) {
     }
   };
 
+  const [editingProject, setEditingProject] = useState(null);
+
+  const handleEditProjectClick = (proj) => {
+    setEditingProject(proj);
+    setProjectName(proj.name || '');
+    setClientId(proj.client_id || '');
+    setDescription(proj.description || '');
+    setStartDate(proj.start_date ? proj.start_date.split('T')[0] : '');
+    setEndDate(proj.end_date ? proj.end_date.split('T')[0] : '');
+    setBudget(proj.budget || '');
+    setProjectHeadId(proj.project_head_id || '');
+    setProjectCategory(proj.category || '');
+    setProjectDepartment(proj.department || '');
+    setProjectPriority(proj.priority || 'Medium');
+    setProjectStatus(proj.status || 'planning');
+    setIsProjectModalOpen(true);
+  };
+
+  const resetProjectForm = () => {
+    setIsProjectModalOpen(false);
+    setProjectName('');
+    setClientId('');
+    setNewClientCompany('');
+    setDescription('');
+    setStartDate('');
+    setEndDate('');
+    setBudget('');
+    setProjectHeadId('');
+    setProjectCategory('');
+    setProjectDepartment('');
+    setProjectPriority('Medium');
+    setProjectStatus('planning');
+    setEditingProject(null);
+  };
+
   // Form states - Project (Detailed creation fields)
   const [projectName, setProjectName] = useState('');
   const [companyMode, setCompanyMode] = useState('existing'); // 'existing' or 'new'
@@ -103,6 +140,25 @@ export default function Projects({ userRole, currentUserId }) {
   const [projectCategory, setProjectCategory] = useState('');
   const [projectDepartment, setProjectDepartment] = useState('');
   const [projectPriority, setProjectPriority] = useState('Medium');
+  const [projectStatus, setProjectStatus] = useState('planning');
+
+  const handleUpdateProjectStatus = async (projectId, newStatus) => {
+    try {
+      const response = await fetch(`${API_URL}/projects/${projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: newStatus,
+          performed_by: userRole === 'admin' ? 'Admin' : 'Project Head'
+        })
+      });
+      if (response.ok) {
+        loadAllData();
+      }
+    } catch (e) {
+      console.error('Error updating project status:', e);
+    }
+  };
 
   // Form states - Task
   const [taskTitle, setTaskTitle] = useState('');
@@ -119,6 +175,10 @@ export default function Projects({ userRole, currentUserId }) {
   // Form states - Task Progress Report
   const [reportContent, setReportContent] = useState('');
   const [hoursSpent, setHoursSpent] = useState('');
+  const [reportProgress, setReportProgress] = useState(0);
+  const [minProgress, setMinProgress] = useState(0);
+  const [reportStatus, setReportStatus] = useState('in_progress');
+  const [reportModalTab, setReportModalTab] = useState('form');
 
   // Indian Rupee formatting
   const formatRupee = (value) => {
@@ -131,12 +191,13 @@ export default function Projects({ userRole, currentUserId }) {
 
   const loadAllData = async () => {
     try {
-      const [projRes, clientRes, userRes, taskRes, reqRes] = await Promise.all([
+      const [projRes, clientRes, userRes, taskRes, reqRes, reportRes] = await Promise.all([
         fetch(`${API_URL}/projects`),
         fetch(`${API_URL}/clients`),
         fetch(`${API_URL}/users`),
         fetch(`${API_URL}/tasks`),
-        fetch(`${API_URL}/deadline-requests`)
+        fetch(`${API_URL}/deadline-requests`),
+        fetch(`${API_URL}/reports`)
       ]);
 
       const projData = await projRes.json();
@@ -144,6 +205,7 @@ export default function Projects({ userRole, currentUserId }) {
       const userData = await userRes.json();
       const taskData = await taskRes.json();
       const reqData = await reqRes.json();
+      const reportData = await reportRes.json();
 
       setProjects(projData);
       setClients(clientData.filter(c => c.status === 'onboarded' || c.status === 'onboard'));
@@ -151,6 +213,24 @@ export default function Projects({ userRole, currentUserId }) {
       setTeamMembers(userData.filter(u => u.role === 'team_member'));
       setTasks(taskData);
       setDeadlineRequests(reqData);
+      setReports(reportData);
+
+      // Sync selected project details with updated info
+      setSelectedProject(prevSelected => {
+        if (!prevSelected) return null;
+        const updated = projData.find(p => p.id === prevSelected.id);
+        if (updated) {
+          // If updated project has client/project head relation data, merge them
+          const client = clientData.find(c => c.id === updated.client_id);
+          const projectHead = userData.find(u => u.id === updated.project_head_id);
+          return {
+            ...updated,
+            client,
+            project_head: projectHead
+          };
+        }
+        return prevSelected;
+      });
     } catch (e) {
       console.error('Error fetching project information:', e);
     } finally {
@@ -203,8 +283,11 @@ export default function Projects({ userRole, currentUserId }) {
         }
       }
 
-      const response = await fetch(`${API_URL}/projects`, {
-        method: 'POST',
+      const url = editingProject ? `${API_URL}/projects/${editingProject.id}` : `${API_URL}/projects`;
+      const method = editingProject ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: projectName,
@@ -217,6 +300,7 @@ export default function Projects({ userRole, currentUserId }) {
           category: projectCategory,
           department: projectDepartment,
           priority: projectPriority,
+          status: projectStatus,
           performed_by: userRole === 'admin' ? 'Admin' : 'Project Head'
         })
       });
@@ -233,7 +317,16 @@ export default function Projects({ userRole, currentUserId }) {
         setProjectCategory('');
         setProjectDepartment('');
         setProjectPriority('Medium');
+        setEditingProject(null);
         loadAllData();
+
+        if (editingProject && selectedProject?.id === editingProject.id) {
+          const updatedRes = await fetch(`${API_URL}/projects/${editingProject.id}`);
+          if (updatedRes.ok) {
+            const updatedProj = await updatedRes.json();
+            setSelectedProject(updatedProj);
+          }
+        }
       }
     } catch (e) {
       console.error(e);
@@ -352,33 +445,45 @@ export default function Projects({ userRole, currentUserId }) {
 
   const handlePostReport = async (e) => {
     e.preventDefault();
+    if (!selectedTask) return;
+    if (Number(reportProgress) < Number(selectedTask?.progress || 0)) {
+      alert(`Progress cannot be decreased below previously logged level (${selectedTask?.progress || 0}%).`);
+      return;
+    }
     try {
-      const response = await fetch(`${API_URL}/reports`, {
+      const reportRes = await fetch(`${API_URL}/reports`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           task_id: selectedTask.id,
-          submitted_by: currentUserId,
+          submitted_by: currentUserId || null,
           content: reportContent,
-          hours_spent: Number(hoursSpent),
+          hours_spent: 0,
+          progress: Number(reportProgress),
           status: 'submitted'
         })
       });
-      if (response.ok) {
-        // Update task status to Review
-        await fetch(`${API_URL}/tasks/${selectedTask.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'review' })
-        });
 
+      const taskRes = await fetch(`${API_URL}/tasks/${selectedTask.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: reportStatus,
+          progress: Number(reportProgress)
+        })
+      });
+
+      if (reportRes.ok || taskRes.ok) {
         setIsReportModalOpen(false);
         setReportContent('');
         setHoursSpent('');
-        loadAllData();
+        await loadAllData();
+      } else {
+        alert("Server returned an error. Please try again.");
       }
     } catch (e) {
-      console.error(e);
+      console.error("Failed to submit progress report:", e);
+      alert("Error submitting report: " + e.message);
     }
   };
 
@@ -394,8 +499,18 @@ export default function Projects({ userRole, currentUserId }) {
     return false;
   });
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    const cleanStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateStr;
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in h-[calc(100vh-180px)] overflow-y-auto pr-2">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-[20px] font-bold text-slate-950 tracking-tight">Project Workspaces</h2>
@@ -419,11 +534,11 @@ export default function Projects({ userRole, currentUserId }) {
 
           {(userRole === 'admin' || userRole === 'project_head') && (
             <button
-              onClick={() => setIsProjectModalOpen(!isProjectModalOpen)}
+              onClick={() => { if (isProjectModalOpen) { resetProjectForm(); } else { setIsProjectModalOpen(true); } }}
               className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-[14px] font-semibold transition-all shadow-md shadow-orange-600/15 cursor-pointer"
             >
               <Plus size={16} className="stroke-[2]" />
-              <span>{isProjectModalOpen ? 'Hide Onboarding Form' : 'Onboard Project'}</span>
+              <span>{editingProject ? 'Edit Workspace Form' : (isProjectModalOpen ? 'Hide Onboarding Form' : 'Onboard Project')}</span>
             </button>
           )}
         </div>
@@ -432,98 +547,156 @@ export default function Projects({ userRole, currentUserId }) {
       {isProjectModalOpen && (
         <div className="bg-white border border-slate-400 rounded-xl p-6 shadow-md transition-all animate-fade-in space-y-6">
           <div>
-            <h3 className="text-[18px] font-bold text-slate-950">Onboard Corporate Workspace</h3>
-            <p className="text-[13px] text-slate-700 font-medium">Create client scope agreements & parameter limits</p>
+            <h3 className="text-[18px] font-bold text-slate-950">
+              {editingProject ? `Edit Workspace Parameters: ${editingProject.name}` : 'Onboard Corporate Workspace'}
+            </h3>
+            <p className="text-[13px] text-slate-700 font-medium">
+              {editingProject ? 'Modify client scope agreements & parameter limits' : 'Create client scope agreements & parameter limits'}
+            </p>
           </div>
-          <form onSubmit={handleCreateProject} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleCreateProject} className="space-y-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
               <div>
-                <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Project Workspace Name</label>
+                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Workspace Name</label>
                 <input
                   type="text"
                   required
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
-                  className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-800 mb-1">Client Partner</label>
+                <select
+                  required
+                  value={client_id}
+                  onChange={(e) => setClientId(e.target.value)}
+                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                >
+                  <option value="">Select Onboarded Client</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.company || c.name}</option>)}
+                </select>
+              </div>
+
+              {userRole === 'admin' ? (
                 <div>
-                  <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Client Partner</label>
-                  <select
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Budget (₹)</label>
+                  <input
+                    type="number"
                     required
-                    value={client_id}
-                    onChange={(e) => setClientId(e.target.value)}
-                    className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  >
-                    <option value="">Select Onboarded Client</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.company || c.name}</option>)}
-                  </select>
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    placeholder="e.g. 500000"
+                  />
                 </div>
-                {userRole === 'admin' ? (
-                  <div>
-                    <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Project Budget (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      value={budget}
-                      onChange={(e) => setBudget(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                      placeholder="e.g. 500000"
-                    />
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Project Budget (₹)</label>
-                    <input
-                      type="text"
-                      disabled
-                      value="Managed by Admin"
-                      className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-700 text-[16px] font-semibold cursor-not-allowed"
-                    />
-                  </div>
-                )}
+              ) : (
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Budget (₹)</label>
+                  <input
+                    type="text"
+                    disabled
+                    value="Managed by Admin"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-700 text-[13px] font-medium cursor-not-allowed"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Category</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Engineering"
+                  value={projectCategory}
+                  onChange={(e) => setProjectCategory(e.target.value)}
+                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Department</label>
+                <input
+                  type="text"
+                  placeholder="e.g. R&D"
+                  value={projectDepartment}
+                  onChange={(e) => setProjectDepartment(e.target.value)}
+                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Priority</label>
+                <select
+                  value={projectPriority}
+                  onChange={(e) => setProjectPriority(e.target.value)}
+                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                >
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Status</label>
+                <select
+                  value={projectStatus}
+                  onChange={(e) => setProjectStatus(e.target.value)}
+                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-bold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                >
+                  <option value="planning">Planning</option>
+                  <option value="active">Active</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="completed">Completed</option>
+                </select>
               </div>
             </div>
+
             <div>
-              <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Brief description</label>
+              <label className="block text-[11px] font-bold text-slate-800 mb-1">Brief Description</label>
               <textarea
                 rows="2"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                placeholder="Enter scope parameters & parameters..."
+                className="w-full bg-white border border-slate-355 rounded-2xl px-3.5 py-2 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
               ></textarea>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[13px] font-bold text-slate-800 mb-1.5">Start Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-bold text-slate-800 mb-1.5">End Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  />
-                </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-800 mb-1">Start Date</label>
+                <input
+                  type="date"
+                  required
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
               </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-800 mb-1">End Date</label>
+                <input
+                  type="date"
+                  required
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+
               {userRole === 'admin' ? (
                 <div>
-                  <label className="block text-[13px] font-bold text-slate-805 mb-1.5">Assign Project Head</label>
+                  <label className="block text-[11px] font-bold text-slate-805 mb-1">Assign Project Head</label>
                   <select
                     value={projectHeadId}
                     onChange={(e) => setProjectHeadId(e.target.value)}
-                    className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   >
                     <option value="">Select Project Head</option>
                     {projectHeads.map(ph => <option key={ph.id} value={ph.id}>{ph.full_name}</option>)}
@@ -531,29 +704,30 @@ export default function Projects({ userRole, currentUserId }) {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-[13px] font-bold text-slate-805 mb-1.5">Project Head</label>
+                  <label className="block text-[11px] font-bold text-slate-805 mb-1">Project Head</label>
                   <input
                     type="text"
                     disabled
                     value="Self (Project Head)"
-                    className="w-full bg-slate-100 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-700 text-[16px] font-semibold cursor-not-allowed"
+                    className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-700 text-[13px] font-medium cursor-not-allowed"
                   />
                 </div>
               )}
             </div>
+
             <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => setIsProjectModalOpen(false)}
-                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-[14px] font-bold border border-slate-300 cursor-pointer"
+                onClick={resetProjectForm}
+                className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[14px] font-semibold shadow-md shadow-orange-600/15 cursor-pointer"
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[13px] font-semibold shadow-md shadow-orange-600/15 cursor-pointer"
               >
-                Save Project
+                {editingProject ? 'Save Changes' : 'Save Project'}
               </button>
             </div>
           </form>
@@ -578,11 +752,8 @@ export default function Projects({ userRole, currentUserId }) {
                       <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">S.No.</th>
                       <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Workspace Name</th>
                       <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Client Partner</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Category / Dept</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Duration Dates</th>
-                      {userRole === 'admin' && (
-                        <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Budget (₹)</th>
-                      )}
+                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Start Date</th>
+                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">End Date</th>
                       <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Project Head</th>
                       <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Status</th>
                       <th className="px-4 py-3 text-[12px] font-bold text-center border border-[#5f5f5f]">Actions</th>
@@ -594,8 +765,8 @@ export default function Projects({ userRole, currentUserId }) {
                       .map((proj, idx) => {
                         const serialNum = (projectsCurrentPage - 1) * projectsItemsPerPage + idx + 1;
                         return (
-                          <tr key={proj.id} className="hover:bg-slate-50 transition-colors text-slate-950 font-medium">
-                            <td className="px-4 py-3.5 text-[13px] font-medium text-slate-900 border border-slate-300">{serialNum}</td>
+                          <tr key={proj.id} className="hover:bg-slate-50 transition-colors text-slate-955 font-medium">
+                            <td className="px-4 py-3.5 text-[13px] font-bold text-slate-900 border border-slate-300">{serialNum}</td>
                             <td className="px-4 py-3.5 text-[14px] font-semibold text-slate-950 border border-slate-300">
                               <span className="cursor-pointer hover:text-orange-600 block" onClick={() => { setSelectedProject(proj); setViewMode('detail'); }}>
                                 {proj.name}
@@ -607,26 +778,48 @@ export default function Projects({ userRole, currentUserId }) {
                             <td className="px-4 py-3.5 text-[13px] font-medium text-slate-900 border border-slate-300">
                               {proj.client?.company || proj.client?.name || 'Onboarding Lead'}
                             </td>
-                            <td className="px-4 py-3.5 text-[13px] font-medium text-slate-900 border border-slate-300">
-                              <div className="font-semibold text-slate-950">{proj.category || 'N/A'}</div>
-                              <div className="text-[11px] text-slate-900">{proj.department || 'N/A'}</div>
+                            <td className="px-4 py-3.5 text-[13px] font-medium text-slate-900 border border-slate-300 whitespace-nowrap">
+                              {formatDate(proj.start_date)}
                             </td>
-                            <td className="px-4 py-3.5 text-[12px] font-medium text-slate-900 border border-slate-300 whitespace-nowrap">
-                              <div>Start: {proj.start_date}</div>
-                              <div>End: {proj.end_date}</div>
+                            <td className="px-4 py-3.5 text-[13px] font-medium text-slate-900 border border-slate-300 whitespace-nowrap">
+                              {formatDate(proj.end_date)}
                             </td>
-                            {userRole === 'admin' && (
-                              <td className="px-4 py-3.5 text-[13px] font-semibold text-emerald-900 border border-slate-300 whitespace-nowrap">
-                                {formatRupee(proj.budget)}
-                              </td>
-                            )}
                             <td className="px-4 py-3.5 text-[13px] font-medium text-slate-900 border border-slate-300">
                               {proj.project_head?.full_name || 'Admin'}
                             </td>
                             <td className="px-4 py-3.5 border border-slate-300">
-                              <span className="text-[11px] uppercase tracking-wider text-slate-950 font-semibold bg-orange-100 border border-orange-400 px-2.5 py-0.5 rounded">
-                                {proj.status}
-                              </span>
+                              {userRole === 'admin' || userRole === 'project_head' ? (
+                                <select
+                                  value={proj.status || 'planning'}
+                                  onChange={(e) => handleUpdateProjectStatus(proj.id, e.target.value)}
+                                  className={`text-[11px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border cursor-pointer focus:outline-none transition-colors ${
+                                    proj.status === 'active'
+                                      ? 'bg-blue-100 text-blue-950 border-blue-400'
+                                      : proj.status === 'completed'
+                                      ? 'bg-emerald-100 text-emerald-950 border-emerald-400'
+                                      : proj.status === 'on_hold'
+                                      ? 'bg-amber-100 text-amber-955 border-amber-400'
+                                      : 'bg-orange-100 text-orange-955 border-orange-400'
+                                  }`}
+                                >
+                                  <option value="planning">Planning</option>
+                                  <option value="active">Active</option>
+                                  <option value="on_hold">On Hold</option>
+                                  <option value="completed">Completed</option>
+                                </select>
+                              ) : (
+                                <span className={`text-[11px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-md border ${
+                                  proj.status === 'active'
+                                    ? 'bg-blue-100 text-blue-950 border-blue-400'
+                                    : proj.status === 'completed'
+                                    ? 'bg-emerald-100 text-emerald-950 border-emerald-400'
+                                    : proj.status === 'on_hold'
+                                    ? 'bg-amber-100 text-amber-955 border-amber-400'
+                                    : 'bg-orange-100 text-orange-955 border-orange-400'
+                                }`}>
+                                  {proj.status || 'planning'}
+                                </span>
+                              )}
                             </td>
                             <td className="px-4 py-3.5 text-center border border-slate-300">
                               <div className="flex items-center justify-center gap-2">
@@ -637,13 +830,22 @@ export default function Projects({ userRole, currentUserId }) {
                                   View Workspace
                                 </button>
                                 {(userRole === 'admin' || userRole === 'project_head') && (
-                                  <button
-                                    onClick={() => handleDeleteProjectClick(proj)}
-                                    className="p-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 rounded-lg cursor-pointer transition-colors"
-                                    title="Delete Project Workspace"
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
+                                  <>
+                                    <button
+                                      onClick={() => handleEditProjectClick(proj)}
+                                      className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-755 border border-blue-300 rounded-lg cursor-pointer transition-colors"
+                                      title="Edit Project Workspace"
+                                    >
+                                      <Edit size={14} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteProjectClick(proj)}
+                                      className="p-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 rounded-lg cursor-pointer transition-colors"
+                                      title="Delete Project Workspace"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             </td>
@@ -652,7 +854,7 @@ export default function Projects({ userRole, currentUserId }) {
                       })}
                     {displayedProjects.length === 0 && (
                       <tr>
-                        <td colSpan={userRole === 'admin' ? 9 : 8} className="text-center p-8 text-slate-805 font-bold text-[14px]">
+                        <td colSpan={8} className="text-center p-8 text-slate-805 font-bold text-[14px]">
                           No projects workspace boards found.
                         </td>
                       </tr>
@@ -694,32 +896,57 @@ export default function Projects({ userRole, currentUserId }) {
           {viewMode === 'detail' && selectedProject && (
             <div className="space-y-6 transition-all animate-fade-in">
               
-              {/* TOP INNER PAGE TABS NAVIGATION */}
+              {/* TOP INNER PAGE HEADER NAVIGATION */}
               <div className="flex items-center gap-3 bg-white p-2 border border-slate-400 rounded-xl shadow-sm">
                 <button
-                  onClick={() => setProjectInnerTab('overview')}
-                  className={`px-4 py-2 text-[13px] font-bold rounded-lg transition-colors ${projectInnerTab === 'overview' ? 'bg-orange-600 text-white shadow-sm' : 'text-slate-800 hover:bg-slate-100'}`}
+                  onClick={() => { setViewMode('list'); setSelectedProject(null); }}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg text-[13px] font-bold text-slate-800 transition-colors cursor-pointer"
                 >
-                  Overview
-                </button>
-                <button
-                  onClick={() => setProjectInnerTab('resources')}
-                  className={`px-4 py-2 text-[13px] font-bold rounded-lg transition-colors ${projectInnerTab === 'resources' ? 'bg-orange-600 text-white shadow-sm' : 'text-slate-800 hover:bg-slate-100'}`}
-                >
-                  Resources
+                  <ArrowLeft size={15} />
+                  <span>Back to Workspaces</span>
                 </button>
               </div>
 
               {/* OVERVIEW CONTENT VIEW */}
-              {projectInnerTab === 'overview' && (
-                <>
+              <>
                   {/* KPI ANALYTICS STATS ROW (6 detailed counters) */}
                   <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                     {/* Status Card */}
                     <div className="bg-white border border-slate-400 rounded-xl p-4 flex flex-col justify-between shadow-sm">
                       <div className="text-[12px] text-slate-700 font-bold uppercase tracking-wider">Project Status</div>
-                      <div className="text-[16px] font-bold text-orange-600 mt-2 block truncate">
-                        {selectedProject.status}
+                      <div className="mt-1">
+                        {userRole === 'admin' || userRole === 'project_head' ? (
+                          <select
+                            value={selectedProject.status || 'planning'}
+                            onChange={(e) => handleUpdateProjectStatus(selectedProject.id, e.target.value)}
+                            className={`text-[12px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md border cursor-pointer focus:outline-none transition-colors w-full ${
+                              selectedProject.status === 'active'
+                                ? 'bg-blue-100 text-blue-955 border-blue-400'
+                                : selectedProject.status === 'completed'
+                                ? 'bg-emerald-100 text-emerald-955 border-emerald-400'
+                                : selectedProject.status === 'on_hold'
+                                ? 'bg-amber-100 text-amber-955 border-amber-400'
+                                : 'bg-orange-100 text-orange-955 border-orange-400'
+                            }`}
+                          >
+                            <option value="planning">Planning</option>
+                            <option value="active">Active</option>
+                            <option value="on_hold">On Hold</option>
+                            <option value="completed">Completed</option>
+                          </select>
+                        ) : (
+                          <span className={`text-[12px] uppercase tracking-wider font-bold px-2 py-1 rounded-md border inline-block ${
+                            selectedProject.status === 'active'
+                              ? 'bg-blue-100 text-blue-955 border-blue-400'
+                              : selectedProject.status === 'completed'
+                              ? 'bg-emerald-100 text-emerald-955 border-emerald-400'
+                              : selectedProject.status === 'on_hold'
+                              ? 'bg-amber-100 text-amber-955 border-amber-400'
+                              : 'bg-orange-100 text-orange-955 border-orange-400'
+                          }`}>
+                            {selectedProject.status || 'planning'}
+                          </span>
+                        )}
                       </div>
                     </div>
                     {/* Total Tasks Card */}
@@ -797,181 +1024,53 @@ export default function Projects({ userRole, currentUserId }) {
                     <div className="border-t border-slate-200 pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                       <div className="text-[13px] font-semibold text-slate-800">
                         <span className="font-bold text-slate-700 block text-[10px] uppercase">Starting Date</span>
-                        <span className="text-[14px] font-bold text-slate-900">{selectedProject.start_date}</span>
+                        <span className="text-[14px] font-bold text-slate-900">{formatDate(selectedProject.start_date)}</span>
                       </div>
                       <div className="text-[13px] font-semibold text-slate-805">
                         <span className="font-bold text-slate-700 block text-[10px] uppercase">Duration Deadline</span>
-                        <span className="text-[14px] font-bold text-red-700">{selectedProject.end_date}</span>
+                        <span className="text-[14px] font-bold text-red-700">{formatDate(selectedProject.end_date)}</span>
                       </div>
                       <div className="flex justify-end gap-2">
                         {(userRole === 'admin' || userRole === 'project_head') && (
                           <button
-                            onClick={() => { setEditingTask(null); setShowTaskForm(!showTaskForm); }}
+                            onClick={() => {
+                              setEditingTask(null);
+                              setTaskTitle('');
+                              setTaskDescription('');
+                              setAssignedTo('');
+                              setTaskStart('');
+                              setTaskEnd('');
+                              setShowTaskForm(true);
+                            }}
                             className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-2 rounded-xl text-[12px] font-bold cursor-pointer transition-colors"
                           >
                             <Plus size={14} />
-                            <span>{showTaskForm ? 'Cancel Form' : 'Allocate Task'}</span>
+                            <span>Add / Edit Task</span>
                           </button>
                         )}
-                        <button className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-400 text-slate-800 rounded-xl text-[12px] font-bold cursor-pointer transition-colors">
-                          Add Correction
-                        </button>
                       </div>
                     </div>
                   </div>
 
                   {/* SUB-TABS ACTIONS SELECTORS */}
                   <div className="flex items-center gap-2 border-b border-slate-300 pb-0.5">
-                    {['timeline', 'list', 'reports'].map((tab) => (
+                    {['list', 'reports'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setProjectViewTab(tab)}
                         className={`px-4 py-2 text-[13px] font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${projectViewTab === tab ? 'border-orange-600 text-orange-600' : 'border-transparent text-slate-800 hover:text-slate-950'}`}
                       >
-                        {tab}
+                        {tab === 'list' ? 'Tasks List' : 'Reports'}
                       </button>
                     ))}
                   </div>
-
-                  {/* ========================================== */}
-                  {/* TAB 1: TIMELINE WEEKLY GRID SCHEDULER VIEW */}
-                  {/* ========================================== */}
-                  {projectViewTab === 'timeline' && (
-                    <div className="bg-white border border-slate-400 rounded-2xl p-5 shadow-md space-y-4">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[15px] font-extrabold text-slate-950">Workspace Timeline Calendar</span>
-                          <span className="text-[11px] font-bold bg-slate-100 border border-slate-350 text-slate-800 px-2 py-0.5 rounded-full">August 2026 Today</span>
-                        </div>
-                        <div className="text-[11px] text-slate-800 font-bold bg-orange-50 border border-orange-200 text-orange-800 px-3 py-1 rounded">
-                          Work Hours: 9:30 AM - 6:30 PM
-                        </div>
-                      </div>
-
-                      {/* Timeline Day columns & Work Hours Grid */}
-                      <div className="overflow-x-auto border border-[#5f5f5f] rounded-xl">
-                        <div className="min-w-[800px] divide-y divide-[#5f5f5f]">
-                          {/* Day Columns Headings */}
-                          <div className="grid grid-cols-8 bg-[#334155] text-white">
-                            <div className="p-3 border-r border-[#5f5f5f] text-[12px] font-bold">Timeline Hour</div>
-                            {['10 Mon', '11 Tue', '12 Wed', '13 Thu', '14 Fri', '15 Sat', '16 Sun'].map((day) => (
-                              <div key={day} className="p-3 text-center border-r border-[#5f5f5f] text-[12px] font-bold">
-                                {day}
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Hours slots rows */}
-                          {['9:30 AM', '11:00 AM', '12:30 PM', '2:00 PM', '3:30 PM', '5:00 PM', '6:30 PM'].map((hourSlot) => (
-                            <div key={hourSlot} className="grid grid-cols-8 hover:bg-slate-50 transition-colors">
-                              <div className="p-3 border-r border-[#5f5f5f] text-[12px] font-bold text-slate-800 bg-slate-50">{hourSlot}</div>
-                              {/* Render tasks that match scheduler */}
-                              {[1, 2, 3, 4, 5, 6, 7].map((dayIdx) => {
-                                const projectTasks = tasks.filter(t => t.project_id === selectedProject.id);
-                                return (
-                                  <div key={dayIdx} className="p-2 border-r border-[#5f5f5f] min-h-[50px] flex flex-col gap-1 justify-center">
-                                    {projectTasks.slice(0, 1).map((t) => (
-                                      <div key={t.id} className="text-[10px] p-1.5 rounded-lg bg-orange-50 border border-orange-300 text-orange-950 font-bold block truncate">
-                                        {t.title}
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   {/* ========================================== */}
                   {/* TAB 2: TASKS LIST VIEW WITH CRUD CONTROLS */}
                   {/* ========================================== */}
                   {projectViewTab === 'list' && (
                     <div className="space-y-4">
-                      {/* Inline Task Form */}
-                      {showTaskForm && (
-                        <div className="bg-slate-50 border border-slate-400 rounded-xl p-5 shadow-sm space-y-4 animate-fade-in">
-                          <div>
-                            <h4 className="text-[14px] font-extrabold text-slate-950 uppercase tracking-wide">
-                              {editingTask ? 'Modify Allocated Task parameters' : 'Allocate New task block'}
-                            </h4>
-                          </div>
-                          <form onSubmit={handleCreateTask} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-[13px] font-bold text-slate-800 mb-1">Task Title *</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={taskTitle}
-                                  onChange={(e) => setTaskTitle(e.target.value)}
-                                  className="w-full bg-white border border-slate-400 rounded-lg px-3 py-2 text-slate-900 text-[14px] font-semibold focus:outline-none"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[13px] font-bold text-slate-800 mb-1">Assign Developer *</label>
-                                <select
-                                  required
-                                  value={assignedTo}
-                                  onChange={(e) => setAssignedTo(e.target.value)}
-                                  className="w-full bg-white border border-slate-400 rounded-lg px-3 py-2 text-slate-900 text-[14px] font-bold focus:outline-none"
-                                >
-                                  <option value="">Select Team Member</option>
-                                  {teamMembers.map(tm => <option key={tm.id} value={tm.id}>{tm.full_name}</option>)}
-                                </select>
-                              </div>
-                            </div>
-                            <div>
-                              <label className="block text-[13px] font-bold text-slate-800 mb-1">Details / Description</label>
-                              <textarea
-                                rows="2"
-                                value={taskDescription}
-                                onChange={(e) => setTaskDescription(e.target.value)}
-                                className="w-full bg-white border border-slate-400 rounded-lg px-3 py-2 text-slate-900 text-[14px] font-semibold focus:outline-none"
-                              ></textarea>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-[13px] font-bold text-slate-800 mb-1">Start Date</label>
-                                <input
-                                  type="date"
-                                  required
-                                  value={taskStart}
-                                  onChange={(e) => setTaskStart(e.target.value)}
-                                  className="w-full bg-white border border-slate-400 rounded-lg px-3 py-2 text-slate-900 text-[14px] font-semibold focus:outline-none"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[13px] font-bold text-slate-800 mb-1">End Date</label>
-                                <input
-                                  type="date"
-                                  required
-                                  value={taskEnd}
-                                  onChange={(e) => setTaskEnd(e.target.value)}
-                                  className="w-full bg-white border border-slate-400 rounded-lg px-3 py-2 text-slate-900 text-[14px] font-semibold focus:outline-none"
-                                />
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-3 pt-2">
-                              <button
-                                type="button"
-                                onClick={() => { setShowTaskForm(false); setEditingTask(null); }}
-                                className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 rounded-lg text-[12px] font-bold border border-slate-300 cursor-pointer"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="submit"
-                                className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[12px] font-bold shadow-md cursor-pointer"
-                              >
-                                {editingTask ? 'Update Task' : 'Allocate Task'}
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-                      )}
+
 
                       {/* Tasks Listing table */}
                       <div className="bg-white border border-slate-400 rounded-2xl shadow-sm overflow-hidden">
@@ -984,6 +1083,7 @@ export default function Projects({ userRole, currentUserId }) {
                                 <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Assigned Developer</th>
                                 <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Start</th>
                                 <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Deadline</th>
+                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Progress</th>
                                 <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Status</th>
                                 <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-[#5f5f5f]">Actions</th>
                               </tr>
@@ -1001,50 +1101,84 @@ export default function Projects({ userRole, currentUserId }) {
                                     <td className="px-4 py-3 text-[13px] font-semibold text-slate-800 border border-slate-300">
                                       {task.assigned_user?.full_name || 'Unassigned'}
                                     </td>
-                                    <td className="px-4 py-3 text-[12px] font-semibold text-slate-800 border border-slate-300">{task.start_date}</td>
-                                    <td className="px-4 py-3 text-[12px] font-semibold text-slate-800 border border-slate-300">{task.end_date}</td>
+                                    <td className="px-4 py-3 text-[12px] font-semibold text-slate-800 border border-slate-300">{formatDate(task.start_date)}</td>
+                                    <td className="px-4 py-3 text-[12px] font-semibold text-slate-800 border border-slate-300">{formatDate(task.end_date)}</td>
+                                    <td className="px-4 py-3 border border-slate-300">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-16 bg-slate-200 rounded-full h-2 overflow-hidden border border-slate-300">
+                                          <div 
+                                            className="bg-orange-600 h-full rounded-full transition-all duration-300"
+                                            style={{ width: `${task.progress || 0}%` }}
+                                          ></div>
+                                        </div>
+                                        <span className="text-[11px] font-extrabold text-slate-900">{task.progress || 0}%</span>
+                                      </div>
+                                    </td>
                                     <td className="px-4 py-3 border border-slate-300">
                                       <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
                                         task.status === 'completed' 
                                           ? 'bg-emerald-100 text-emerald-950 border border-emerald-400'
-                                          : task.status === 'review'
+                                          : task.status === 'in_progress'
                                           ? 'bg-blue-100 text-blue-955 border border-blue-400'
                                           : 'bg-slate-200 text-slate-950 border border-slate-400'
                                       }`}>
-                                        {task.status}
+                                        {task.status === 'in_progress' ? 'In Progress' : task.status === 'todo' ? 'To Do' : task.status}
                                       </span>
                                     </td>
                                     <td className="px-4 py-3 text-center border border-slate-300">
                                       <div className="flex items-center justify-center gap-1.5">
-                                        <button
-                                          onClick={() => {
-                                            setEditingTask(task);
-                                            setTaskTitle(task.title);
-                                            setTaskDescription(task.description || '');
-                                            setAssignedTo(task.assigned_to || '');
-                                            setTaskStart(task.start_date || '');
-                                            setTaskEnd(task.end_date || '');
-                                            setShowTaskForm(true);
-                                          }}
-                                          className="p-1 hover:bg-slate-100 text-blue-700 border border-slate-300 rounded cursor-pointer"
-                                          title="Edit Task"
-                                        >
-                                          <Edit size={14} />
-                                        </button>
-                                        <button
-                                          onClick={() => handleDeleteTask(task.id)}
-                                          className="p-1 hover:bg-red-50 text-red-700 border border-slate-300 rounded cursor-pointer"
-                                          title="Delete Task"
-                                        >
-                                          <Trash2 size={14} />
-                                        </button>
+                                        {(String(task.assigned_to) === String(currentUserId) || userRole === 'admin') && (
+                                          <button
+                                            onClick={() => {
+                                              setSelectedTask(task);
+                                              setReportContent('');
+                                              setHoursSpent('');
+                                              const currentProg = task.progress || 0;
+                                              setReportProgress(currentProg);
+                                              setMinProgress(currentProg);
+                                              setReportStatus(task.status || (currentProg === 100 ? 'completed' : currentProg > 0 ? 'in_progress' : 'todo'));
+                                              setReportModalTab('form');
+                                              setIsReportModalOpen(true);
+                                            }}
+                                            className="px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[10.5px] font-bold shadow-sm cursor-pointer transition-colors whitespace-nowrap"
+                                            title="Put Progress Report"
+                                          >
+                                            Put Report
+                                          </button>
+                                        )}
+                                        {(userRole === 'admin' || userRole === 'project_head') && (
+                                          <>
+                                            <button
+                                              onClick={() => {
+                                                setEditingTask(task);
+                                                setTaskTitle(task.title);
+                                                setTaskDescription(task.description || '');
+                                                setAssignedTo(task.assigned_to || '');
+                                                setTaskStart(task.start_date || '');
+                                                setTaskEnd(task.end_date || '');
+                                                setShowTaskForm(true);
+                                              }}
+                                              className="p-1 hover:bg-slate-100 text-blue-700 border border-slate-300 rounded cursor-pointer animate-fade-in-fast"
+                                              title="Edit Task"
+                                            >
+                                              <Edit size={14} />
+                                            </button>
+                                            <button
+                                              onClick={() => handleDeleteTask(task.id)}
+                                              className="p-1 hover:bg-red-50 text-red-700 border border-slate-300 rounded cursor-pointer animate-fade-in-fast"
+                                              title="Delete Task"
+                                            >
+                                              <Trash2 size={14} />
+                                            </button>
+                                          </>
+                                        )}
                                       </div>
                                     </td>
                                   </tr>
                                 ))}
                               {tasks.filter(t => t.project_id === selectedProject.id).length === 0 && (
                                   <tr>
-                                    <td colSpan={7} className="text-center p-6 text-slate-800 font-semibold text-[13px]">
+                                    <td colSpan={8} className="text-center p-6 text-slate-800 font-semibold text-[13px]">
                                       No tasks assigned inside this project workspace.
                                     </td>
                                   </tr>
@@ -1057,74 +1191,166 @@ export default function Projects({ userRole, currentUserId }) {
                   )}
 
                   {/* ========================================== */}
-                  {/* TAB 3: WORKSPACE AUDIT LOGS TIMELINE VIEW */}
+                  {/* TAB 3: WORKSPACE DEVELOPER PROGRESS REPORTS */}
                   {/* ========================================== */}
                   {projectViewTab === 'reports' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
-                      {/* Audit history logs */}
-                      <div className="bg-white border border-slate-400 rounded-2xl p-5 shadow-md space-y-4">
-                        <h4 className="text-[13px] font-bold text-slate-950 uppercase tracking-widest flex items-center gap-1.5">
-                          <Clock size={14} /> System Audit Logs
-                        </h4>
-                        <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                          {projectHistory.map((log) => (
-                            <div key={log.id} className="relative pl-5 pb-3 border-l border-slate-400 last:border-l-0">
-                              <div className="absolute -left-[5.5px] top-1.5 w-2.5 h-2.5 bg-orange-600 rounded-full border border-white"></div>
-                              <div className="text-[11px] font-bold text-slate-700">{new Date(log.created_at).toLocaleString()}</div>
-                              <div className="text-[13px] font-bold text-slate-950 mt-0.5">{log.description}</div>
-                              <div className="text-[11px] text-slate-800 font-semibold mt-0.5">By: <span className="font-bold text-orange-600">{log.performed_by}</span></div>
-                            </div>
-                          ))}
-                          {projectHistory.length === 0 && (
-                            <div className="text-center p-6 text-slate-705 font-semibold text-[13px]">No audit logs recorded yet.</div>
-                          )}
-                        </div>
-                      </div>
-
+                    <div className="animate-fade-in">
                       {/* Developer Progress Reports logs */}
-                      <div className="bg-white border border-slate-400 rounded-2xl p-5 shadow-md space-y-4">
+                      <div className="bg-white border border-slate-400 rounded-2xl p-5 shadow-md space-y-4 overflow-hidden">
                         <h4 className="text-[13px] font-bold text-slate-950 uppercase tracking-widest flex items-center gap-1.5">
                           <ClipboardList size={14} /> Developer Progress Reports
                         </h4>
-                        {/* Render reports if any */}
-                        <div className="space-y-3 max-h-96 overflow-y-auto">
-                          <div className="text-center p-6 text-slate-705 font-semibold text-[13px]">No report logs submitted yet.</div>
+                        <div className="max-h-96 overflow-y-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="bg-slate-700 text-white text-[11px] uppercase">
+                                <th className="px-3 py-2 text-left border border-slate-400">S.No</th>
+                                <th className="px-3 py-2 text-left border border-slate-400">Developer</th>
+                                <th className="px-3 py-2 text-left border border-slate-400">Task Title</th>
+                                <th className="px-3 py-2 text-left border border-slate-400">Progress</th>
+                                <th className="px-3 py-2 text-left border border-slate-400">Remarks</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-300 text-[12px] font-medium">
+                              {reports
+                                .filter(r => {
+                                  const task = tasks.find(t => t.id === r.task_id);
+                                  return task && task.project_id === selectedProject.id;
+                                })
+                                .map((rep, index) => (
+                                  <tr key={rep.id} className="hover:bg-slate-50">
+                                    <td className="px-3 py-2 font-bold text-slate-800 border border-slate-300">{index + 1}</td>
+                                    <td className="px-3 py-2 font-semibold text-slate-900 border border-slate-300">
+                                      {rep.user?.full_name || teamMembers.find(m => m.id === rep.submitted_by)?.full_name || 'Developer'}
+                                    </td>
+                                    <td className="px-3 py-2 text-slate-800 border border-slate-300">
+                                      {rep.task?.title || tasks.find(t => t.id === rep.task_id)?.title || 'Task'}
+                                    </td>
+                                    <td className="px-3 py-2 font-extrabold text-slate-900 border border-slate-300">
+                                      <span className="bg-orange-50 border border-orange-200 text-orange-800 px-2 py-0.5 rounded-md text-[11px]">
+                                        {rep.progress ?? (tasks.find(t => t.id === rep.task_id)?.progress || 0)}%
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2 text-slate-700 border border-slate-300" title={rep.content}>
+                                      {rep.content}
+                                    </td>
+                                  </tr>
+                                ))}
+                              {reports.filter(r => {
+                                const task = tasks.find(t => t.id === r.task_id);
+                                return task && task.project_id === selectedProject.id;
+                              }).length === 0 && (
+                                <tr>
+                                  <td colSpan={5} className="text-center p-6 text-slate-705 font-semibold text-[13px]">
+                                    No progress reports submitted yet.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
                         </div>
                       </div>
                     </div>
                   )}
                 </>
-              )}
 
-              {/* RESOURCES CONTENT VIEW */}
-              {projectInnerTab === 'resources' && (
-                <div className="bg-white border border-slate-400 rounded-2xl p-6 shadow-md space-y-6">
-                  <div>
-                    <h3 className="text-[16px] font-bold text-slate-950 uppercase tracking-widest">Workspace Allocated Resources</h3>
-                    <p className="text-[13px] text-slate-700 font-semibold">Active team assets, documents, and credentials</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Employees */}
-                    <div className="border border-slate-350 p-4 rounded-xl space-y-3 bg-slate-50">
-                      <h4 className="text-[13px] font-bold text-slate-950 uppercase tracking-wide">Developer Profiles</h4>
-                      <div className="space-y-2">
-                        {teamMembers.map(tm => (
-                          <div key={tm.id} className="flex justify-between items-center p-2 bg-white border border-slate-300 rounded-lg">
-                            <span className="text-[13px] font-bold text-slate-900">{tm.full_name}</span>
-                            <span className="text-[11px] text-slate-800 font-semibold bg-slate-100 border border-slate-300 px-2 py-0.5 rounded">Developer</span>
-                          </div>
-                        ))}
+
+              {/* ADD / EDIT TASK POPUP MODAL */}
+              {showTaskForm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in-fast">
+                  <div className="w-full max-w-lg bg-white border border-slate-450 rounded-2xl shadow-2xl p-6 relative animate-scale-up text-slate-955">
+                    
+                    {/* CLOSE BUTTON TOP RIGHT */}
+                    <button 
+                      onClick={() => { setShowTaskForm(false); setEditingTask(null); }}
+                      className="absolute top-4 right-4 z-10 text-slate-700 hover:text-black bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+
+                    <div className="mb-4 pr-8">
+                      <h3 className="text-[18px] font-bold text-slate-950">
+                        {editingTask ? 'Modify Task Details' : 'Add / Edit Task'}
+                      </h3>
+                      <p className="text-[12px] text-slate-800">Fill in task parameters and developer assignments</p>
+                    </div>
+
+                    <form onSubmit={handleCreateTask} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-800 mb-1">Task Title *</label>
+                          <input
+                            type="text"
+                            required
+                            value={taskTitle}
+                            onChange={(e) => setTaskTitle(e.target.value)}
+                            className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-800 mb-1">Assign Developer *</label>
+                          <select
+                            required
+                            value={assignedTo}
+                            onChange={(e) => setAssignedTo(e.target.value)}
+                            className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[13px] font-bold focus:outline-none"
+                          >
+                            <option value="">Select Team Member</option>
+                            {teamMembers.map(tm => <option key={tm.id} value={tm.id}>{tm.full_name}</option>)}
+                          </select>
+                        </div>
                       </div>
-                    </div>
-                    {/* Files / credentials place */}
-                    <div className="border border-slate-350 p-4 rounded-xl space-y-3 bg-slate-50">
-                      <h4 className="text-[13px] font-bold text-slate-950 uppercase tracking-wide">Workspace Documents</h4>
-                      <div className="text-center p-6 text-slate-700 font-semibold text-[13px]">No documents deposited.</div>
-                    </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-800 mb-1">Details / Description</label>
+                        <textarea
+                          rows="3"
+                          value={taskDescription}
+                          onChange={(e) => setTaskDescription(e.target.value)}
+                          placeholder="Describe deliverables..."
+                          className="w-full bg-white border border-slate-355 rounded-2xl px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                        ></textarea>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3.5">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-800 mb-1">Start Date</label>
+                          <input
+                            type="date"
+                            required
+                            value={taskStart}
+                            onChange={(e) => setTaskStart(e.target.value)}
+                            className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-800 mb-1">End Date</label>
+                          <input
+                            type="date"
+                            required
+                            value={taskEnd}
+                            onChange={(e) => setTaskEnd(e.target.value)}
+                            className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => { setShowTaskForm(false); setEditingTask(null); }}
+                          className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[13px] font-semibold shadow-md cursor-pointer"
+                        >
+                          {editingTask ? 'Save Changes' : 'Add Task'}
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 </div>
               )}
-
             </div>
           )}
         </>
@@ -1189,54 +1415,180 @@ export default function Projects({ userRole, currentUserId }) {
         </div>
       )}
 
-      {/* SUBMIT PROGRESS REPORT MODAL */}
+      {/* SUBMIT PROGRESS REPORT & HISTORY MODAL */}
       {isReportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white border border-slate-400 rounded-2xl p-6 space-y-6 shadow-xl">
-            <div>
-              <h3 className="text-[18px] font-bold text-slate-950">Submit Task Progress Report</h3>
-              <p className="text-[13px] text-slate-700 font-medium">Provide details on hours logged & task completion status</p>
-            </div>
-            <form onSubmit={handlePostReport} className="space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm">
+          <div className="w-full max-w-xl bg-white border border-slate-450 rounded-2xl p-6 space-y-5 shadow-2xl animate-scale-up text-slate-955">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3.5">
               <div>
-                <label className="block text-[13px] font-bold text-slate-805 mb-1.5">Hours Spent</label>
-                <input
-                  type="number"
-                  required
-                  step="0.5"
-                  value={hoursSpent}
-                  onChange={(e) => setHoursSpent(e.target.value)}
-                  className="w-full bg-white border border-slate-400 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  placeholder="e.g. 4.5"
-                />
+                <h3 className="text-[17px] font-bold text-slate-950">
+                  {selectedTask ? `Progress Report: ${selectedTask.title}` : 'Submit Task Progress Report'}
+                </h3>
+                <p className="text-[12px] text-slate-600 font-medium">Log new progression updates or inspect previous report logs</p>
               </div>
-              <div>
-                <label className="block text-[13px] font-bold text-slate-805 mb-1.5">Progress/Report description</label>
-                <textarea
-                  required
-                  rows="3"
-                  value={reportContent}
-                  onChange={(e) => setReportContent(e.target.value)}
-                  placeholder="e.g. Finished Tailwind base configuration, updated index.css stylesheets."
-                  className="w-full bg-white border border-slate-400 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                ></textarea>
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
+
+              {/* Sub-tabs toggle */}
+              <div className="flex bg-slate-100 p-1 rounded-full border border-slate-300 self-start sm:self-auto">
                 <button
                   type="button"
-                  onClick={() => setIsReportModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-850 rounded-xl text-[14px] font-bold border border-slate-400 cursor-pointer"
+                  onClick={() => setReportModalTab('form')}
+                  className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
+                    reportModalTab === 'form' 
+                      ? 'bg-orange-600 text-white shadow-sm' 
+                      : 'text-slate-700 hover:text-slate-950'
+                  }`}
                 >
-                  Cancel
+                  Update Report
                 </button>
                 <button
-                  type="submit"
-                  className="px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[14px] font-semibold shadow-md shadow-orange-600/15 cursor-pointer"
+                  type="button"
+                  onClick={() => setReportModalTab('history')}
+                  className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
+                    reportModalTab === 'history' 
+                      ? 'bg-orange-600 text-white shadow-sm' 
+                      : 'text-slate-700 hover:text-slate-950'
+                  }`}
                 >
-                  Submit Report
+                  Report History ({reports.filter(r => r.task_id === selectedTask?.id).length})
                 </button>
               </div>
-            </form>
+            </div>
+
+            {reportModalTab === 'form' ? (
+              <form onSubmit={handlePostReport} className="space-y-4">
+                {/* Progress Slider and Status Dropdown Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 items-center bg-slate-50 border border-slate-300 rounded-2xl p-3.5">
+                  <div className="md:col-span-2 space-y-1.5">
+                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-800">
+                      <span>Completion Progress</span>
+                      <span className="bg-orange-100 text-orange-800 border border-orange-300 px-2 py-0.5 rounded-full text-[11px] font-extrabold">
+                        {reportProgress}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={minProgress}
+                      max={100}
+                      value={reportProgress}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        if (val < minProgress) return;
+                        setReportProgress(val);
+                        if (val === 100) {
+                          setReportStatus('completed');
+                        } else if (val > 0) {
+                          setReportStatus('in_progress');
+                        } else {
+                          setReportStatus('todo');
+                        }
+                      }}
+                      className="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-orange-600"
+                    />
+                    {minProgress > 0 && (
+                      <span className="text-[10px] text-slate-600 font-medium block">
+                        * Minimum allowed: {minProgress}% (cannot decrease)
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Task Status</label>
+                    <select
+                      value={reportStatus}
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        setReportStatus(newStatus);
+                        if (newStatus === 'completed') {
+                          setReportProgress(100);
+                        } else if (newStatus === 'in_progress') {
+                          if (reportProgress === 100 || reportProgress === 0) {
+                            setReportProgress(Math.max(minProgress, 50));
+                          }
+                        } else if (newStatus === 'todo') {
+                          if (minProgress === 0) {
+                            setReportProgress(0);
+                          }
+                        }
+                      }}
+                      className="w-full bg-white border border-slate-355 rounded-full px-3 py-1.5 text-slate-955 text-[12px] font-bold focus:outline-none focus:border-orange-500"
+                    >
+                      <option value="todo">To Do</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">New Progress/Report Remarks *</label>
+                  <textarea
+                    required
+                    rows="3"
+                    value={reportContent}
+                    onChange={(e) => setReportContent(e.target.value)}
+                    placeholder="Describe new progress, completed sub-tasks & remarks..."
+                    className="w-full bg-white border border-slate-355 rounded-2xl px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500"
+                  ></textarea>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsReportModalOpen(false)}
+                    className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[13px] font-semibold shadow-md shadow-orange-600/15 cursor-pointer"
+                  >
+                    Submit Report
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                  {reports
+                    .filter(r => r.task_id === selectedTask?.id)
+                    .map((rep, idx) => (
+                      <div key={rep.id || idx} className="bg-slate-50 border border-slate-300 rounded-2xl p-4 space-y-2">
+                        <div className="flex justify-between items-center text-[12px]">
+                          <span className="font-bold text-slate-950">
+                            {rep.user?.full_name || teamMembers.find(m => m.id === rep.submitted_by)?.full_name || 'Developer'}
+                          </span>
+                          <span className="bg-orange-100 text-orange-850 font-extrabold px-2.5 py-0.5 rounded-full text-[11px] border border-orange-300">
+                            {rep.progress ?? (selectedTask?.progress || 0)}% Progress
+                          </span>
+                        </div>
+                        <p className="text-[12.5px] text-slate-800 font-medium whitespace-pre-wrap leading-relaxed">
+                          {rep.content}
+                        </p>
+                        <div className="text-[10px] text-slate-500 font-semibold pt-1 border-t border-slate-200">
+                          Submitted on: {rep.created_at ? new Date(rep.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Recently'}
+                        </div>
+                      </div>
+                    ))}
+
+                  {reports.filter(r => r.task_id === selectedTask?.id).length === 0 && (
+                    <div className="text-center py-10 text-slate-600 font-semibold text-[13px]">
+                      No report history logged for this task yet.
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsReportModalOpen(false)}
+                    className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

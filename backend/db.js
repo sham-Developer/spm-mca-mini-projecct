@@ -130,10 +130,18 @@ const initializeDatabase = async () => {
           submitted_by UUID REFERENCES users(id) ON DELETE CASCADE,
           content TEXT NOT NULL,
           hours_spent NUMERIC(5, 2) DEFAULT 0.00,
+          progress INT DEFAULT 0,
           status TEXT CHECK (status IN ('submitted', 'approved')) DEFAULT 'submitted',
           created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
       );
     `);
+
+    try {
+      await client.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS progress INT DEFAULT 0;`);
+      await client.query(`ALTER TABLE reports ADD COLUMN IF NOT EXISTS progress INT DEFAULT 0;`);
+    } catch (e) {
+      console.warn("Could not add progress column to tasks/reports:", e);
+    }
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS project_history (

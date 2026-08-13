@@ -516,7 +516,7 @@ export default function HRManagement() {
       {/* COMBINED VIEW / EDIT & DOCUMENT MANAGEMENT MODAL */}
       {isFormModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in-fast">
-          <div className="w-full max-w-4xl bg-white border border-slate-450 rounded-2xl shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-[80vh] text-slate-955 relative overflow-hidden animate-scale-up">
+          <div className="w-full max-w-3xl bg-white border border-slate-450 rounded-2xl shadow-2xl flex flex-col h-[90vh] text-slate-955 relative overflow-hidden animate-scale-up">
             
             {/* CLOSE BUTTON TOP RIGHT */}
             <button 
@@ -526,175 +526,268 @@ export default function HRManagement() {
               <X size={18} />
             </button>
 
-            {/* LEFT PROFILE & ORGANIZATIONAL DETAILS FORM (Scrollable) */}
-            <form onSubmit={handleCreateOrUpdateEmployee} className="md:w-3/5 p-6 flex flex-col justify-between overflow-y-auto border-b md:border-b-0 md:border-r border-slate-405">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-[18px] font-bold text-orange-600">
-                    {isEditing ? 'Manage Employee Profile' : 'Add New Organization Employee'}
-                  </h3>
-                  <p className="text-[12px] text-slate-800">Fill in background profile, role controls and credentials</p>
+            <form onSubmit={handleCreateOrUpdateEmployee} className="flex flex-col h-full overflow-hidden">
+              {/* SCROLLABLE CONTENT AREA */}
+              <div className="flex-1 overflow-y-auto">
+                {/* PROFILE & ORGANIZATIONAL DETAILS */}
+                <div className="p-6 space-y-4">
+                  <div>
+                    <h3 className="text-[18px] font-bold text-orange-600">
+                      {isEditing ? 'Manage Employee Profile' : 'Add New Organization Employee'}
+                    </h3>
+                    <p className="text-[12px] text-slate-800">Fill in background profile, role controls and credentials</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">
+                        {isEditing ? 'Change Password (optional)' : 'Password'}
+                      </label>
+                      <input
+                        type="password"
+                        required={!isEditing}
+                        placeholder={isEditing ? 'Leave blank to keep same' : 'e.g. member123'}
+                        value={passwordHash}
+                        onChange={(e) => setPasswordHash(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Platform Role</label>
+                      <select
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="project_head">Project Head</option>
+                        <option value="team_member">Team Member</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Department</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Engineering"
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Designation</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Developer"
+                        value={designation}
+                        onChange={(e) => setDesignation(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Phone Number</label>
+                      <input
+                        type="text"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Date of Birth</label>
+                      <input
+                        type="date"
+                        value={dob}
+                        onChange={(e) => setDob(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Gender</label>
+                      <select
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      >
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Date of Joining</label>
+                      <input
+                        type="date"
+                        required
+                        value={joinsDate}
+                        onChange={(e) => setJoinsDate(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Employment Type</label>
+                      <select
+                        value={employmentType}
+                        onChange={(e) => setEmploymentType(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      >
+                        <option value="on role">On Role</option>
+                        <option value="internship" disabled={isInternshipDisabled}>
+                          Internship {isInternshipDisabled ? '(Disabled - Promoted to On Role)' : ''}
+                        </option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Status</label>
+                      <select
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Residential Address</label>
+                    <textarea
+                      rows="2"
+                      placeholder="Enter permanent or communication address..."
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full bg-white border border-slate-355 rounded-2xl px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                    ></textarea>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+                {/* BOTTOM: DOCUMENT UPLOAD & MANAGEMENT */}
+                <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-5">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Full Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    />
+                    <h4 className="text-[15px] font-bold text-slate-955 mb-1.5">Document Deposits & Credentials</h4>
+                    <p className="text-[12px] text-slate-800">Add credentials like ID proofs, certificates, or letters</p>
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Email Address</label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    />
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">
-                      {isEditing ? 'Change Password (optional)' : 'Password'}
-                    </label>
-                    <input
-                      type="password"
-                      required={!isEditing}
-                      placeholder={isEditing ? 'Leave blank to keep same' : 'e.g. member123'}
-                      value={passwordHash}
-                      onChange={(e) => setPasswordHash(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Platform Role</label>
-                    <select
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="project_head">Project Head</option>
-                      <option value="team_member">Team Member</option>
-                    </select>
-                  </div>
-                </div>
+                  {/* Upload New Document Box */}
+                  <div className="bg-white border border-slate-350 rounded-xl p-4 space-y-3.5 shadow-sm">
+                    <h5 className="text-[12px] font-bold text-slate-900 uppercase tracking-wider">Deposit New Credential</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-end">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-750 uppercase mb-1">Document Label</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Identity Proof"
+                          value={newDocLabel}
+                          onChange={(e) => setNewDocLabel(e.target.value)}
+                          className="w-full bg-white border border-slate-350 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
+                        />
+                      </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Department</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Engineering"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Designation</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Developer"
-                      value={designation}
-                      onChange={(e) => setDesignation(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Phone Number</label>
-                    <input
-                      type="text"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    />
-                  </div>
-                </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 border border-dashed border-slate-350 rounded-full p-2 text-center bg-slate-50 text-[11px] truncate">
+                          {uploadingDocName ? `Selected: ${uploadingDocName}` : 'Select a PDF / Image'}
+                        </div>
+                        <label className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 px-3 py-1.5 rounded-full cursor-pointer text-[11px] font-bold flex items-center gap-1 shrink-0">
+                          <Upload size={12} />
+                          <span>Browse</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                            onChange={handleUploadNewDoc}
+                          />
+                        </label>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Date of Birth</label>
-                    <input
-                      type="date"
-                      value={dob}
-                      onChange={(e) => setDob(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
-                    />
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={handleDepositNewDoc}
+                        className="px-4 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[11px] font-bold transition-colors cursor-pointer"
+                      >
+                        Add Document
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Gender</label>
-                    <select
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    >
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Date of Joining</label>
-                    <input
-                      type="date"
-                      required
-                      value={joinsDate}
-                      onChange={(e) => setJoinsDate(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
-                    />
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Employment Type</label>
-                    <select
-                      value={employmentType}
-                      onChange={(e) => setEmploymentType(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    >
-                      <option value="on role">On Role</option>
-                      <option value="internship" disabled={isInternshipDisabled}>
-                        Internship {isInternshipDisabled ? '(Disabled - Promoted to On Role)' : ''}
-                      </option>
-                    </select>
+                  {/* List of Deposited Documents */}
+                  <div className="space-y-2.5">
+                    <span className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider border-b border-slate-250 pb-1">Current Documents ({formDocuments.length})</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                      {formDocuments.map((doc, idx) => (
+                        <div key={idx} className="flex items-center justify-between bg-white border border-slate-300 rounded-xl p-2.5 text-[12px] shadow-sm hover:border-slate-400 transition-all">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText size={14} className="text-slate-700 shrink-0" />
+                            <span className="font-semibold text-slate-955 truncate max-w-[150px]">{doc.name}</span>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            {doc.file && (
+                              <button
+                                type="button"
+                                onClick={() => openBase64File(doc.file, doc.name)}
+                                className="p-1 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded text-slate-900 cursor-pointer"
+                                title="View Document"
+                              >
+                                <Eye size={12} />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteFormDoc(idx)}
+                              className="p-1 bg-red-50 hover:bg-red-100 border border-red-200 rounded text-red-700 cursor-pointer"
+                              title="Delete Document"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {formDocuments.length === 0 && (
+                        <div className="col-span-full text-center p-6 text-slate-700 italic text-[12px]">No documents deposited for this profile yet.</div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Status</label>
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
-                      className="w-full bg-white border border-slate-350 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Residential Address</label>
-                  <textarea
-                    rows="2"
-                    placeholder="Enter permanent or communication address..."
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-xl px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                  ></textarea>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-slate-200">
+              {/* ACTION FOOTER */}
+              <div className="flex justify-end gap-3 p-4 bg-white border-t border-slate-200 shrink-0">
                 <button
                   type="button"
                   onClick={() => { setIsFormModalOpen(false); resetForm(); }}
@@ -712,98 +805,6 @@ export default function HRManagement() {
                 </button>
               </div>
             </form>
-
-            {/* RIGHT SIDE: DOCUMENT UPLOAD & MANAGEMENT (Self-Contained) */}
-            <div className="flex-1 p-6 bg-slate-50 flex flex-col justify-between overflow-y-auto">
-              <div className="space-y-5">
-                <div>
-                  <h4 className="text-[15px] font-bold text-slate-955 mb-1.5">Document Deposits & Credentials</h4>
-                  <p className="text-[12px] text-slate-800">Add credentials like ID proofs, certificates, or letters</p>
-                </div>
-
-                {/* Upload New Document Box */}
-                <div className="bg-white border border-slate-350 rounded-xl p-4 space-y-3.5 shadow-sm">
-                  <h5 className="text-[12px] font-bold text-slate-900 uppercase tracking-wider">Deposit New Credential</h5>
-                  <div className="grid grid-cols-1 gap-2.5">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-750 uppercase mb-1">Document Label</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Identity Proof"
-                        value={newDocLabel}
-                        onChange={(e) => setNewDocLabel(e.target.value)}
-                        className="w-full bg-white border border-slate-350 rounded-lg px-2.5 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 border border-dashed border-slate-350 rounded-lg p-2 text-center bg-slate-50 text-[11px] truncate">
-                        {uploadingDocName ? `Selected: ${uploadingDocName}` : 'Select a PDF / Image'}
-                      </div>
-                      <label className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 px-3 py-1.5 rounded-lg cursor-pointer text-[11px] font-bold flex items-center gap-1 shrink-0">
-                        <Upload size={12} />
-                        <span>Browse</span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
-                          onChange={handleUploadNewDoc}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end pt-1">
-                    <button
-                      type="button"
-                      onClick={handleDepositNewDoc}
-                      className="px-3.5 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
-                    >
-                      Add Document
-                    </button>
-                  </div>
-                </div>
-
-                {/* List of Deposited Documents */}
-                <div className="space-y-2.5">
-                  <span className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider border-b border-slate-250 pb-1">Current Documents ({formDocuments.length})</span>
-                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                    {formDocuments.map((doc, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-white border border-slate-300 rounded-xl p-2.5 text-[12px] shadow-sm hover:border-slate-400 transition-all">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <FileText size={14} className="text-slate-700 shrink-0" />
-                          <span className="font-semibold text-slate-950 truncate max-w-[150px]">{doc.name}</span>
-                        </div>
-                        <div className="flex gap-1.5 shrink-0">
-                          {doc.file && (
-                            <button
-                              type="button"
-                              onClick={() => openBase64File(doc.file, doc.name)}
-                              className="p-1 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded text-slate-900 cursor-pointer"
-                              title="View Document"
-                            >
-                              <Eye size={12} />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteFormDoc(idx)}
-                            className="p-1 bg-red-50 hover:bg-red-100 border border-red-200 rounded text-red-700 cursor-pointer"
-                            title="Delete Document"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {formDocuments.length === 0 && (
-                      <div className="text-center p-6 text-slate-700 italic text-[12px]">No documents deposited for this profile yet.</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
       )}

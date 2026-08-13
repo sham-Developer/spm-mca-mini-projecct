@@ -432,25 +432,30 @@ app.put('/api/tasks/:id', async (req, res) => {
   const { id } = req.params;
   const fields = req.body;
   
+  // Always update in-memory store so changes reflect instantly
+  tasksStore = tasksStore.map(t => String(t.id) === String(id) ? { ...t, ...fields } : t);
+
   if (isDbConfigured && pool) {
     try {
       const keys = Object.keys(fields).filter(k => fields[k] !== undefined);
-      if (keys.length === 0) {
-        return res.status(400).json({ error: "No fields to update" });
+      if (keys.length > 0) {
+        const setClause = keys.map((key, i) => `"${key}" = $${i + 1}`).join(', ');
+        const values = keys.map(key => fields[key]);
+        values.push(id);
+        
+        const query = `UPDATE tasks SET ${setClause} WHERE id = $${values.length} RETURNING *`;
+        const result = await pool.query(query, values);
+        if (result.rows.length > 0) {
+          return res.json(result.rows[0]);
+        }
       }
-      const setClause = keys.map((key, i) => `"${key}" = $${i + 1}`).join(', ');
-      const values = keys.map(key => fields[key]);
-      values.push(id);
-      
-      const query = `UPDATE tasks SET ${setClause} WHERE id = $${values.length} RETURNING *`;
-      const result = await pool.query(query, values);
-      return res.json(result.rows[0]);
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      console.warn("Tasks DB update error (using memory fallback):", err.message);
     }
   }
-  tasksStore = tasksStore.map(t => t.id === id ? { ...t, ...req.body } : t);
-  res.json(tasksStore.find(t => t.id === id));
+  
+  const updated = tasksStore.find(t => String(t.id) === String(id)) || { id, ...fields };
+  res.json(updated);
 });
 
 app.delete('/api/tasks/:id', async (req, res) => {
@@ -555,21 +560,37 @@ app.get('/api/reports', async (req, res) => {
 });
 
 app.post('/api/reports', async (req, res) => {
-  const { task_id, submitted_by, content, hours_spent } = req.body;
-  const newReport = { id: 'rep' + (reportsStore.length + 1), status: 'submitted', ...req.body };
+  const { task_id, submitted_by, content, hours_spent, progress } = req.body;
+  const newReport = { 
+    id: 'rep' + (reportsStore.length + 1), 
+    task_id,
+    submitted_by: submitted_by || null,
+    content: content || '',
+    hours_spent: Number(hours_spent || 0),
+    progress: Number(progress || 0),
+    status: 'submitted',
+    created_at: new Date().toISOString()
+  };
   
+  reportsStore.push(newReport);
+  
+  // Sync matching task in memory
+  tasksStore = tasksStore.map(t => String(t.id) === String(task_id) ? { ...t, progress: Number(progress || 0) } : t);
+
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query(
-        'INSERT INTO reports (task_id, submitted_by, content, hours_spent) VALUES ($1, $2, $3, $4) RETURNING *',
-        [task_id, submitted_by, content, hours_spent]
+        'INSERT INTO reports (task_id, submitted_by, content, hours_spent, progress) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [task_id, submitted_by || null, content, hours_spent || 0, progress || 0]
       );
-      return res.json(result.rows[0]);
+      if (result.rows.length > 0) {
+        return res.json(result.rows[0]);
+      }
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      console.warn("Reports DB insert warning (using memory fallback):", err.message);
     }
   }
-  reportsStore.push(newReport);
+  
   res.json(newReport);
 });
 
