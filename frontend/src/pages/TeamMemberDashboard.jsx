@@ -47,6 +47,16 @@ export default function TeamMemberDashboard({ currentUserId }) {
     fetchMemberDashboardData();
   }, [currentUserId]);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
@@ -146,7 +156,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                       <span className="block text-[11px] text-slate-600 font-bold mt-0.5">{task.project?.name}</span>
                     </td>
                     <td className="px-4 py-3 border border-slate-300 text-[13px] text-slate-900 font-bold whitespace-nowrap">
-                      <div>{task.start_date} <span className="text-slate-500 font-bold text-[10px] uppercase">to</span> {task.end_date}</div>
+                      <div>{formatDate(task.start_date)} <span className="text-slate-500 font-bold text-[10px] uppercase">to</span> {formatDate(task.end_date)}</div>
                     </td>
                     <td className="px-4 py-3 border border-slate-300">
                       <div className="flex items-center gap-2">

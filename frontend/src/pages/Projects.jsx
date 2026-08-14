@@ -1208,6 +1208,8 @@ export default function Projects({ userRole, currentUserId }) {
                                 <th className="px-3 py-2 text-left border border-slate-400">Developer</th>
                                 <th className="px-3 py-2 text-left border border-slate-400">Task Title</th>
                                 <th className="px-3 py-2 text-left border border-slate-400">Progress</th>
+                                <th className="px-3 py-2 text-left border border-slate-400">Date Submitted</th>
+                                <th className="px-3 py-2 text-left border border-slate-400">Status</th>
                                 <th className="px-3 py-2 text-left border border-slate-400">Remarks</th>
                               </tr>
                             </thead>
@@ -1231,6 +1233,18 @@ export default function Projects({ userRole, currentUserId }) {
                                         {rep.progress ?? (tasks.find(t => t.id === rep.task_id)?.progress || 0)}%
                                       </span>
                                     </td>
+                                    <td className="px-3 py-2 text-slate-800 border border-slate-300 font-semibold">
+                                      {formatDate(rep.created_at)}
+                                    </td>
+                                    <td className="px-3 py-2 border border-slate-300">
+                                      <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border uppercase ${
+                                        rep.status === 'approved' 
+                                          ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
+                                          : 'bg-amber-100 border-amber-400 text-amber-955'
+                                      }`}>
+                                        {rep.status === 'approved' ? 'Approved' : 'Pending Review'}
+                                      </span>
+                                    </td>
                                     <td className="px-3 py-2 text-slate-700 border border-slate-300" title={rep.content}>
                                       {rep.content}
                                     </td>
@@ -1241,7 +1255,7 @@ export default function Projects({ userRole, currentUserId }) {
                                 return task && task.project_id === selectedProject.id;
                               }).length === 0 && (
                                 <tr>
-                                  <td colSpan={5} className="text-center p-6 text-slate-705 font-semibold text-[13px]">
+                                  <td colSpan={7} className="text-center p-6 text-slate-705 font-semibold text-[13px]">
                                     No progress reports submitted yet.
                                   </td>
                                 </tr>
@@ -1552,21 +1566,31 @@ export default function Projects({ userRole, currentUserId }) {
                 <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                   {reports
                     .filter(r => r.task_id === selectedTask?.id)
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                     .map((rep, idx) => (
-                      <div key={rep.id || idx} className="bg-slate-50 border border-slate-300 rounded-2xl p-4 space-y-2">
-                        <div className="flex justify-between items-center text-[12px]">
-                          <span className="font-bold text-slate-950">
+                      <div key={rep.id || idx} className="bg-slate-50 border border-slate-300 rounded-2xl p-4 space-y-2 shadow-sm">
+                        <div className="flex justify-between items-center flex-wrap gap-2 text-[12px]">
+                          <span className="font-bold text-slate-955">
                             {rep.user?.full_name || teamMembers.find(m => m.id === rep.submitted_by)?.full_name || 'Developer'}
                           </span>
-                          <span className="bg-orange-100 text-orange-850 font-extrabold px-2.5 py-0.5 rounded-full text-[11px] border border-orange-300">
-                            {rep.progress ?? (selectedTask?.progress || 0)}% Progress
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="bg-orange-100 text-orange-850 font-extrabold px-2.5 py-0.5 rounded-full text-[11px] border border-orange-300">
+                              {rep.progress ?? (selectedTask?.progress || 0)}% Progress
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[11px] font-extrabold border ${
+                              rep.status === 'approved' 
+                                ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
+                                : 'bg-amber-100 border-amber-400 text-amber-955'
+                            }`}>
+                              {rep.status === 'approved' ? 'Approved / Acknowledged' : 'Pending Review'}
+                            </span>
+                          </div>
                         </div>
-                        <p className="text-[12.5px] text-slate-800 font-medium whitespace-pre-wrap leading-relaxed">
-                          {rep.content}
+                        <p className="text-[12.5px] text-slate-800 font-medium italic whitespace-pre-wrap leading-relaxed">
+                          " {rep.content} "
                         </p>
-                        <div className="text-[10px] text-slate-500 font-semibold pt-1 border-t border-slate-200">
-                          Submitted on: {rep.created_at ? new Date(rep.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Recently'}
+                        <div className="text-[10px] text-slate-700 font-semibold pt-1 border-t border-slate-200">
+                          Submitted: {formatDate(rep.created_at)}
                         </div>
                       </div>
                     ))}

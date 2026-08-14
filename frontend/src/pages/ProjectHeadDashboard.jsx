@@ -5,7 +5,8 @@ import {
   Clock, 
   CheckCircle, 
   AlertCircle, 
-  Users 
+  Users,
+  History
 } from 'lucide-react';
 import API_URL from '../config';
 
@@ -19,6 +20,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
   const [tasks, setTasks] = useState([]);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedHistoryTask, setSelectedHistoryTask] = useState(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -84,6 +86,31 @@ export default function ProjectHeadDashboard({ currentUserId }) {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleAcknowledgeReport = async (reportId) => {
+    try {
+      // 1. Approve report (mark status as approved, keeping task status as-is)
+      await fetch(`${API_URL}/reports/${reportId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved' })
+      });
+      // Trigger data reload smoothly
+      fetchHeadDashboardData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   };
 
 
@@ -320,7 +347,9 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                       </div>
                       <div>
                         <h5 className="text-[13.5px] font-bold text-slate-950 leading-tight">{report.task?.title || 'Progress Update'}</h5>
-                        <span className="text-[11px] text-slate-600 font-semibold mt-0.5 block">By: {report.user?.full_name || 'Team Member'}</span>
+                        <span className="text-[11px] text-slate-700 font-semibold mt-0.5 block">
+                          By: {report.user?.full_name || 'Team Member'} • Submitted: {formatDate(report.created_at)}
+                        </span>
                       </div>
                     </div>
                     <span className="bg-orange-50 border border-orange-200 text-orange-800 font-extrabold px-2 py-0.5 rounded-full text-[11px] whitespace-nowrap">
@@ -331,13 +360,30 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                     " {report.content} "
                   </p>
 
-                  <div className="pt-2.5 border-t border-slate-200 flex justify-end">
+                  <div className="pt-2.5 border-t border-slate-200 flex justify-between items-center">
                     <button
-                      onClick={() => handleApproveReport(report.id, report.task_id)}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-[12px] font-semibold transition-all shadow-md shadow-emerald-600/10 cursor-pointer"
+                      onClick={() => setSelectedHistoryTask({ id: report.task_id, title: report.task?.title || 'Progress Update' })}
+                      className="flex items-center gap-1.5 text-[12px] font-bold text-slate-800 hover:text-slate-950 hover:underline cursor-pointer"
                     >
-                      Sign Off & Complete Task
+                      <History size={15} className="stroke-[2.5]" />
+                      View History
                     </button>
+
+                    {report.progress === 100 ? (
+                      <button
+                        onClick={() => handleApproveReport(report.id, report.task_id)}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-[12px] font-bold transition-all shadow-md shadow-emerald-600/10 cursor-pointer"
+                      >
+                        Sign Off & Complete Task
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleAcknowledgeReport(report.id)}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full text-[12px] font-bold transition-all shadow-md shadow-indigo-600/10 cursor-pointer"
+                      >
+                        Acknowledge Update
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -350,6 +396,83 @@ export default function ProjectHeadDashboard({ currentUserId }) {
           </div>
         </div>
       </div>
+
+      {/* Task History Modal */}
+      {selectedHistoryTask && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white border border-slate-400 rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-400 flex items-center justify-between bg-slate-100 rounded-t-xl">
+              <div>
+                <h3 className="text-[17px] font-extrabold text-slate-950">Task Update History</h3>
+                <p className="text-[12px] text-slate-700 font-semibold mt-0.5">
+                  Showing historical updates for: <span className="text-slate-950 font-bold">{selectedHistoryTask.title}</span>
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedHistoryTask(null)}
+                className="text-slate-800 hover:text-slate-950 font-bold text-lg p-1.5 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              {reports
+                .filter(r => r.task_id === selectedHistoryTask.id)
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .map((historyReport) => (
+                  <div 
+                    key={historyReport.id} 
+                    className="p-4 bg-slate-50 border border-slate-300 rounded-xl space-y-2 shadow-sm"
+                  >
+                    <div className="flex justify-between items-center flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-slate-200 border border-slate-400 text-slate-900 font-extrabold px-2 py-0.5 rounded text-[11px]">
+                          {historyReport.progress}% Progress
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-[11px] font-extrabold border ${
+                          historyReport.status === 'approved' 
+                            ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
+                            : 'bg-amber-100 border-amber-400 text-amber-955'
+                        }`}>
+                          {historyReport.status === 'approved' ? 'Approved / Acknowledged' : 'Submitted (Pending Review)'}
+                        </span>
+                      </div>
+                      <span className="text-[11.5px] text-slate-800 font-bold">
+                        Submitted: {formatDate(historyReport.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-slate-950 font-medium italic whitespace-pre-wrap leading-relaxed">
+                      " {historyReport.content} "
+                    </p>
+                    {historyReport.user?.full_name && (
+                      <div className="text-[11px] text-slate-700 font-semibold">
+                        By: <span className="font-bold text-slate-900">{historyReport.user.full_name}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              {reports.filter(r => r.task_id === selectedHistoryTask.id).length === 0 && (
+                <p className="text-center text-slate-700 font-semibold py-8 text-[13px]">
+                  No history logged for this task yet.
+                </p>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-300 flex justify-end bg-slate-50 rounded-b-xl">
+              <button
+                onClick={() => setSelectedHistoryTask(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-[12.5px] font-bold transition-all shadow-md cursor-pointer"
+              >
+                Close History
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -33,6 +33,38 @@ let reportsStore = [];
 let projectHistoryStore = [
   { id: 'h1', project_id: 'p1', action: 'created', description: 'Project created with initial budget of ₹15,00,000.', performed_by: 'Admin', created_at: new Date().toISOString() }
 ];
+let notificationsStore = [];
+
+const createNotification = async (userId, title, message) => {
+  if (!userId) return;
+  if (isDbConfigured && pool) {
+    try {
+      await pool.query(
+        'INSERT INTO notifications (user_id, title, message, is_read) VALUES ($1, $2, $3, FALSE)',
+        [userId, title, message]
+      );
+    } catch (e) {
+      console.error("Failed to insert database notification, storing in memory:", e);
+      notificationsStore.push({
+        id: Math.random().toString(36).substring(2, 9),
+        user_id: userId,
+        title,
+        message,
+        is_read: false,
+        created_at: new Date().toISOString()
+      });
+    }
+  } else {
+    notificationsStore.push({
+      id: Math.random().toString(36).substring(2, 9),
+      user_id: userId,
+      title,
+      message,
+      is_read: false,
+      created_at: new Date().toISOString()
+    });
+  }
+};
 
 // Helper db wrapper to route requests
 const executeQuery = async (queryText, params, memoryAction) => {
@@ -419,12 +451,19 @@ app.post('/api/tasks', async (req, res) => {
         'INSERT INTO tasks (project_id, title, description, assigned_to, start_date, end_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
         [project_id, title, description, assigned_to, start_date, end_date]
       );
-      return res.json(result.rows[0]);
+      const insertedTask = result.rows[0];
+      if (assigned_to) {
+        await createNotification(assigned_to, 'New Task Assigned', `You have been assigned a new task: "${title}"`);
+      }
+      return res.json(insertedTask);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
   tasksStore.push(newTask);
+  if (assigned_to) {
+    createNotification(assigned_to, 'New Task Assigned', `You have been assigned a new task: "${title}"`);
+  }
   res.json(newTask);
 });
 
@@ -446,7 +485,11 @@ app.put('/api/tasks/:id', async (req, res) => {
         const query = `UPDATE tasks SET ${setClause} WHERE id = $${values.length} RETURNING *`;
         const result = await pool.query(query, values);
         if (result.rows.length > 0) {
-          return res.json(result.rows[0]);
+          const updatedTask = result.rows[0];
+          if (fields.status === 'completed' && updatedTask.assigned_to) {
+            await createNotification(updatedTask.assigned_to, 'Task Completed & Signed Off', `Your task "${updatedTask.title}" has been signed off and completed.`);
+          }
+          return res.json(updatedTask);
         }
       }
     } catch (err) {
@@ -455,6 +498,9 @@ app.put('/api/tasks/:id', async (req, res) => {
   }
   
   const updated = tasksStore.find(t => String(t.id) === String(id)) || { id, ...fields };
+  if (fields.status === 'completed' && updated.assigned_to) {
+    createNotification(updated.assigned_to, 'Task Completed & Signed Off', `Your task "${updated.title}" has been signed off and completed.`);
+  }
   res.json(updated);
 });
 
@@ -508,12 +554,32 @@ app.post('/api/deadline-requests', async (req, res) => {
         'INSERT INTO deadline_requests (task_id, requested_by, current_end_date, requested_end_date, reason) VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [task_id, requested_by, current_end_date, requested_end_date, reason]
       );
-      return res.json(result.rows[0]);
+      const inserted = result.rows[0];
+      
+      // Get project head to notify
+      const projectHeadQuery = await pool.query(
+        'SELECT p.project_head_id, t.title, u.full_name FROM tasks t JOIN projects p ON t.project_id = p.id JOIN users u ON u.id = $2 WHERE t.id = $1',
+        [task_id, requested_by]
+      );
+      if (projectHeadQuery.rows.length > 0) {
+        const { project_head_id, title, full_name } = projectHeadQuery.rows[0];
+        if (project_head_id) {
+          await createNotification(project_head_id, 'Deadline Extension Request', `${full_name} has requested an extension for task: "${title}"`);
+        }
+      }
+      return res.json(inserted);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
+  
   deadlineRequestsStore.push(newReq);
+  const task = tasksStore.find(t => t.id === task_id);
+  const project = projectsStore.find(p => p.id === task?.project_id);
+  const user = usersStore.find(u => u.id === requested_by);
+  if (project?.project_head_id) {
+    createNotification(project.project_head_id, 'Deadline Extension Request', `${user?.full_name || 'A team member'} has requested an extension for task: "${task?.title || 'Task'}"`);
+  }
   res.json(newReq);
 });
 
@@ -524,13 +590,29 @@ app.put('/api/deadline-requests/:id', async (req, res) => {
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query('UPDATE deadline_requests SET status = $1 WHERE id = $2 RETURNING *', [status, id]);
-      return res.json(result.rows[0]);
+      const updated = result.rows[0];
+      
+      // Get requester & task info to notify
+      const infoQuery = await pool.query(
+        'SELECT d.requested_by, t.title FROM deadline_requests d JOIN tasks t ON d.task_id = t.id WHERE d.id = $1',
+        [id]
+      );
+      if (infoQuery.rows.length > 0) {
+        const { requested_by, title } = infoQuery.rows[0];
+        await createNotification(requested_by, `Deadline Request ${status.toUpperCase()}`, `Your extension request for task "${title}" has been ${status}.`);
+      }
+      return res.json(updated);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
   deadlineRequestsStore = deadlineRequestsStore.map(d => d.id === id ? { ...d, ...req.body } : d);
-  res.json(deadlineRequestsStore.find(d => d.id === id));
+  const updatedMem = deadlineRequestsStore.find(d => d.id === id);
+  const taskMem = tasksStore.find(t => t.id === updatedMem?.task_id);
+  if (updatedMem?.requested_by) {
+    createNotification(updatedMem.requested_by, `Deadline Request ${status.toUpperCase()}`, `Your extension request for task "${taskMem?.title || 'Task'}" has been ${status}.`);
+  }
+  res.json(updatedMem);
 });
 
 // Reports API
@@ -577,6 +659,14 @@ app.post('/api/reports', async (req, res) => {
   // Sync matching task in memory
   tasksStore = tasksStore.map(t => String(t.id) === String(task_id) ? { ...t, progress: Number(progress || 0) } : t);
 
+  // Trigger in-memory notification
+  const taskMem = tasksStore.find(t => t.id === task_id);
+  const projectMem = projectsStore.find(p => p.id === taskMem?.project_id);
+  const userMem = usersStore.find(u => u.id === submitted_by);
+  if (projectMem?.project_head_id) {
+    createNotification(projectMem.project_head_id, 'New Task Update Submitted', `${userMem?.full_name || 'A team member'} submitted a progress report (${progress}%) for task: "${taskMem?.title || 'Task'}"`);
+  }
+
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query(
@@ -584,7 +674,19 @@ app.post('/api/reports', async (req, res) => {
         [task_id, submitted_by || null, content, hours_spent || 0, progress || 0]
       );
       if (result.rows.length > 0) {
-        return res.json(result.rows[0]);
+        const inserted = result.rows[0];
+        // Get project head to notify
+        const projectHeadQuery = await pool.query(
+          'SELECT p.project_head_id, t.title, u.full_name FROM tasks t JOIN projects p ON t.project_id = p.id JOIN users u ON u.id = $2 WHERE t.id = $1',
+          [task_id, submitted_by]
+        );
+        if (projectHeadQuery.rows.length > 0) {
+          const { project_head_id, title, full_name } = projectHeadQuery.rows[0];
+          if (project_head_id) {
+            await createNotification(project_head_id, 'New Task Update Submitted', `${full_name} submitted a progress report (${progress}%) for task: "${title}"`);
+          }
+        }
+        return res.json(inserted);
       }
     } catch (err) {
       console.warn("Reports DB insert warning (using memory fallback):", err.message);
@@ -601,13 +703,88 @@ app.put('/api/reports/:id', async (req, res) => {
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query('UPDATE reports SET status = $1 WHERE id = $2 RETURNING *', [status, id]);
-      return res.json(result.rows[0]);
+      const updated = result.rows[0];
+      
+      // Get report requester & task info to notify
+      const infoQuery = await pool.query(
+        'SELECT r.submitted_by, r.progress, t.title FROM reports r JOIN tasks t ON r.task_id = t.id WHERE r.id = $1',
+        [id]
+      );
+      if (infoQuery.rows.length > 0) {
+        const { submitted_by, progress, title } = infoQuery.rows[0];
+        if (submitted_by) {
+          await createNotification(submitted_by, 'Task Update Approved', `Your progress report of ${progress}% on task "${title}" has been approved / acknowledged.`);
+        }
+      }
+      return res.json(updated);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
   reportsStore = reportsStore.map(r => r.id === id ? { ...r, ...req.body } : r);
-  res.json(reportsStore.find(r => r.id === id));
+  const updatedMem = reportsStore.find(r => r.id === id);
+  const taskMem = tasksStore.find(t => t.id === updatedMem?.task_id);
+  if (updatedMem?.submitted_by) {
+    createNotification(updatedMem.submitted_by, 'Task Update Approved', `Your progress report of ${updatedMem.progress}% on task "${taskMem?.title || 'Task'}" has been approved / acknowledged.`);
+  }
+  res.json(updatedMem);
+});
+
+// Notifications API
+app.get('/api/notifications/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const memoryAction = () => {
+    return notificationsStore.filter(n => String(n.user_id) === String(userId));
+  };
+  try {
+    const notifications = await executeQuery(
+      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId],
+      memoryAction
+    );
+    res.json(notifications);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/notifications/:id/read', async (req, res) => {
+  const { id } = req.params;
+  const memoryAction = () => {
+    const notif = notificationsStore.find(n => String(n.id) === String(id));
+    if (notif) notif.is_read = true;
+    return { success: true };
+  };
+  try {
+    if (isDbConfigured && pool) {
+      await pool.query('UPDATE notifications SET is_read = TRUE WHERE id = $1', [id]);
+      res.json({ success: true });
+    } else {
+      res.json(memoryAction());
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/notifications/user/:userId/read-all', async (req, res) => {
+  const { userId } = req.params;
+  const memoryAction = () => {
+    notificationsStore.forEach(n => {
+      if (String(n.user_id) === String(userId)) n.is_read = true;
+    });
+    return { success: true };
+  };
+  try {
+    if (isDbConfigured && pool) {
+      await pool.query('UPDATE notifications SET is_read = TRUE WHERE user_id = $1', [userId]);
+      res.json({ success: true });
+    } else {
+      res.json(memoryAction());
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Status check API
