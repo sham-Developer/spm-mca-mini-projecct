@@ -748,15 +748,15 @@ export default function Projects({ userRole, currentUserId }) {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="bg-[#334155] text-white">
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">S.No.</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Workspace Name</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Client Partner</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Start Date</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">End Date</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Project Head</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Status</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-center border border-[#5f5f5f]">Actions</th>
+                    <tr className="bg-[#3715ca] text-white">
+                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300 w-16">S.No.</th>
+                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Workspace Name</th>
+                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Client Partner</th>
+                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Start Date</th>
+                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">End Date</th>
+                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Project Head</th>
+                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Status</th>
+                      <th className="px-4 py-3 text-[12px] font-bold text-center border border-slate-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300">
@@ -1077,15 +1077,15 @@ export default function Projects({ userRole, currentUserId }) {
                         <div className="overflow-x-auto">
                           <table className="w-full border-collapse">
                             <thead>
-                              <tr className="bg-[#334155] text-white">
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">S.No.</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Task Title</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Assigned Developer</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Start</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Deadline</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Progress</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Status</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-[#5f5f5f]">Actions</th>
+                              <tr className="bg-[#3715ca] text-white">
+                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300 w-16">S.No.</th>
+                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Task Title</th>
+                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Assigned Developer</th>
+                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Start</th>
+                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Deadline</th>
+                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Progress</th>
+                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Status</th>
+                                <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-slate-300">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-300">

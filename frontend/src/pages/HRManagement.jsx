@@ -469,17 +469,17 @@ export default function HRManagement() {
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
         </div>
       ) : (
-        <div className="bg-white border border-slate-300 rounded-2xl overflow-hidden shadow-md">
+        <div className="bg-white border border-slate-400 rounded-2xl overflow-hidden shadow-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#334155] text-white">
-                  <th className="px-4 py-3 text-[12px] font-bold text-center border border-[#5f5f5f] w-16">S.No.</th>
-                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Employee Name</th>
-                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Email ID</th>
-                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Designation</th>
-                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-[#5f5f5f]">Date of Joining</th>
-                  <th className="px-4 py-3 text-[12px] font-bold text-center border border-[#5f5f5f]">Actions</th>
+                <tr className="bg-[#3715ca] text-white">
+                  <th className="px-4 py-3 text-[12px] font-bold text-center border border-slate-300 w-16">S.No.</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Employee Name</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Email ID</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Designation</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Date of Joining</th>
+                  <th className="px-4 py-3 text-[12px] font-bold text-center border border-slate-300">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-300 text-slate-950 font-medium">
@@ -496,35 +496,36 @@ export default function HRManagement() {
                             {empInitials}
                           </div>
                           <div>
-                            <span className="block text-[14px] font-extrabold text-slate-950 leading-tight">{employee.full_name}</span>
-                            <span className="inline-block text-[10px] font-bold uppercase px-2 py-0.5 bg-slate-100 border border-slate-300 rounded mt-1.5 text-slate-900">
+                            <span className="block text-[14px] font-extrabold text-slate-955 leading-tight">{employee.full_name}</span>
+                            <span className="inline-block text-[10px] font-extrabold uppercase px-2 py-0.5 bg-slate-100 border border-slate-300 rounded mt-1.5 text-slate-800">
                               {employee.employment_type || 'on role'}
                             </span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 text-[13px] text-slate-900 font-bold border border-slate-300">
+                      <td className="px-4 py-3.5 text-[13px] text-slate-900 border border-slate-300">
                         {employee.email}
                       </td>
-                      <td className="px-4 py-3.5 text-[13px] text-slate-900 font-semibold border border-slate-300">
+                      <td className="px-4 py-3.5 text-[13px] text-slate-900 border border-slate-300">
                         {employee.designation || 'Unspecified'}
                       </td>
-                      <td className="px-4 py-3.5 text-[13px] text-slate-900 font-semibold border border-slate-300 whitespace-nowrap">
+                      <td className="px-4 py-3.5 text-[13px] text-slate-900 border border-slate-300 whitespace-nowrap">
                         {formatDateToDMY(employee.joins_date)}
                       </td>
                       <td className="px-4 py-3.5 border border-slate-300">
                         <div className="flex gap-2 justify-center">
                           <button
                             onClick={() => openEditModal(employee)}
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-900 border border-slate-400 rounded-xl text-[12px] font-bold shadow-sm cursor-pointer transition-all"
+                            className="inline-flex items-center justify-center p-1.5 border border-amber-300 hover:bg-amber-50 text-amber-700 rounded-lg cursor-pointer transition-colors"
+                            title="View / Edit Profile"
                           >
                             <Edit size={13} />
-                            <span>View / Edit Profile</span>
                           </button>
                           {employee.email !== 'admin@saas.com' && (
                             <button
                               onClick={() => handleDeleteEmployee(employee.id)}
-                              className="inline-flex items-center justify-center p-2 bg-red-50 hover:bg-red-100 text-red-750 border border-red-300 rounded-xl cursor-pointer transition-colors"
+                              className="inline-flex items-center justify-center p-1.5 border border-red-300 hover:bg-red-50 text-red-700 rounded-lg cursor-pointer transition-colors"
+                              title="Delete Employee"
                             >
                               <Trash2 size={13} />
                             </button>

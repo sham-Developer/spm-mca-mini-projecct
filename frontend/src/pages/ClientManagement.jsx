@@ -15,7 +15,11 @@ import {
   Eye, 
   FileText,
   AlertCircle,
-  FilterX
+  FilterX,
+  Mail,
+  Phone,
+  Building,
+  CheckCircle
 } from 'lucide-react';
 import API_URL from '../config';
 import { useUI } from '../components/UIProvider';
@@ -600,7 +604,7 @@ export default function ClientManagement() {
       </div>
 
       {/* SEARCH AND FILTERS BAR */}
-      <div className="bg-slate-50 border border-slate-300 rounded-2xl p-4 shadow-sm space-y-3 md:space-y-0 md:flex md:items-center md:justify-between gap-4">
+      <div className="space-y-3 md:space-y-0 md:flex md:items-center md:justify-between gap-4 pb-4">
         
         {/* Left Side: Search Keyword */}
         <div className="flex items-center bg-white border border-slate-400 rounded-xl px-3.5 py-1.5 shadow-inner flex-1 max-w-md">
@@ -771,15 +775,15 @@ export default function ClientManagement() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-400 bg-slate-100 text-slate-955">
-                      <th className="border border-slate-305 p-4 text-[12px] font-bold uppercase tracking-wider w-16 text-center">S.No.</th>
-                      <th className="border border-slate-305 p-4 text-[12px] font-bold uppercase tracking-wider">Client / Company</th>
-                      <th className="border border-slate-305 p-4 text-[12px] font-bold uppercase tracking-wider">Contact</th>
-                      <th className="border border-slate-305 p-4 text-[12px] font-bold uppercase tracking-wider">Pipeline Stage</th>
-                      <th className="border border-slate-305 p-4 text-[12px] font-bold uppercase tracking-wider">Linked Workspaces</th>
-                      <th className="border border-slate-305 p-4 text-[12px] font-bold uppercase tracking-wider">Followup Limits</th>
-                      <th className="border border-slate-305 p-4 text-[12px] font-bold uppercase tracking-wider">Last Interaction</th>
-                      <th className="border border-slate-305 p-4 text-[12px] font-bold uppercase tracking-wider text-right">Actions</th>
+                    <tr className="bg-[#3715ca] text-white">
+                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider w-16 text-center">S.No.</th>
+                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Client / Company</th>
+                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Contact</th>
+                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Pipeline Stage</th>
+                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Linked Workspaces</th>
+                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Followup Limits</th>
+                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Last Interaction</th>
+                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300 text-slate-950 font-medium">
@@ -790,32 +794,73 @@ export default function ClientManagement() {
                       const clientProjects = projects.filter(p => p.client_id === client.id);
                       const isActionDue = client.next_followup_date && client.next_followup_date <= todayString;
 
+                      // Map status order index to a color index to rotate circle avatars
+                      const colorIndex = STATUS_ORDER.indexOf(client.status);
+                      const avatarColors = [
+                        'bg-orange-150 text-orange-800 border-orange-200',
+                        'bg-yellow-150 text-yellow-800 border-yellow-250',
+                        'bg-purple-150 text-purple-800 border-purple-200',
+                        'bg-pink-150 text-pink-800 border-pink-200',
+                        'bg-blue-150 text-blue-800 border-blue-200',
+                        'bg-emerald-150 text-emerald-805 border-emerald-250'
+                      ];
+                      const avatarColorClass = avatarColors[colorIndex >= 0 ? colorIndex : 0];
+
                       return (
                         <tr 
                           key={client.id} 
-                          className={`hover:bg-slate-50 transition-colors ${isActionDue ? 'bg-red-50/50 hover:bg-red-100/50 animate-pulse-slow' : ''}`}
+                          className={`hover:bg-slate-50/80 transition-colors ${isActionDue ? 'bg-red-50/50 hover:bg-red-100/50' : ''}`}
                         >
                           <td className={`border border-slate-300 p-4 text-[13px] font-bold text-center ${isActionDue ? 'border-l-4 border-l-red-500' : ''}`}>
                             {indexOfFirstItem + index + 1}
                           </td>
                           <td className="border border-slate-300 p-4">
-                            <span className="block text-[14px] font-bold text-slate-955">{client.name}</span>
-                            <span className="block text-[12px] text-slate-800 font-medium">{client.company || 'Private Client'}</span>
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-full border flex items-center justify-center font-bold text-[14px] shrink-0 ${avatarColorClass}`}>
+                                <Building size={18} className="stroke-[2.5]" />
+                              </div>
+                              <div>
+                                <span className="block text-[14px] font-extrabold text-slate-950 leading-tight">{client.name}</span>
+                                <span className="block text-[12px] text-slate-700 font-medium mt-0.5">{client.company || 'Private Client'}</span>
+                              </div>
+                            </div>
                           </td>
                           <td className="border border-slate-300 p-4">
-                            <span className="block text-[13px] text-slate-950">{client.email}</span>
-                            <span className="block text-[12px] text-slate-805">{client.phone || '--'}</span>
+                            <div className="space-y-1 text-[13px] font-medium text-slate-900">
+                              <div className="flex items-center gap-1.5">
+                                <Mail size={13} className="text-slate-700 shrink-0" />
+                                <span className="truncate max-w-[160px]" title={client.email}>{client.email}</span>
+                              </div>
+                              {client.phone && (
+                                <div className="flex items-center gap-1.5">
+                                  <Phone size={13} className="text-slate-700 shrink-0" />
+                                  <span>{client.phone}</span>
+                                </div>
+                              )}
+                            </div>
                           </td>
-                          <td className="border border-slate-300 p-4">
-                            <span className="inline-block text-[11px] font-bold uppercase px-2.5 py-1 bg-orange-100 border border-orange-400 text-orange-950 rounded-full">
-                              {client.status}
+                          <td className="border border-slate-300 p-4 text-center">
+                            <span className={`inline-block text-[10px] font-extrabold uppercase px-3 py-1 rounded-full border ${
+                              client.status === 'initiated' 
+                                ? 'bg-[#f9570c] text-white border-[#c2410c]' 
+                                : client.status === 'inprogress'
+                                ? 'bg-[#f1b418] text-slate-950 border-[#ca8a04]'
+                                : client.status === 'budgetary'
+                                ? 'bg-[#f59e0b] text-white border-[#d97706]'
+                                : client.status === 'proposal'
+                                ? 'bg-[#d946ef] text-white border-[#c026d3]'
+                                : client.status === 'lead'
+                                ? 'bg-[#2563eb] text-white border-[#1d4ed8]'
+                                : 'bg-[#10b981] text-white border-[#059669]'
+                            }`}>
+                              {client.status === 'inprogress' ? 'In Progress' : client.status}
                             </span>
                           </td>
                           <td className="border border-slate-300 p-4">
                             {clientProjects.length > 0 ? (
-                              <div className="space-y-1">
+                              <div className="flex flex-wrap gap-1.5 max-w-[180px]">
                                 {clientProjects.map(proj => (
-                                  <span key={proj.id} className="block text-[11px] font-medium text-slate-900 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded w-max">
+                                  <span key={proj.id} className="text-[11px] font-extrabold text-blue-755 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded whitespace-nowrap">
                                     {proj.name}
                                   </span>
                                 ))}
@@ -824,43 +869,50 @@ export default function ClientManagement() {
                               <span className="text-[12px] text-slate-700 font-medium">No projects linked</span>
                             )}
                           </td>
-                          <td className="border border-slate-300 p-4 text-[12px] font-medium text-slate-850">
-                            {client.next_followup_date ? (
-                              <span className={`font-bold ${isActionDue ? 'text-red-650' : ''}`}>
-                                Next: {formatDateToDMY(client.next_followup_date)}
-                              </span>
-                            ) : (
-                              <span>No limits set</span>
-                            )}
+                          <td className="border border-slate-300 p-4">
+                            <div className="flex items-center gap-1.5 text-[12px] font-bold text-slate-900">
+                              <CheckCircle size={15} className="text-emerald-600 shrink-0 stroke-[2.5]" />
+                              <span>{client.next_followup_date ? formatDateToDMY(client.next_followup_date) : "No limits set"}</span>
+                            </div>
                           </td>
                           <td className="border border-slate-300 p-4 max-w-xs whitespace-normal break-words">
-                            {lastNote ? (
-                              <div>
-                                <span className="block text-[11px] text-slate-805 font-bold">{formatDateToDMY(lastNote.date)}</span>
-                                <span className="text-[12px] text-slate-955 font-medium italic">"{lastNote.note}"</span>
-                              </div>
-                            ) : (
-                              <span className="text-slate-800 text-[12px] font-medium">No interaction logged</span>
-                            )}
+                            <div className="flex items-start gap-1.5 text-[12px] font-medium text-slate-900">
+                              {lastNote ? (
+                                <>
+                                  <Calendar size={14} className="text-slate-700 mt-0.5 shrink-0" />
+                                  <div>
+                                    <span className="block text-[11px] text-black font-extrabold">{formatDateToDMY(lastNote.date)}</span>
+                                    <span className="italic">"{lastNote.note}"</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <MessageSquare size={14} className="text-slate-700 mt-0.5 shrink-0" />
+                                  <span className="text-slate-700">No interaction logged</span>
+                                </>
+                              )}
+                            </div>
                           </td>
                           <td className="border border-slate-300 p-4 text-right">
                             <div className="flex gap-2 justify-end">
                               <button
                                  onClick={() => { setSelectedClient(client); setIsFollowupModalOpen(true); }}
-                                 className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-955 rounded-lg text-[12px] font-medium border border-slate-400 shadow-sm cursor-pointer"
+                                 className="inline-flex items-center justify-center p-1.5 border border-blue-300 hover:bg-blue-50 text-blue-700 rounded-lg cursor-pointer transition-colors"
+                                 title="Logs & Action"
                               >
                                 <MessageSquare size={13} />
-                                <span>Logs</span>
                               </button>
                               <button 
                                 onClick={() => openEditClientModal(client)}
-                                className="inline-flex items-center justify-center p-1.5 bg-slate-50 hover:bg-slate-100 text-slate-900 border border-slate-400 rounded-lg cursor-pointer"
+                                className="inline-flex items-center justify-center p-1.5 border border-amber-300 hover:bg-amber-50 text-amber-700 rounded-lg cursor-pointer transition-colors"
+                                title="Edit Lead"
                               >
                                 <Edit size={13} />
                               </button>
                               <button 
                                 onClick={() => handleDeleteClient(client.id)}
-                                className="inline-flex items-center justify-center p-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 rounded-lg cursor-pointer"
+                                className="inline-flex items-center justify-center p-1.5 border border-red-300 hover:bg-red-50 text-red-700 rounded-lg cursor-pointer transition-colors"
+                                title="Delete Lead"
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -931,7 +983,7 @@ export default function ClientManagement() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
                 <div>
@@ -940,7 +992,7 @@ export default function ClientManagement() {
                     type="text"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
               </div>
@@ -953,7 +1005,7 @@ export default function ClientManagement() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
                 <div>
@@ -962,7 +1014,7 @@ export default function ClientManagement() {
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
               </div>
@@ -976,7 +1028,7 @@ export default function ClientManagement() {
                   placeholder="e.g. Website Overhaul, Marketing Campaign"
                   value={newProjectsText}
                   onChange={(e) => setNewProjectsText(e.target.value)}
-                  className="w-full bg-white border border-slate-350 rounded-xl px-3.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 />
                 <span className="text-[11px] text-slate-700 font-medium mt-1 block">Specify comma-separated project names to auto-provision associated workspaces.</span>
               </div>
@@ -1017,35 +1069,62 @@ export default function ClientManagement() {
             </button>
 
             {/* LEFT SIDE: CLIENT PROFILE SUMMARY */}
-            <div className="md:w-1/3 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-400 p-6 flex flex-col justify-between overflow-y-auto">
-              <div className="space-y-6">
+            <div className="md:w-1/3 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-400 p-5 flex flex-col justify-between overflow-y-auto">
+              <div className="space-y-4">
                 <div>
-                  <span className="inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 bg-orange-100 border border-orange-400 text-orange-950 rounded-full mb-2 font-bold">
+                  <span className="block text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-1.5">Pipeline Stage</span>
+                  <span className="inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 bg-orange-100 border border-orange-400 text-orange-950 rounded-full font-bold tracking-wide">
                     {selectedClient.status}
                   </span>
-                  <h3 className="text-[20px] font-bold text-orange-600 tracking-tight leading-snug">{selectedClient.name}</h3>
-                  <p className="text-[13px] text-slate-900 font-medium">{selectedClient.company || 'Private Lead Client'}</p>
                 </div>
 
-                <div className="space-y-3.5 border-t border-slate-300 pt-4">
+                <div className="space-y-3 border-t border-slate-300 pt-3">
                   <div>
-                    <span className="block text-[11px] font-bold text-slate-800 uppercase tracking-widest">Email</span>
-                    <span className="text-[13px] font-medium text-slate-950 break-all">{selectedClient.email}</span>
+                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Client Name</span>
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={selectedClient.name} 
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
+                    />
                   </div>
                   <div>
-                    <span className="block text-[11px] font-bold text-slate-800 uppercase tracking-widest">Phone</span>
-                    <span className="text-[13px] font-medium text-slate-955">{selectedClient.phone || '--'}</span>
+                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Company</span>
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={selectedClient.company || 'Private Lead Client'} 
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
+                    />
                   </div>
                   <div>
-                    <span className="block text-[11px] font-bold text-slate-800 uppercase tracking-widest font-bold">Linked Workspaces</span>
+                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Email</span>
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={selectedClient.email} 
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
+                    />
+                  </div>
+                  <div>
+                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Phone</span>
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={selectedClient.phone || '--'} 
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-normal focus:outline-none cursor-default"
+                    />
+                  </div>
+                  <div>
+                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Linked Workspaces</span>
                     <div className="mt-1.5 space-y-1">
                       {projects.filter(p => p.client_id === selectedClient.id).map(proj => (
-                        <div key={proj.id} className="text-[12px] font-medium text-slate-955 bg-white border border-slate-300 rounded px-2.5 py-1">
+                        <div key={proj.id} className="text-[12px] font-bold text-slate-955 bg-white border border-slate-350 rounded px-2.5 py-1">
                           {proj.name}
                         </div>
                       ))}
                       {projects.filter(p => p.client_id === selectedClient.id).length === 0 && (
-                        <span className="text-[12px] text-slate-700 italic font-medium">No workspaces linked yet.</span>
+                        <span className="text-[12px] text-slate-700 italic font-semibold">No workspaces linked yet.</span>
                       )}
                     </div>
                   </div>
@@ -1229,7 +1308,7 @@ export default function ClientManagement() {
 
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                  <label className="block text-[11px] font-bold text-slate-805 uppercase mb-1">Next Followup Date</label>
+                                  <label className="block text-[11px] font-bold text-black uppercase mb-1">Next Followup Date</label>
                                   <input
                                     type="date"
                                     value={editingFollowupDate}
@@ -1240,7 +1319,7 @@ export default function ClientManagement() {
 
                                 {(entry.status_to === 'budgetary' || entry.status_to === 'proposal') && (
                                   <div>
-                                    <label className="block text-[11px] font-bold text-slate-805 uppercase mb-1">
+                                    <label className="block text-[11px] font-bold text-black uppercase mb-1">
                                       Replace {entry.status_to === 'budgetary' ? 'Budget' : 'Proposal'} Document
                                     </label>
                                     <div className="flex items-center justify-between bg-white border border-slate-350 rounded-lg px-2 py-1 text-slate-955 text-[12px]">
@@ -1304,7 +1383,7 @@ export default function ClientManagement() {
                                   setEditingFileName(entry.status_to === 'budgetary' ? (entry.budget_filename || '') : (entry.proposal_filename || ''));
                                   setEditingFileBase64('');
                                 }}
-                                className="text-slate-805 hover:text-black hover:underline text-[11px] font-bold shrink-0 cursor-pointer"
+                                className="text-black hover:text-black hover:underline text-[11px] font-bold shrink-0 cursor-pointer"
                               >
                                 Edit Log
                               </button>

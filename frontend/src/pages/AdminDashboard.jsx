@@ -90,11 +90,11 @@ export default function AdminDashboard() {
       {/* Overview Analytics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {/* Total Clients */}
-        <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-indigo-100/70 to-indigo-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Total Clients</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.totalClients}</h3>
+              <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.totalClients}</h3>
               <span className="text-[11px] font-extrabold text-emerald-800 flex items-center gap-0.5 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded-full">
                 <TrendingUp size={10} className="stroke-[3]" />
                 +12%
@@ -107,11 +107,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Active Projects */}
-        <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-orange-100/70 to-orange-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-orange-950 uppercase tracking-widest block">Active Projects</span>
+            <span className="text-[11px] font-bold text-orange-955 uppercase tracking-widest block">Active Projects</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.activeProjects}</h3>
+              <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.activeProjects}</h3>
               <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
                 On Track
               </span>
@@ -123,11 +123,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Headcount */}
-        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-emerald-100/70 to-emerald-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Headcount (HR)</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.totalEmployees}</h3>
+              <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.totalEmployees}</h3>
               <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
                 Resourceful
               </span>
@@ -139,11 +139,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Portfolio Budget */}
-        <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-amber-100/70 to-amber-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-amber-950 uppercase tracking-widest block">Portfolio Budget</span>
+            <span className="text-[11px] font-bold text-amber-955 uppercase tracking-widest block">Portfolio Budget</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[22px] font-black text-amber-950 tracking-tight">
+              <h3 className="text-[22px] font-black text-slate-955 tracking-tight">
                 {formatRupee(stats.totalBudget)}
               </h3>
             </div>
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
             <h3 className="text-[17px] font-extrabold text-slate-950 tracking-tight">Portfolio Budget Evolution</h3>
             <p className="text-[12px] text-slate-600 font-medium">Visual trend of budget allocations across onboarded projects</p>
           </div>
-          <div className="h-80 bg-white p-5 rounded-2xl border border-slate-300 shadow-md">
+          <div className="h-80 bg-white p-5 rounded-2xl border border-slate-400 shadow-md">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <defs>
@@ -199,7 +199,7 @@ export default function AdminDashboard() {
             <p className="text-[12px] text-slate-600 font-medium">Quick view of sales funnel statuses</p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-300 divide-y divide-slate-200 shadow-md overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-400 divide-y divide-slate-300 shadow-md overflow-hidden">
             {clients.slice(0, 4).map((client) => {
               const initials = client.name ? client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'C';
               return (

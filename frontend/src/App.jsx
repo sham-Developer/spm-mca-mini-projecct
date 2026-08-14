@@ -41,7 +41,7 @@ export default function App() {
     }
 
     return (
-      <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans">
+      <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-800 font-sans">
         <Sidebar user={user} onLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         {sidebarOpen && (
           <div 
@@ -49,9 +49,9 @@ export default function App() {
             onClick={() => setSidebarOpen(false)}
           />
         )}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
           <Header user={user} title={title} onMenuClick={() => setSidebarOpen(true)} />
-          <main className="p-4 sm:p-8 flex-grow">
+          <main className="p-4 sm:p-8 flex-grow overflow-y-auto">
             {children}
           </main>
         </div>

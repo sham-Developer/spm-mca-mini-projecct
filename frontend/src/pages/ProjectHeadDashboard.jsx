@@ -139,10 +139,10 @@ export default function ProjectHeadDashboard({ currentUserId }) {
       {/* Project head overview stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {/* Managed Workspaces */}
-        <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-indigo-100/70 to-indigo-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Workspaces Managed</span>
-            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.managedProjectsCount}</h3>
+            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.managedProjectsCount}</h3>
           </div>
           <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/10">
             <FolderKanban size={20} className="stroke-[2.5]" />
@@ -150,10 +150,10 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         </div>
 
         {/* Tasks Allocated */}
-        <div className="bg-gradient-to-br from-violet-50 to-white border border-violet-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-violet-100/70 to-violet-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-violet-900 uppercase tracking-widest block">Allocations</span>
-            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.allocatedTasksCount}</h3>
+            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.allocatedTasksCount}</h3>
           </div>
           <div className="p-3 bg-violet-600 rounded-xl text-white shadow-md shadow-violet-600/10">
             <Users size={20} className="stroke-[2.5]" />
@@ -161,11 +161,11 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         </div>
 
         {/* Pending Extensions */}
-        <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-amber-100/70 to-amber-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-amber-955 uppercase tracking-widest block">Pending Extensions</span>
             <div className="flex items-baseline gap-2">
-              <h3 className={`text-[30px] font-black tracking-tight ${stats.pendingDeadlineRequestsCount > 0 ? 'text-amber-700' : 'text-slate-950'}`}>
+              <h3 className={`text-[30px] font-black tracking-tight ${stats.pendingDeadlineRequestsCount > 0 ? 'text-amber-700' : 'text-slate-955'}`}>
                 {stats.pendingDeadlineRequestsCount}
               </h3>
               {stats.pendingDeadlineRequestsCount > 0 && (
@@ -181,7 +181,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         </div>
 
         {/* Tasks Completed */}
-        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-emerald-100/70 to-emerald-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Approved Closed</span>
             <h3 className="text-[30px] font-black text-emerald-800 tracking-tight">{stats.completedTasksCount}</h3>
@@ -200,16 +200,16 @@ export default function ProjectHeadDashboard({ currentUserId }) {
             <p className="text-[12px] text-slate-600 font-medium">Live operational review of team progress metrics</p>
           </div>
 
-          <div className="bg-white border border-slate-300 rounded-2xl overflow-hidden shadow-md">
+          <div className="bg-white border border-slate-400 rounded-2xl overflow-hidden shadow-md">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#334155] text-white">
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-[#5f5f5f] w-16">S.No.</th>
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Task Title</th>
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Assignee</th>
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Progress</th>
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Status</th>
+                  <tr className="bg-[#3715ca] text-white">
+                    <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-slate-300 w-16">S.No.</th>
+                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Task Title</th>
+                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Assignee</th>
+                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Progress</th>
+                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-300">
@@ -339,7 +339,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
             {reports.filter(r => r.status === 'submitted').map((report) => {
               const userInitials = report.user?.full_name ? report.user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'D';
               return (
-                <div key={report.id} className="bg-white border border-slate-300 rounded-2xl p-4.5 space-y-3 shadow-md hover:shadow-lg transition-shadow">
+                <div key={report.id} className="bg-white border border-slate-400 rounded-2xl p-4.5 space-y-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 text-orange-700 font-extrabold text-[11px] flex items-center justify-center">
@@ -389,7 +389,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
               );
             })}
             {reports.filter(r => r.status === 'submitted').length === 0 && (
-              <div className="p-8 text-center bg-white border border-slate-300 rounded-2xl text-slate-700 text-[13px] font-semibold shadow-md">
+              <div className="p-8 text-center bg-white border border-slate-400 rounded-2xl text-slate-700 text-[13px] font-semibold shadow-md">
                 All clear! No pending task completions to review.
               </div>
             )}

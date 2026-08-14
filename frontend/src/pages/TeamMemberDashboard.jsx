@@ -82,10 +82,10 @@ export default function TeamMemberDashboard({ currentUserId }) {
       {/* Team member KPI overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {/* My Assigned Tasks */}
-        <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-slate-100/70 to-slate-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-widest block">Total Assigned</span>
-            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.myTasksCount}</h3>
+            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.myTasksCount}</h3>
           </div>
           <div className="p-3 bg-slate-700 rounded-xl text-white shadow-md shadow-slate-700/10">
             <ClipboardList size={20} className="stroke-[2.5]" />
@@ -93,10 +93,10 @@ export default function TeamMemberDashboard({ currentUserId }) {
         </div>
 
         {/* To Do / In Progress */}
-        <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-orange-100/70 to-orange-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-orange-950 uppercase tracking-widest block">In Progress</span>
-            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">{stats.todoTasksCount}</h3>
+            <span className="text-[11px] font-bold text-orange-955 uppercase tracking-widest block">In Progress</span>
+            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.todoTasksCount}</h3>
           </div>
           <div className="p-3 bg-orange-600 rounded-xl text-white shadow-md shadow-orange-600/10">
             <Clock size={20} className="stroke-[2.5]" />
@@ -104,7 +104,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
         </div>
 
         {/* Submitted (In Review) */}
-        <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-blue-100/70 to-blue-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-blue-900 uppercase tracking-widest block">Pending Review</span>
             <h3 className="text-[30px] font-black text-blue-900 tracking-tight">{stats.reviewTasksCount}</h3>
@@ -115,7 +115,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
         </div>
 
         {/* Tasks Approved */}
-        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-emerald-100/70 to-emerald-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Tasks Completed</span>
             <h3 className="text-[30px] font-black text-emerald-800 tracking-tight">{stats.completedTasksCount}</h3>
@@ -133,16 +133,16 @@ export default function TeamMemberDashboard({ currentUserId }) {
           <p className="text-[12px] text-slate-600 font-medium">Review specifications and report progressions of assigned workflows</p>
         </div>
 
-        <div className="bg-white border border-slate-300 rounded-2xl overflow-hidden shadow-md">
+        <div className="bg-white border border-slate-400 rounded-2xl overflow-hidden shadow-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#334155] text-white">
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-[#5f5f5f] w-16">S.No.</th>
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Deliverable / Project</th>
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Duration limits</th>
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Progress</th>
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-[#5f5f5f]">Status</th>
+                <tr className="bg-[#3715ca] text-white">
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-slate-300 w-16">S.No.</th>
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Deliverable / Project</th>
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Duration limits</th>
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Progress</th>
+                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-300">
