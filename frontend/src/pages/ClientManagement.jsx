@@ -770,18 +770,18 @@ export default function ClientManagement() {
 
           {/* ==================== STANDARD TABLE VIEW ==================== */}
           {viewMode === 'table' && (
-            <div className="bg-white border border-slate-400 rounded-xl overflow-hidden shadow-md">
+            <div className="bg-white overflow-hidden shadow-md border border-slate-300 rounded-[20px]">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-[#3715ca] text-white">
-                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider w-16 text-center">S.No.</th>
-                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Client / Company</th>
-                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Contact</th>
-                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Pipeline Stage</th>
-                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Linked Workspaces</th>
-                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Last Interaction</th>
-                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider text-right">Actions</th>
+                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider w-16 text-center">S.No.</th>
+                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Client / Company</th>
+                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Contact</th>
+                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Pipeline Stage</th>
+                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Linked Workspaces</th>
+                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Last Interaction</th>
+                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300 text-slate-950 font-medium">

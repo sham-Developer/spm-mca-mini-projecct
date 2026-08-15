@@ -70,12 +70,12 @@ export default function Login({ onLoginSuccess }) {
       <div className="w-full max-w-md bg-white/95 backdrop-blur-md border border-slate-200 rounded-3xl shadow-2xl overflow-hidden relative z-10 transition-all duration-300 hover:shadow-orange-500/10">
         <div className="p-8">
           <div className="flex justify-center mb-6">
-            <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center font-extrabold text-2xl text-white shadow-lg shadow-orange-600/20">
+            <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center font-bold text-2xl text-white shadow-lg shadow-orange-600/20">
               N
             </div>
           </div>
 
-          <h2 className="text-[24px] font-extrabold text-center text-slate-900 mb-1 tracking-tight">Welcome back</h2>
+          <h2 className="text-[24px] font-bold text-center text-slate-900 mb-1 tracking-tight">Welcome back</h2>
           <p className="text-slate-800 text-center text-[14px] font-semibold mb-8">Sign in to access your NexTask workspace</p>
 
           {error && (

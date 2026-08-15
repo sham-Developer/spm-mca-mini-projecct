@@ -75,7 +75,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
     <div className="space-y-8 animate-fade-in text-slate-955 font-sans">
       {/* Page Header */}
       <div>
-        <h2 className="text-[22px] font-black text-slate-955 tracking-tight">Developer Workspace</h2>
+        <h2 className="text-[22px] font-bold text-slate-955 tracking-tight">Developer Workspace</h2>
         <p className="text-[13px] text-slate-700 font-semibold">Track your active allocations, submit progress reports, and review completed deliverables</p>
       </div>
 
@@ -85,7 +85,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
         <div className="bg-gradient-to-br from-slate-100/70 to-slate-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-widest block">Total Assigned</span>
-            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.myTasksCount}</h3>
+            <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.myTasksCount}</h3>
           </div>
           <div className="p-3 bg-slate-700 rounded-xl text-white shadow-md shadow-slate-700/10">
             <ClipboardList size={20} className="stroke-[2.5]" />
@@ -96,7 +96,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
         <div className="bg-gradient-to-br from-orange-100/70 to-orange-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-orange-955 uppercase tracking-widest block">In Progress</span>
-            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.todoTasksCount}</h3>
+            <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.todoTasksCount}</h3>
           </div>
           <div className="p-3 bg-orange-600 rounded-xl text-white shadow-md shadow-orange-600/10">
             <Clock size={20} className="stroke-[2.5]" />
@@ -107,7 +107,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
         <div className="bg-gradient-to-br from-blue-100/70 to-blue-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-blue-900 uppercase tracking-widest block">Pending Review</span>
-            <h3 className="text-[30px] font-black text-blue-900 tracking-tight">{stats.reviewTasksCount}</h3>
+            <h3 className="text-[30px] font-bold text-blue-900 tracking-tight">{stats.reviewTasksCount}</h3>
           </div>
           <div className="p-3 bg-blue-600 rounded-xl text-white shadow-md shadow-blue-600/10">
             <Calendar size={20} className="stroke-[2.5]" />
@@ -118,7 +118,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
         <div className="bg-gradient-to-br from-emerald-100/70 to-emerald-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Tasks Completed</span>
-            <h3 className="text-[30px] font-black text-emerald-800 tracking-tight">{stats.completedTasksCount}</h3>
+            <h3 className="text-[30px] font-bold text-emerald-800 tracking-tight">{stats.completedTasksCount}</h3>
           </div>
           <div className="p-3 bg-emerald-600 rounded-xl text-white shadow-md shadow-emerald-600/10">
             <CheckCircle2 size={20} className="stroke-[2.5]" />
@@ -129,11 +129,11 @@ export default function TeamMemberDashboard({ currentUserId }) {
       {/* Task progression list */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-[17px] font-extrabold text-slate-955 tracking-tight">My Deliverables</h3>
+          <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">My Deliverables</h3>
           <p className="text-[12px] text-slate-600 font-medium">Review specifications and report progressions of assigned workflows</p>
         </div>
 
-        <div className="bg-white border border-slate-400 rounded-2xl overflow-hidden shadow-md">
+        <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -166,7 +166,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                             style={{ width: `${task.progress || 0}%` }}
                           ></div>
                         </div>
-                        <span className="text-[11px] font-extrabold text-slate-800">{task.progress || 0}%</span>
+                        <span className="text-[11px] font-bold text-slate-800">{task.progress || 0}%</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 border border-slate-300">
@@ -213,7 +213,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-[12px] text-slate-800 font-bold">
-                    Showing <span className="font-extrabold">{indexOfFirstItem + 1}</span> to <span className="font-extrabold">{Math.min(indexOfLastItem, tasks.length)}</span> of <span className="font-extrabold">{tasks.length}</span> results
+                    Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{Math.min(indexOfLastItem, tasks.length)}</span> of <span className="font-bold">{tasks.length}</span> results
                   </p>
                 </div>
                 <div>
@@ -229,7 +229,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                       <button
                         key={i + 1}
                         onClick={() => setCurrentPage(i + 1)}
-                        className={`relative inline-flex items-center px-3.5 py-1.5 border-t border-b border-slate-300 text-xs font-extrabold transition-colors cursor-pointer ${
+                        className={`relative inline-flex items-center px-3.5 py-1.5 border-t border-b border-slate-300 text-xs font-bold transition-colors cursor-pointer ${
                           currentPage === i + 1
                             ? 'z-10 bg-orange-600 text-white'
                             : 'bg-white text-slate-700 hover:bg-slate-50'

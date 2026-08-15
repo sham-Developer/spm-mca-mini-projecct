@@ -41,7 +41,7 @@ export default function App() {
     }
 
     return (
-      <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-800 font-sans">
+      <div className="flex h-screen overflow-hidden text-slate-800 font-sans">
         <Sidebar user={user} onLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         {sidebarOpen && (
           <div 
@@ -51,7 +51,14 @@ export default function App() {
         )}
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
           <Header user={user} title={title} onMenuClick={() => setSidebarOpen(true)} />
-          <main className="p-4 sm:p-8 flex-grow overflow-y-auto">
+          <main 
+            className="p-4 sm:p-8 flex-grow overflow-y-auto"
+            style={{
+              backgroundColor: '#f1f5f9',
+              backgroundImage: 'radial-gradient(circle, #b8c5d6 1.2px, transparent 1.2px)',
+              backgroundSize: '22px 22px'
+            }}
+          >
             {children}
           </main>
         </div>

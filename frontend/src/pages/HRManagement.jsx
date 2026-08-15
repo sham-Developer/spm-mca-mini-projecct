@@ -346,7 +346,7 @@ export default function HRManagement() {
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-[22px] font-black text-slate-955 tracking-tight">Personnel & HR Management</h2>
+          <h2 className="text-[22px] font-bold text-slate-955 tracking-tight">Personnel & HR Management</h2>
           <p className="text-[13px] text-slate-700 font-semibold">Manage employee profile details, credentials, and document deposits</p>
         </div>
 
@@ -362,10 +362,10 @@ export default function HRManagement() {
       {/* HR ANALYTICS STATS ROW (4 detailed counters) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-fast">
         {/* Total Directory Count */}
-        <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-blue-200 to-white border border-indigo-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Total Directory</span>
-            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">
+            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
               {employees.length}
             </h3>
           </div>
@@ -375,10 +375,10 @@ export default function HRManagement() {
         </div>
 
         {/* On-Role Staff */}
-        <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-orange-200 to-white border border-orange-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-orange-955 uppercase tracking-widest block">On Role Staff</span>
-            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">
+            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
               {employees.filter(e => e.employment_type === 'on role' || e.employment_type === 'on_role' || !e.employment_type).length}
             </h3>
           </div>
@@ -388,10 +388,10 @@ export default function HRManagement() {
         </div>
 
         {/* Active Engineers */}
-        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-emerald-100 to-white border border-emerald-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-emerald-955 uppercase tracking-widest block">Active Engineers</span>
-            <h3 className="text-[30px] font-black text-slate-950 tracking-tight">
+            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
               {employees.filter(e => e.role === 'team_member' && e.status === 'active').length}
             </h3>
           </div>
@@ -401,10 +401,10 @@ export default function HRManagement() {
         </div>
 
         {/* Leadership & Admins */}
-        <div className="bg-gradient-to-br from-violet-50 to-white border border-violet-100 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+        <div className="bg-gradient-to-br from-violet-200 to-white border border-violet-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-violet-900 uppercase tracking-widest block">Admins & Heads</span>
-            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">
+            <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">
               {employees.filter(e => e.role === 'admin' || e.role === 'project_head').length}
             </h3>
           </div>
@@ -415,7 +415,7 @@ export default function HRManagement() {
       </div>
 
       {/* SEARCH AND FILTERS BAR */}
-      <div className="bg-slate-50 border border-slate-350 rounded-2xl p-4 shadow-sm space-y-3 md:space-y-0 md:flex md:items-center md:justify-between gap-4 animate-fade-in-fast">
+      <div className="rounded-2xl space-y-3 md:space-y-0 md:flex md:items-center md:justify-between gap-4 animate-fade-in-fast">
         
         {/* Left Side: Search Keyword */}
         <div className="flex items-center bg-white border border-slate-400 rounded-xl px-3.5 py-1.5 shadow-inner flex-1 max-w-md">
@@ -469,7 +469,7 @@ export default function HRManagement() {
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
         </div>
       ) : (
-        <div className="bg-white border border-slate-400 rounded-2xl overflow-hidden shadow-md">
+        <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -496,8 +496,8 @@ export default function HRManagement() {
                             {empInitials}
                           </div>
                           <div>
-                            <span className="block text-[14px] font-extrabold text-slate-955 leading-tight">{employee.full_name}</span>
-                            <span className="inline-block text-[10px] font-extrabold uppercase px-2 py-0.5 bg-slate-100 border border-slate-300 rounded mt-1.5 text-slate-800">
+                            <span className="block text-[14px] font-bold text-slate-955 leading-tight">{employee.full_name}</span>
+                            <span className="inline-block text-[10px] font-bold uppercase px-2 py-0.5 bg-slate-100 border border-slate-300 rounded mt-1.5 text-slate-800">
                               {employee.employment_type || 'on role'}
                             </span>
                           </div>

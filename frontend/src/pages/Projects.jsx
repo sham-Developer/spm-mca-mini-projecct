@@ -518,19 +518,6 @@ export default function Projects({ userRole, currentUserId }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {userRole === 'project_head' && (
-            <button
-              onClick={() => setIsReviewRequestsModalOpen(true)}
-              className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-400 px-4 py-2.5 rounded-xl text-[14px] font-bold transition-all shadow-sm cursor-pointer"
-            >
-              <span>Review Extension Requests</span>
-              {deadlineRequests.filter(r => r.status === 'pending').length > 0 && (
-                <span className="w-5 h-5 bg-orange-600 rounded-full flex items-center justify-center text-[11px] font-bold text-white">
-                  {deadlineRequests.filter(r => r.status === 'pending').length}
-                </span>
-              )}
-            </button>
-          )}
 
           {(userRole === 'admin' || userRole === 'project_head') && (
             <button
@@ -744,7 +731,7 @@ export default function Projects({ userRole, currentUserId }) {
           {/* 2. MAIN TABLE VIEW OF ALL PROJECTS (List view mode) */}
           {/* ========================================================= */}
           {viewMode === 'list' && (
-            <div className="bg-white border border-slate-400 rounded-2xl shadow-md overflow-hidden">
+            <div className="bg-white rounded-[20px] shadow-md overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
@@ -792,14 +779,14 @@ export default function Projects({ userRole, currentUserId }) {
                                 <select
                                   value={proj.status || 'planning'}
                                   onChange={(e) => handleUpdateProjectStatus(proj.id, e.target.value)}
-                                  className={`text-[11px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border cursor-pointer focus:outline-none transition-colors ${
+                                  className={`text-[11px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md cursor-pointer outline-none focus:outline-none transition-colors ${
                                     proj.status === 'active'
-                                      ? 'bg-blue-100 text-blue-950 border-blue-400'
+                                      ? 'bg-blue-100 text-blue-950'
                                       : proj.status === 'completed'
-                                      ? 'bg-emerald-100 text-emerald-950 border-emerald-400'
+                                      ? 'bg-emerald-100 text-emerald-950'
                                       : proj.status === 'on_hold'
-                                      ? 'bg-amber-100 text-amber-955 border-amber-400'
-                                      : 'bg-orange-100 text-orange-955 border-orange-400'
+                                      ? 'bg-amber-100 text-amber-955'
+                                      : 'bg-orange-100 text-orange-955'
                                   }`}
                                 >
                                   <option value="planning">Planning</option>
@@ -894,15 +881,15 @@ export default function Projects({ userRole, currentUserId }) {
           {/* 3. GO TO PAGE INNER VIEW PANEL (Matching Mockup 1 style) */}
           {/* ========================================================= */}
           {viewMode === 'detail' && selectedProject && (
-            <div className="space-y-6 transition-all animate-fade-in">
+            <div className="space-y-3 transition-all animate-fade-in">
               
               {/* TOP INNER PAGE HEADER NAVIGATION */}
-              <div className="flex items-center gap-3 bg-white p-2 border border-slate-400 rounded-xl shadow-sm">
+              <div className="flex items-center gap-2 bg-white px-2.5 py-1.5 border border-slate-400 rounded-xl shadow-sm">
                 <button
                   onClick={() => { setViewMode('list'); setSelectedProject(null); }}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg text-[13px] font-bold text-slate-800 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg text-[12px] font-bold text-slate-800 transition-colors cursor-pointer"
                 >
-                  <ArrowLeft size={15} />
+                  <ArrowLeft size={13} />
                   <span>Back to Workspaces</span>
                 </button>
               </div>
@@ -910,16 +897,16 @@ export default function Projects({ userRole, currentUserId }) {
               {/* OVERVIEW CONTENT VIEW */}
               <>
                   {/* KPI ANALYTICS STATS ROW (6 detailed counters) */}
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
                     {/* Status Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                      <div className="text-[12px] text-slate-700 font-bold uppercase tracking-wider">Project Status</div>
+                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
+                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Project Status</div>
                       <div className="mt-1">
                         {userRole === 'admin' || userRole === 'project_head' ? (
                           <select
                             value={selectedProject.status || 'planning'}
                             onChange={(e) => handleUpdateProjectStatus(selectedProject.id, e.target.value)}
-                            className={`text-[12px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md border cursor-pointer focus:outline-none transition-colors w-full ${
+                            className={`text-[11px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md border cursor-pointer focus:outline-none transition-colors w-full ${
                               selectedProject.status === 'active'
                                 ? 'bg-blue-100 text-blue-955 border-blue-400'
                                 : selectedProject.status === 'completed'
@@ -935,7 +922,7 @@ export default function Projects({ userRole, currentUserId }) {
                             <option value="completed">Completed</option>
                           </select>
                         ) : (
-                          <span className={`text-[12px] uppercase tracking-wider font-bold px-2 py-1 rounded-md border inline-block ${
+                          <span className={`text-[11px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md border inline-block ${
                             selectedProject.status === 'active'
                               ? 'bg-blue-100 text-blue-955 border-blue-400'
                               : selectedProject.status === 'completed'
@@ -950,85 +937,85 @@ export default function Projects({ userRole, currentUserId }) {
                       </div>
                     </div>
                     {/* Total Tasks Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                      <div className="text-[12px] text-slate-700 font-bold uppercase tracking-wider">Total Tasks</div>
-                      <div className="text-[26px] font-extrabold text-slate-950 mt-1">
+                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
+                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Total Tasks</div>
+                      <div className="text-[22px] font-bold text-slate-950 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id).length}
                       </div>
                     </div>
                     {/* Completed Tasks Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                      <div className="text-[12px] text-slate-700 font-bold uppercase tracking-wider">Completed</div>
-                      <div className="text-[26px] font-extrabold text-emerald-700 mt-1">
+                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
+                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Completed</div>
+                      <div className="text-[22px] font-bold text-emerald-700 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id && t.status === 'completed').length}
                       </div>
                     </div>
                     {/* Ongoing Tasks Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                      <div className="text-[12px] text-slate-700 font-bold uppercase tracking-wider">Ongoing</div>
-                      <div className="text-[26px] font-extrabold text-blue-700 mt-1">
+                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
+                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Ongoing</div>
+                      <div className="text-[22px] font-bold text-blue-700 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id && t.status !== 'completed').length}
                       </div>
                     </div>
                     {/* Delayed Completed Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                      <div className="text-[12px] text-slate-700 font-bold uppercase tracking-wider">Delayed</div>
-                      <div className="text-[26px] font-extrabold text-yellow-700 mt-1">
+                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
+                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Delayed</div>
+                      <div className="text-[22px] font-bold text-yellow-700 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id && t.status === 'completed' && new Date(t.end_date) > new Date(selectedProject.end_date)).length}
                       </div>
                     </div>
                     {/* Overdue Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                      <div className="text-[12px] text-slate-700 font-bold uppercase tracking-wider">Overdue</div>
-                      <div className="text-[26px] font-extrabold text-red-700 mt-1">
+                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
+                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Overdue</div>
+                      <div className="text-[22px] font-bold text-red-700 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id && t.status !== 'completed' && new Date() > new Date(t.end_date)).length}
                       </div>
                     </div>
                   </div>
 
-                  {/* PROJECT META CARD (Image 1 top middle section style) */}
-                  <div className="bg-white border border-slate-400 rounded-2xl p-5 shadow-md space-y-5">
-                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+                  {/* PROJECT META CARD */}
+                  <div className="bg-white border border-slate-400 rounded-2xl p-3.5 shadow-md space-y-3">
+                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3">
                       {/* Name & Priority badge */}
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-[20px] font-extrabold text-slate-950">{selectedProject.name}</h3>
-                          <span className="text-[11px] uppercase tracking-wider text-orange-950 font-bold bg-orange-100 border border-orange-400 px-2 py-0.5 rounded">
+                          <h3 className="text-[18px] font-bold text-slate-950">{selectedProject.name}</h3>
+                          <span className="text-[10px] uppercase tracking-wider text-orange-950 font-bold bg-orange-100 border border-orange-400 px-2 py-0.5 rounded">
                             {selectedProject.priority || 'Medium'}
                           </span>
                         </div>
-                        <p className="text-[13px] text-slate-800 font-medium">{selectedProject.description || 'No description workspace parameters specified.'}</p>
+                        <p className="text-[12px] text-slate-800 font-medium">{selectedProject.description || 'No description workspace parameters specified.'}</p>
                       </div>
 
                       {/* Initiated By & Project Head details */}
-                      <div className="flex flex-wrap gap-4 text-[13px]">
-                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl p-2.5">
-                          <Users size={16} className="text-orange-600" />
+                      <div className="flex flex-wrap gap-2 text-[12px]">
+                        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-xl p-2">
+                          <Users size={14} className="text-orange-600" />
                           <div>
                             <span className="text-[10px] text-slate-800 font-bold block uppercase">Initiated By</span>
-                            <span className="font-extrabold text-slate-950">{selectedProject.client?.name || 'Client Lead'}</span>
+                            <span className="font-bold text-slate-950 text-[12px]">{selectedProject.client?.name || 'Client Lead'}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl p-2.5">
-                          <User size={16} className="text-orange-600" />
+                        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-xl p-2">
+                          <User size={14} className="text-orange-600" />
                           <div>
                             <span className="text-[10px] text-slate-800 font-bold block uppercase">Team Head</span>
-                            <span className="font-extrabold text-slate-950">{selectedProject.project_head?.full_name || 'Software Admin'}</span>
+                            <span className="font-bold text-slate-950 text-[12px]">{selectedProject.project_head?.full_name || 'Software Admin'}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Bottom detailed parameters section */}
-                    <div className="border-t border-slate-200 pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                      <div className="text-[13px] font-semibold text-slate-800">
+                    <div className="border-t border-slate-200 pt-2.5 grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+                      <div className="text-[12px] font-semibold text-slate-800">
                         <span className="font-bold text-slate-700 block text-[10px] uppercase">Starting Date</span>
-                        <span className="text-[14px] font-bold text-slate-900">{formatDate(selectedProject.start_date)}</span>
+                        <span className="text-[13px] font-bold text-slate-900">{formatDate(selectedProject.start_date)}</span>
                       </div>
-                      <div className="text-[13px] font-semibold text-slate-805">
+                      <div className="text-[12px] font-semibold text-slate-805">
                         <span className="font-bold text-slate-700 block text-[10px] uppercase">Duration Deadline</span>
-                        <span className="text-[14px] font-bold text-red-700">{formatDate(selectedProject.end_date)}</span>
+                        <span className="text-[13px] font-bold text-red-700">{formatDate(selectedProject.end_date)}</span>
                       </div>
                       <div className="flex justify-end gap-2">
                         {(userRole === 'admin' || userRole === 'project_head') && (
@@ -1042,9 +1029,9 @@ export default function Projects({ userRole, currentUserId }) {
                               setTaskEnd('');
                               setShowTaskForm(true);
                             }}
-                            className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-2 rounded-xl text-[12px] font-bold cursor-pointer transition-colors"
+                            className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer transition-colors"
                           >
-                            <Plus size={14} />
+                            <Plus size={13} />
                             <span>Add / Edit Task</span>
                           </button>
                         )}
@@ -1111,7 +1098,7 @@ export default function Projects({ userRole, currentUserId }) {
                                             style={{ width: `${task.progress || 0}%` }}
                                           ></div>
                                         </div>
-                                        <span className="text-[11px] font-extrabold text-slate-900">{task.progress || 0}%</span>
+                                        <span className="text-[11px] font-bold text-slate-900">{task.progress || 0}%</span>
                                       </div>
                                     </td>
                                     <td className="px-4 py-3 border border-slate-300">
@@ -1228,7 +1215,7 @@ export default function Projects({ userRole, currentUserId }) {
                                     <td className="px-3 py-2 text-slate-800 border border-slate-300">
                                       {rep.task?.title || tasks.find(t => t.id === rep.task_id)?.title || 'Task'}
                                     </td>
-                                    <td className="px-3 py-2 font-extrabold text-slate-900 border border-slate-300">
+                                    <td className="px-3 py-2 font-bold text-slate-900 border border-slate-300">
                                       <span className="bg-orange-50 border border-orange-200 text-orange-800 px-2 py-0.5 rounded-md text-[11px]">
                                         {rep.progress ?? (tasks.find(t => t.id === rep.task_id)?.progress || 0)}%
                                       </span>
@@ -1237,7 +1224,7 @@ export default function Projects({ userRole, currentUserId }) {
                                       {formatDate(rep.created_at)}
                                     </td>
                                     <td className="px-3 py-2 border border-slate-300">
-                                      <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border uppercase ${
+                                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${
                                         rep.status === 'approved' 
                                           ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
                                           : 'bg-amber-100 border-amber-400 text-amber-955'
@@ -1475,7 +1462,7 @@ export default function Projects({ userRole, currentUserId }) {
                   <div className="md:col-span-2 space-y-1.5">
                     <div className="flex justify-between items-center text-[11px] font-bold text-slate-800">
                       <span>Completion Progress</span>
-                      <span className="bg-orange-100 text-orange-800 border border-orange-300 px-2 py-0.5 rounded-full text-[11px] font-extrabold">
+                      <span className="bg-orange-100 text-orange-800 border border-orange-300 px-2 py-0.5 rounded-full text-[11px] font-bold">
                         {reportProgress}%
                       </span>
                     </div>
@@ -1574,10 +1561,10 @@ export default function Projects({ userRole, currentUserId }) {
                             {rep.user?.full_name || teamMembers.find(m => m.id === rep.submitted_by)?.full_name || 'Developer'}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="bg-orange-100 text-orange-850 font-extrabold px-2.5 py-0.5 rounded-full text-[11px] border border-orange-300">
+                            <span className="bg-orange-100 text-orange-850 font-bold px-2.5 py-0.5 rounded-full text-[11px] border border-orange-300">
                               {rep.progress ?? (selectedTask?.progress || 0)}% Progress
                             </span>
-                            <span className={`px-2 py-0.5 rounded text-[11px] font-extrabold border ${
+                            <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
                               rep.status === 'approved' 
                                 ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
                                 : 'bg-amber-100 border-amber-400 text-amber-955'
@@ -1684,8 +1671,8 @@ export default function Projects({ userRole, currentUserId }) {
             </div>
 
             <div className="space-y-3">
-              <label className="block text-[12px] font-extrabold text-slate-900">
-                To confirm, type <span className="font-extrabold text-red-700">I confirm to delete this project</span> in the input below:
+              <label className="block text-[12px] font-bold text-slate-900">
+                To confirm, type <span className="font-bold text-red-700">I confirm to delete this project</span> in the input below:
               </label>
               <input
                 type="text"

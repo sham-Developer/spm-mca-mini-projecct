@@ -83,7 +83,7 @@ export default function AdminDashboard() {
     <div className="space-y-8 animate-fade-in text-slate-955">
       {/* Page Header */}
       <div>
-        <h2 className="text-[22px] font-black text-slate-950 tracking-tight">Executive Dashboard</h2>
+        <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Executive Dashboard</h2>
         <p className="text-[13px] text-slate-700 font-semibold">Real-time overview of client onboarding, workspace portfolio, and capital resources</p>
       </div>
 
@@ -94,8 +94,8 @@ export default function AdminDashboard() {
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Total Clients</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.totalClients}</h3>
-              <span className="text-[11px] font-extrabold text-emerald-800 flex items-center gap-0.5 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded-full">
+              <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.totalClients}</h3>
+              <span className="text-[11px] font-bold text-emerald-800 flex items-center gap-0.5 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded-full">
                 <TrendingUp size={10} className="stroke-[3]" />
                 +12%
               </span>
@@ -111,8 +111,8 @@ export default function AdminDashboard() {
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-orange-955 uppercase tracking-widest block">Active Projects</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.activeProjects}</h3>
-              <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+              <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.activeProjects}</h3>
+              <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
                 On Track
               </span>
             </div>
@@ -127,8 +127,8 @@ export default function AdminDashboard() {
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Headcount (HR)</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.totalEmployees}</h3>
-              <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+              <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.totalEmployees}</h3>
+              <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
                 Resourceful
               </span>
             </div>
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-amber-955 uppercase tracking-widest block">Portfolio Budget</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[22px] font-black text-slate-955 tracking-tight">
+              <h3 className="text-[22px] font-bold text-slate-955 tracking-tight">
                 {formatRupee(stats.totalBudget)}
               </h3>
             </div>
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
         {/* Chart View */}
         <div className="lg:col-span-2 space-y-4">
           <div>
-            <h3 className="text-[17px] font-extrabold text-slate-950 tracking-tight">Portfolio Budget Evolution</h3>
+            <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Portfolio Budget Evolution</h3>
             <p className="text-[12px] text-slate-600 font-medium">Visual trend of budget allocations across onboarded projects</p>
           </div>
           <div className="h-80 bg-white p-5 rounded-2xl border border-slate-400 shadow-md">
@@ -195,7 +195,7 @@ export default function AdminDashboard() {
         {/* Client onboard summaries */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-[17px] font-extrabold text-slate-955 tracking-tight">Recent Enquiries</h3>
+            <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">Recent Enquiries</h3>
             <p className="text-[12px] text-slate-600 font-medium">Quick view of sales funnel statuses</p>
           </div>
 
@@ -213,7 +213,7 @@ export default function AdminDashboard() {
                       <span className="text-[11px] text-slate-600 font-bold block mt-0.5">{client.company || 'Private Partner'}</span>
                     </div>
                   </div>
-                  <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border ${
+                  <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border ${
                     client.status === 'onboarded' 
                       ? 'bg-emerald-100 text-emerald-950 border-emerald-400' 
                       : client.status === 'follow_up'

@@ -132,7 +132,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
     <div className="space-y-8 animate-fade-in text-slate-955">
       {/* Page Header */}
       <div>
-        <h2 className="text-[22px] font-black text-slate-950 tracking-tight">Project Management Board</h2>
+        <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Project Management Board</h2>
         <p className="text-[13px] text-slate-700 font-semibold">Track task completion workflows, approve progress entries, and review project extensions</p>
       </div>
 
@@ -142,7 +142,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         <div className="bg-gradient-to-br from-indigo-100/70 to-indigo-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Workspaces Managed</span>
-            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.managedProjectsCount}</h3>
+            <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.managedProjectsCount}</h3>
           </div>
           <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/10">
             <FolderKanban size={20} className="stroke-[2.5]" />
@@ -153,7 +153,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         <div className="bg-gradient-to-br from-violet-100/70 to-violet-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-violet-900 uppercase tracking-widest block">Allocations</span>
-            <h3 className="text-[30px] font-black text-slate-955 tracking-tight">{stats.allocatedTasksCount}</h3>
+            <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.allocatedTasksCount}</h3>
           </div>
           <div className="p-3 bg-violet-600 rounded-xl text-white shadow-md shadow-violet-600/10">
             <Users size={20} className="stroke-[2.5]" />
@@ -165,11 +165,11 @@ export default function ProjectHeadDashboard({ currentUserId }) {
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-amber-955 uppercase tracking-widest block">Pending Extensions</span>
             <div className="flex items-baseline gap-2">
-              <h3 className={`text-[30px] font-black tracking-tight ${stats.pendingDeadlineRequestsCount > 0 ? 'text-amber-700' : 'text-slate-955'}`}>
+              <h3 className={`text-[30px] font-bold tracking-tight ${stats.pendingDeadlineRequestsCount > 0 ? 'text-amber-700' : 'text-slate-955'}`}>
                 {stats.pendingDeadlineRequestsCount}
               </h3>
               {stats.pendingDeadlineRequestsCount > 0 && (
-                <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded-full border border-amber-300">
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded-full border border-amber-300">
                   Action Required
                 </span>
               )}
@@ -184,7 +184,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         <div className="bg-gradient-to-br from-emerald-100/70 to-emerald-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Approved Closed</span>
-            <h3 className="text-[30px] font-black text-emerald-800 tracking-tight">{stats.completedTasksCount}</h3>
+            <h3 className="text-[30px] font-bold text-emerald-800 tracking-tight">{stats.completedTasksCount}</h3>
           </div>
           <div className="p-3 bg-emerald-600 rounded-xl text-white shadow-md shadow-emerald-600/10">
             <CheckCircle size={20} className="stroke-[2.5]" />
@@ -196,11 +196,11 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         {/* Active project head task allocation board */}
         <div className="lg:col-span-2 space-y-4">
           <div>
-            <h3 className="text-[17px] font-extrabold text-slate-955 tracking-tight">Active Team Allocations</h3>
+            <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">Active Team Allocations</h3>
             <p className="text-[12px] text-slate-600 font-medium">Live operational review of team progress metrics</p>
           </div>
 
-          <div className="bg-white border border-slate-400 rounded-2xl overflow-hidden shadow-md">
+          <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -240,7 +240,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                                 style={{ width: `${task.progress || 0}%` }}
                               ></div>
                             </div>
-                            <span className="text-[11px] font-extrabold text-slate-800">{task.progress || 0}%</span>
+                            <span className="text-[11px] font-bold text-slate-800">{task.progress || 0}%</span>
                           </div>
                         </td>
                         <td className="px-4 py-3 border border-slate-300">
@@ -288,7 +288,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                   <div>
                     <p className="text-[12px] text-slate-800 font-bold">
-                      Showing <span className="font-extrabold">{indexOfFirstItem + 1}</span> to <span className="font-extrabold">{Math.min(indexOfLastItem, tasks.length)}</span> of <span className="font-extrabold">{tasks.length}</span> results
+                      Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{Math.min(indexOfLastItem, tasks.length)}</span> of <span className="font-bold">{tasks.length}</span> results
                     </p>
                   </div>
                   <div>
@@ -304,7 +304,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                         <button
                           key={i + 1}
                           onClick={() => setCurrentPage(i + 1)}
-                          className={`relative inline-flex items-center px-3.5 py-1.5 border-t border-b border-slate-300 text-xs font-extrabold transition-colors cursor-pointer ${
+                          className={`relative inline-flex items-center px-3.5 py-1.5 border-t border-b border-slate-300 text-xs font-bold transition-colors cursor-pointer ${
                             currentPage === i + 1
                               ? 'bg-orange-600 text-white border-orange-600'
                               : 'bg-white text-slate-700 hover:bg-slate-50'
@@ -331,7 +331,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         {/* Pending task reviews and progression reports */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-[17px] font-extrabold text-slate-955 tracking-tight">Pending Evaluations</h3>
+            <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">Pending Evaluations</h3>
             <p className="text-[12px] text-slate-600 font-medium">Sign-off reports submitted by team members</p>
           </div>
 
@@ -342,7 +342,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                 <div key={report.id} className="bg-white border border-slate-400 rounded-2xl p-4.5 space-y-3 shadow-md hover:shadow-lg transition-shadow">
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 text-orange-700 font-extrabold text-[11px] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 text-orange-700 font-bold text-[11px] flex items-center justify-center">
                         {userInitials}
                       </div>
                       <div>
@@ -352,7 +352,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                         </span>
                       </div>
                     </div>
-                    <span className="bg-orange-50 border border-orange-200 text-orange-800 font-extrabold px-2 py-0.5 rounded-full text-[11px] whitespace-nowrap">
+                    <span className="bg-orange-50 border border-orange-200 text-orange-800 font-bold px-2 py-0.5 rounded-full text-[11px] whitespace-nowrap">
                       {report.progress || 0}% Progress
                     </span>
                   </div>
@@ -404,7 +404,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-400 flex items-center justify-between bg-slate-100 rounded-t-xl">
               <div>
-                <h3 className="text-[17px] font-extrabold text-slate-950">Task Update History</h3>
+                <h3 className="text-[17px] font-bold text-slate-950">Task Update History</h3>
                 <p className="text-[12px] text-slate-700 font-semibold mt-0.5">
                   Showing historical updates for: <span className="text-slate-950 font-bold">{selectedHistoryTask.title}</span>
                 </p>
@@ -429,10 +429,10 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                   >
                     <div className="flex justify-between items-center flex-wrap gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="bg-slate-200 border border-slate-400 text-slate-900 font-extrabold px-2 py-0.5 rounded text-[11px]">
+                        <span className="bg-slate-200 border border-slate-400 text-slate-900 font-bold px-2 py-0.5 rounded text-[11px]">
                           {historyReport.progress}% Progress
                         </span>
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-extrabold border ${
+                        <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
                           historyReport.status === 'approved' 
                             ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
                             : 'bg-amber-100 border-amber-400 text-amber-955'

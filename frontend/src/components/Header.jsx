@@ -95,7 +95,7 @@ export default function Header({ user, title, onMenuClick }) {
           >
             <Bell size={18} className="stroke-[2]" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-orange-600 text-white rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-extrabold font-sans">
+              <span className="absolute -top-1 -right-1 bg-orange-600 text-white rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-bold font-sans">
                 {unreadCount}
               </span>
             )}
@@ -109,11 +109,11 @@ export default function Header({ user, title, onMenuClick }) {
               />
               <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-400 rounded-xl shadow-2xl z-50 text-slate-950 flex flex-col font-sans animate-fade-in">
                 <div className="px-4 py-3 border-b border-slate-400 flex items-center justify-between bg-slate-50 rounded-t-xl">
-                  <span className="text-[13px] font-extrabold text-slate-900 uppercase tracking-wider">Notifications</span>
+                  <span className="text-[13px] font-bold text-slate-900 uppercase tracking-wider">Notifications</span>
                   {unreadCount > 0 && (
                     <button 
                       onClick={handleMarkAllAsRead}
-                      className="text-[11px] font-extrabold text-orange-600 hover:text-orange-500 cursor-pointer hover:underline"
+                      className="text-[11px] font-bold text-orange-600 hover:text-orange-500 cursor-pointer hover:underline"
                     >
                       Mark all read
                     </button>
@@ -132,7 +132,7 @@ export default function Header({ user, title, onMenuClick }) {
                       }`}
                     >
                       <div className="flex justify-between items-start gap-1.5">
-                        <h5 className={`text-[12.5px] leading-tight ${notif.is_read ? 'font-semibold text-slate-800' : 'font-extrabold text-slate-950'}`}>
+                        <h5 className={`text-[12.5px] leading-tight ${notif.is_read ? 'font-semibold text-slate-800' : 'font-bold text-slate-950'}`}>
                           {notif.title}
                         </h5>
                         <span className="text-[10px] text-slate-700 font-bold whitespace-nowrap">
