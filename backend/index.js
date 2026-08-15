@@ -276,7 +276,7 @@ app.get('/api/projects', async (req, res) => {
 app.post('/api/projects', async (req, res) => {
   const { name, client_id, description, start_date, end_date, budget, project_head_id, performed_by } = req.body;
   const newProject = { id: 'p' + (projectsStore.length + 1), status: 'planning', ...req.body };
-  
+
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query(
@@ -289,11 +289,21 @@ app.post('/api/projects', async (req, res) => {
         'INSERT INTO project_history (project_id, action, description, performed_by) VALUES ($1, $2, $3, $4)',
         [createdProj.id, 'created', `Project created with initial budget of ₹${budget || 0}.`, performedByVal]
       );
+      // Notify the assigned project head
+      if (project_head_id) {
+        await createNotification(
+          project_head_id,
+          'New Project Assigned to You',
+          `You have been assigned as Project Head for the new project: "${name}"`
+        );
+      }
       return res.json(createdProj);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
+
+  // In-memory fallback
   projectsStore.push(newProject);
   const performedByVal = performed_by || 'System';
   projectHistoryStore.push({
@@ -304,13 +314,21 @@ app.post('/api/projects', async (req, res) => {
     performed_by: performedByVal,
     created_at: new Date().toISOString()
   });
+  // Notify the assigned project head (in-memory)
+  if (project_head_id) {
+    createNotification(
+      project_head_id,
+      'New Project Assigned to You',
+      `You have been assigned as Project Head for the new project: "${name}"`
+    );
+  }
   res.json(newProject);
 });
 
 app.put('/api/projects/:id', async (req, res) => {
   const { id } = req.params;
   const performedBy = req.body.performed_by || 'System';
-  
+
   if (isDbConfigured && pool) {
     try {
       // 1. Get existing project to compare
@@ -333,7 +351,7 @@ app.put('/api/projects/:id', async (req, res) => {
       const result = await pool.query(queryText, values);
       const updated = result.rows[0];
 
-      // 3. Log history
+      // 3. Log history & send notifications
       if (prev) {
         if (req.body.status && prev.status !== req.body.status) {
           await pool.query(
@@ -347,6 +365,17 @@ app.put('/api/projects/:id', async (req, res) => {
             [id, 'budget_updated', `Budget updated from ₹${prev.budget} to ₹${req.body.budget}.`, performedBy]
           );
         }
+        // Notify new project head if assigned/changed
+        if (
+          req.body.project_head_id &&
+          String(req.body.project_head_id) !== String(prev.project_head_id)
+        ) {
+          await createNotification(
+            req.body.project_head_id,
+            'Project Assigned to You',
+            `You have been assigned as Project Head for project: "${updated.name}"`
+          );
+        }
       }
 
       return res.json(updated);
@@ -355,6 +384,7 @@ app.put('/api/projects/:id', async (req, res) => {
     }
   }
 
+  // In-memory fallback
   const prev = projectsStore.find(p => p.id === id);
   projectsStore = projectsStore.map(p => p.id === id ? { ...p, ...req.body } : p);
   const updated = projectsStore.find(p => p.id === id);
@@ -379,6 +409,17 @@ app.put('/api/projects/:id', async (req, res) => {
         performed_by: performedBy,
         created_at: new Date().toISOString()
       });
+    }
+    // Notify new project head (in-memory)
+    if (
+      req.body.project_head_id &&
+      String(req.body.project_head_id) !== String(prev.project_head_id)
+    ) {
+      createNotification(
+        req.body.project_head_id,
+        'Project Assigned to You',
+        `You have been assigned as Project Head for project: "${updated.name}"`
+      );
     }
   }
 
@@ -470,37 +511,83 @@ app.post('/api/tasks', async (req, res) => {
 app.put('/api/tasks/:id', async (req, res) => {
   const { id } = req.params;
   const fields = req.body;
-  
-  // Always update in-memory store so changes reflect instantly
-  tasksStore = tasksStore.map(t => String(t.id) === String(id) ? { ...t, ...fields } : t);
 
   if (isDbConfigured && pool) {
     try {
+      // Fetch previous state to detect reassignment or completion
+      const prevResult = await pool.query('SELECT * FROM tasks WHERE id = $1', [id]);
+      const prevTask = prevResult.rows[0];
+
       const keys = Object.keys(fields).filter(k => fields[k] !== undefined);
       if (keys.length > 0) {
         const setClause = keys.map((key, i) => `"${key}" = $${i + 1}`).join(', ');
         const values = keys.map(key => fields[key]);
         values.push(id);
-        
+
         const query = `UPDATE tasks SET ${setClause} WHERE id = $${values.length} RETURNING *`;
         const result = await pool.query(query, values);
         if (result.rows.length > 0) {
           const updatedTask = result.rows[0];
-          if (fields.status === 'completed' && updatedTask.assigned_to) {
-            await createNotification(updatedTask.assigned_to, 'Task Completed & Signed Off', `Your task "${updatedTask.title}" has been signed off and completed.`);
+
+          // Notify newly assigned member if assignee changed
+          if (
+            fields.assigned_to &&
+            prevTask &&
+            String(fields.assigned_to) !== String(prevTask.assigned_to)
+          ) {
+            await createNotification(
+              fields.assigned_to,
+              'New Task Assigned',
+              `You have been assigned a new task: "${updatedTask.title}"`
+            );
           }
+
+          // Notify assignee when task is marked completed
+          if (fields.status === 'completed' && updatedTask.assigned_to) {
+            await createNotification(
+              updatedTask.assigned_to,
+              'Task Completed & Signed Off',
+              `Your task "${updatedTask.title}" has been signed off and completed.`
+            );
+          }
+
+          // Always sync memory store too
+          tasksStore = tasksStore.map(t => String(t.id) === String(id) ? { ...t, ...fields } : t);
           return res.json(updatedTask);
         }
       }
     } catch (err) {
-      console.warn("Tasks DB update error (using memory fallback):", err.message);
+      console.warn('Tasks DB update error (using memory fallback):', err.message);
     }
   }
-  
+
+  // In-memory fallback
+  const prevMem = tasksStore.find(t => String(t.id) === String(id));
+  tasksStore = tasksStore.map(t => String(t.id) === String(id) ? { ...t, ...fields } : t);
   const updated = tasksStore.find(t => String(t.id) === String(id)) || { id, ...fields };
-  if (fields.status === 'completed' && updated.assigned_to) {
-    createNotification(updated.assigned_to, 'Task Completed & Signed Off', `Your task "${updated.title}" has been signed off and completed.`);
+
+  // Notify newly assigned member (in-memory)
+  if (
+    fields.assigned_to &&
+    prevMem &&
+    String(fields.assigned_to) !== String(prevMem.assigned_to)
+  ) {
+    createNotification(
+      fields.assigned_to,
+      'New Task Assigned',
+      `You have been assigned a new task: "${updated.title}"`
+    );
   }
+
+  // Notify assignee when task completed (in-memory)
+  if (fields.status === 'completed' && updated.assigned_to) {
+    createNotification(
+      updated.assigned_to,
+      'Task Completed & Signed Off',
+      `Your task "${updated.title}" has been signed off and completed.`
+    );
+  }
+
   res.json(updated);
 });
 

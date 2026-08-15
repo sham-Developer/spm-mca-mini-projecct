@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  UserCheck, 
-  Calendar, 
-  MessageSquare, 
-  Plus, 
-  Check, 
-  Search, 
-  Edit, 
-  Trash2, 
-  LayoutGrid, 
-  Columns, 
-  X, 
-  Upload, 
-  Eye, 
+import {
+  UserCheck,
+  Calendar,
+  MessageSquare,
+  Plus,
+  Check,
+  Search,
+  Edit,
+  Trash2,
+  LayoutGrid,
+  Columns,
+  X,
+  Upload,
+  Eye,
   FileText,
   AlertCircle,
   FilterX,
@@ -65,7 +65,7 @@ export default function ClientManagement() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('kanban'); // 'table' or 'kanban'
-  
+
   // Saving states for spinners
   const [isSavingClient, setIsSavingClient] = useState(false);
   const [isSavingFollowup, setIsSavingFollowup] = useState(false);
@@ -74,10 +74,10 @@ export default function ClientManagement() {
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isFollowupModalOpen, setIsFollowupModalOpen] = useState(false);
   const [isEditingClient, setIsEditingClient] = useState(false);
-  
+
   // Selection
   const [selectedClient, setSelectedClient] = useState(null);
-  
+
   // Client Form
   const [clientId, setClientId] = useState('');
   const [name, setName] = useState('');
@@ -129,7 +129,7 @@ export default function ClientManagement() {
       const clientsData = await clientsRes.json();
       const projectsData = await projectsRes.json();
       const usersData = await usersRes.json();
-      
+
       setClients(clientsData);
       setProjects(projectsData);
       setProjectHeads(usersData.filter(u => u.role === 'project_head'));
@@ -354,8 +354,8 @@ export default function ClientManagement() {
       const response = await fetch(`${API_URL}/clients/${selectedClient.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          follow_up_notes: updatedNotes, 
+        body: JSON.stringify({
+          follow_up_notes: updatedNotes,
           status: activeNextStatus,
           onboarded_at: (activeNextStatus === 'onboard' || activeNextStatus === 'onboarded') ? new Date().toISOString() : selectedClient.onboarded_at,
           next_followup_date: nextFollowupDate || selectedClient.next_followup_date
@@ -383,7 +383,7 @@ export default function ClientManagement() {
 
   const handleSaveEditedNote = async (index) => {
     if (!editingNoteText.trim()) return;
-    
+
     const updatedNotes = [...(selectedClient.follow_up_notes || [])];
     const targetEntry = updatedNotes[index];
 
@@ -480,11 +480,11 @@ export default function ClientManagement() {
     setPhone(client.phone || '');
     setCompany(client.company || '');
     setInitialStatus(client.status || 'initiated');
-    
+
     const linked = projects.filter(p => p.client_id === client.id);
     setOriginalProjects(linked.map(p => ({ id: p.id, name: p.name })));
     setNewProjectsText(linked.map(p => p.name).join(', '));
-    
+
     setIsEditingClient(true);
     setIsClientModalOpen(true);
   };
@@ -529,8 +529,8 @@ export default function ClientManagement() {
     if (!matchesSearch) return false;
 
     // Get last activity date
-    const lastNote = client.follow_up_notes?.length > 0 
-      ? client.follow_up_notes[client.follow_up_notes.length - 1] 
+    const lastNote = client.follow_up_notes?.length > 0
+      ? client.follow_up_notes[client.follow_up_notes.length - 1]
       : null;
     const lastActivityDate = lastNote ? lastNote.date : (client.created_at?.split('T')[0] || '');
 
@@ -577,14 +577,14 @@ export default function ClientManagement() {
 
         <div className="flex items-center gap-3">
           <div className="bg-white border border-slate-400 rounded-xl p-1 flex items-center shadow-sm">
-            <button 
+            <button
               onClick={() => setViewMode('kanban')}
               className={`p-2 rounded-lg flex items-center gap-1.5 text-[13px] font-medium cursor-pointer transition-colors ${viewMode === 'kanban' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-800 hover:bg-slate-50'}`}
             >
               <Columns size={16} />
               <span>Kanban Board</span>
             </button>
-            <button 
+            <button
               onClick={() => setViewMode('table')}
               className={`p-2 rounded-lg flex items-center gap-1.5 text-[13px] font-medium cursor-pointer transition-colors ${viewMode === 'table' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-800 hover:bg-slate-50'}`}
             >
@@ -605,13 +605,13 @@ export default function ClientManagement() {
 
       {/* SEARCH AND FILTERS BAR */}
       <div className="space-y-3 md:space-y-0 md:flex md:items-center md:justify-between gap-4 pb-4">
-        
+
         {/* Left Side: Search Keyword */}
         <div className="flex items-center bg-white border border-slate-400 rounded-xl px-3.5 py-1.5 shadow-inner flex-1 max-w-md">
           <Search size={16} className="text-slate-600 mr-2" />
-          <input 
-            type="text" 
-            placeholder="Search by name, company or email..." 
+          <input
+            type="text"
+            placeholder="Search by name, company or email..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             className="w-full bg-transparent text-[13px] text-slate-950 focus:outline-none placeholder:text-slate-500 font-medium py-1 border-none"
@@ -622,7 +622,7 @@ export default function ClientManagement() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-bold text-slate-950">
             <span className="text-slate-800 font-medium">Activity From:</span>
-            <input 
+            <input
               type="date"
               value={filterStartDate}
               onChange={(e) => { setFilterStartDate(e.target.value); setCurrentPage(1); }}
@@ -632,7 +632,7 @@ export default function ClientManagement() {
 
           <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-bold text-slate-955">
             <span className="text-slate-800 font-medium">To:</span>
-            <input 
+            <input
               type="date"
               value={filterEndDate}
               onChange={(e) => { setFilterEndDate(e.target.value); setCurrentPage(1); }}
@@ -666,8 +666,8 @@ export default function ClientManagement() {
                 const columnClients = finalSortedClients.filter(c => c.status === status);
                 const theme = STATUS_THEMES[status] || STATUS_THEMES.initiated;
                 return (
-                  <div 
-                    key={status} 
+                  <div
+                    key={status}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => handleDrop(e, status)}
                     className={`border rounded-xl p-4 w-[280px] shrink-0 flex flex-col min-h-[500px] shadow-sm transition-all duration-300 ${theme.bg}`}
@@ -687,10 +687,10 @@ export default function ClientManagement() {
                       {columnClients.map(client => {
                         const clientProjects = projects.filter(p => p.client_id === client.id);
                         const isActionDue = client.next_followup_date && client.next_followup_date <= todayString;
-                        
+
                         // Calculate last edited date
-                        const lastNote = client.follow_up_notes?.length > 0 
-                          ? client.follow_up_notes[client.follow_up_notes.length - 1] 
+                        const lastNote = client.follow_up_notes?.length > 0
+                          ? client.follow_up_notes[client.follow_up_notes.length - 1]
                           : null;
                         const lastEditedRaw = lastNote ? lastNote.date : client.created_at?.split('T')[0];
 
@@ -699,9 +699,8 @@ export default function ClientManagement() {
                             key={client.id}
                             draggable
                             onDragStart={(e) => handleDragStart(e, client)}
-                            className={`bg-white border rounded-xl p-4 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-slate-500 hover:ring-4 hover:ring-orange-500/5 transition-all duration-300 cursor-grab active:cursor-grabbing text-slate-955 ${
-                              isActionDue ? 'border-red-500 bg-red-50/50 shadow-red-200/50 shadow-sm' : 'border-slate-400'
-                            }`}
+                            className={`bg-white border rounded-xl p-4 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-slate-500 hover:ring-4 hover:ring-orange-500/5 transition-all duration-300 cursor-grab active:cursor-grabbing text-slate-955 ${isActionDue ? 'border-red-500 bg-red-50/50 shadow-red-200/50 shadow-sm' : 'border-slate-400'
+                              }`}
                           >
                             <div className="flex justify-between items-start gap-1 mb-1">
                               <h4 className="text-[14px] font-bold text-slate-955 leading-tight">{client.name}</h4>
@@ -712,7 +711,7 @@ export default function ClientManagement() {
                               )}
                             </div>
                             <span className="block text-[12px] font-medium text-slate-800 mb-2">{client.company || 'Private Client'}</span>
-                            
+
                             <div className="space-y-1 text-[11px] text-slate-850 font-medium mb-3">
                               <div className="truncate">{client.email}</div>
                               <div>{client.phone || '--'}</div>
@@ -732,21 +731,21 @@ export default function ClientManagement() {
                             </div>
 
                             <div className="flex justify-between items-center gap-1.5 border-t border-slate-305 pt-3">
-                              <button 
+                              <button
                                 onClick={() => { setSelectedClient(client); setIsFollowupModalOpen(true); }}
                                 className="w-full py-1.5 bg-slate-50 border border-slate-400 hover:bg-slate-100 text-slate-955 rounded-lg text-[11px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1"
                               >
                                 <MessageSquare size={12} />
                                 <span>Log Action</span>
                               </button>
-                              <button 
+                              <button
                                 onClick={() => openEditClientModal(client)}
                                 className="p-1.5 bg-slate-50 border border-slate-400 hover:bg-slate-100 text-slate-800 rounded-lg cursor-pointer transition-colors"
                                 title="Edit Client"
                               >
                                 <Edit size={12} />
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleDeleteClient(client.id)}
                                 className="p-1.5 bg-red-50 border border-red-300 hover:bg-red-100 text-red-700 rounded-lg cursor-pointer transition-colors"
                                 title="Delete Client"
@@ -781,15 +780,14 @@ export default function ClientManagement() {
                       <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Contact</th>
                       <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Pipeline Stage</th>
                       <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Linked Workspaces</th>
-                      <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Followup Limits</th>
                       <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider">Last Interaction</th>
                       <th className="border border-slate-300 p-4 text-[12px] font-bold uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300 text-slate-950 font-medium">
                     {currentClients.map((client, index) => {
-                      const lastNote = client.follow_up_notes?.length > 0 
-                        ? client.follow_up_notes[client.follow_up_notes.length - 1] 
+                      const lastNote = client.follow_up_notes?.length > 0
+                        ? client.follow_up_notes[client.follow_up_notes.length - 1]
                         : null;
                       const clientProjects = projects.filter(p => p.client_id === client.id);
                       const isActionDue = client.next_followup_date && client.next_followup_date <= todayString;
@@ -797,18 +795,18 @@ export default function ClientManagement() {
                       // Map status order index to a color index to rotate circle avatars
                       const colorIndex = STATUS_ORDER.indexOf(client.status);
                       const avatarColors = [
-                        'bg-orange-150 text-orange-800 border-orange-200',
-                        'bg-yellow-150 text-yellow-800 border-yellow-250',
-                        'bg-purple-150 text-purple-800 border-purple-200',
-                        'bg-pink-150 text-pink-800 border-pink-200',
-                        'bg-blue-150 text-blue-800 border-blue-200',
-                        'bg-emerald-150 text-emerald-805 border-emerald-250'
+                        'bg-orange-150 text-orange-800 border-orange-800',
+                        'bg-yellow-150 text-yellow-800 border-yellow-800',
+                        'bg-purple-150 text-purple-800 border-purple-800',
+                        'bg-pink-150 text-pink-800 border-pink-800',
+                        'bg-blue-150 text-blue-800 border-blue-800',
+                        'bg-emerald-150 text-emerald-805 border-emerald-800'
                       ];
                       const avatarColorClass = avatarColors[colorIndex >= 0 ? colorIndex : 0];
 
                       return (
-                        <tr 
-                          key={client.id} 
+                        <tr
+                          key={client.id}
                           className={`hover:bg-slate-50/80 transition-colors ${isActionDue ? 'bg-red-50/50 hover:bg-red-100/50' : ''}`}
                         >
                           <td className={`border border-slate-300 p-4 text-[13px] font-bold text-center ${isActionDue ? 'border-l-4 border-l-red-500' : ''}`}>
@@ -820,39 +818,40 @@ export default function ClientManagement() {
                                 <Building size={18} className="stroke-[2.5]" />
                               </div>
                               <div>
-                                <span className="block text-[14px] font-extrabold text-slate-950 leading-tight">{client.name}</span>
-                                <span className="block text-[12px] text-slate-700 font-medium mt-0.5">{client.company || 'Private Client'}</span>
+                                <span className="block text-sm font-bold text-slate-950 leading-relaxed capitalize">{client.name}</span>
+                                <span className="block text-xs text-slate-700 font-medium mt-1">{client.company || 'Private Client'}</span>
                               </div>
                             </div>
                           </td>
                           <td className="border border-slate-300 p-4">
-                            <div className="space-y-1 text-[13px] font-medium text-slate-900">
-                              <div className="flex items-center gap-1.5">
-                                <Mail size={13} className="text-slate-700 shrink-0" />
-                                <span className="truncate max-w-[160px]" title={client.email}>{client.email}</span>
+                            <div className="space-y-1 text-xs font-medium text-black">
+                              <div className="flex items-center gap-2">
+                                <Mail size={13} className="text-black shrink-0" />
+                                <span className="truncate max-w-[160px] text-[13px]" title={client.email}>{client.email}</span>
                               </div>
                               {client.phone && (
-                                <div className="flex items-center gap-1.5">
-                                  <Phone size={13} className="text-slate-700 shrink-0" />
-                                  <span>{client.phone}</span>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Phone size={13} className="text-black shrink-0" />
+                                  <span className='text-[13px]'>{client.phone}</span>
                                 </div>
                               )}
                             </div>
                           </td>
                           <td className="border border-slate-300 p-4 text-center">
-                            <span className={`inline-block text-[10px] font-extrabold uppercase px-3 py-1 rounded-full border ${
-                              client.status === 'initiated' 
-                                ? 'bg-[#f9570c] text-white border-[#c2410c]' 
-                                : client.status === 'inprogress'
-                                ? 'bg-[#f1b418] text-slate-950 border-[#ca8a04]'
-                                : client.status === 'budgetary'
-                                ? 'bg-[#f59e0b] text-white border-[#d97706]'
-                                : client.status === 'proposal'
-                                ? 'bg-[#d946ef] text-white border-[#c026d3]'
-                                : client.status === 'lead'
-                                ? 'bg-[#2563eb] text-white border-[#1d4ed8]'
-                                : 'bg-[#10b981] text-white border-[#059669]'
-                            }`}>
+                            <span
+                              className={`inline-block text-xs font-semibold capitalize px-3 py-1 rounded-full border-2 ${client.status === 'initiated'
+                                  ? 'text-[#ea580c] border-[#ea580c]'
+                                  : client.status === 'inprogress'
+                                    ? 'text-[#a16207] border-[#a16207]'
+                                    : client.status === 'budgetary'
+                                      ? 'text-[#5f6b00] border-[#5f6b00]'
+                                      : client.status === 'proposal'
+                                        ? 'text-[#c026d3] border-[#c026d3]'
+                                        : client.status === 'lead'
+                                          ? 'text-[#1d4ed8] border-[#1d4ed8]'
+                                          : 'text-[#059669] border-[#059669]'
+                                }`}
+                            >
                               {client.status === 'inprogress' ? 'In Progress' : client.status}
                             </span>
                           </td>
@@ -860,34 +859,29 @@ export default function ClientManagement() {
                             {clientProjects.length > 0 ? (
                               <div className="flex flex-wrap gap-1.5 max-w-[180px]">
                                 {clientProjects.map(proj => (
-                                  <span key={proj.id} className="text-[11px] font-extrabold text-blue-755 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded whitespace-nowrap">
+                                  <span key={proj.id} className="text-xs font-medium text-black bg-blue-100 border border-blue-200 px-2.5 py-0.5 rounded whitespace-nowrap">
                                     {proj.name}
                                   </span>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-[12px] text-slate-700 font-medium">No projects linked</span>
+                              <span className="text-xs text-black font-regular">No projects linked</span>
                             )}
                           </td>
-                          <td className="border border-slate-300 p-4">
-                            <div className="flex items-center gap-1.5 text-[12px] font-bold text-slate-900">
-                              <CheckCircle size={15} className="text-emerald-600 shrink-0 stroke-[2.5]" />
-                              <span>{client.next_followup_date ? formatDateToDMY(client.next_followup_date) : "No limits set"}</span>
-                            </div>
-                          </td>
+                          
                           <td className="border border-slate-300 p-4 max-w-xs whitespace-normal break-words">
-                            <div className="flex items-start gap-1.5 text-[12px] font-medium text-slate-900">
+                            <div className="flex items-start gap-1.5 text-xs font-medium text-slate-900">
                               {lastNote ? (
                                 <>
-                                  <Calendar size={14} className="text-slate-700 mt-0.5 shrink-0" />
+                                  <Calendar size={14} className="text-slate-900 mt-0.5 shrink-0" />
                                   <div>
-                                    <span className="block text-[11px] text-black font-extrabold">{formatDateToDMY(lastNote.date)}</span>
-                                    <span className="italic">"{lastNote.note}"</span>
+                                    <span className="block text-black font-medium mb-1">{formatDateToDMY(lastNote.date)}</span>
+                                    <div className="text-purple-900 font-medium">Remarks: <span className="text-black font-regular">{lastNote.note}</span></div>
                                   </div>
                                 </>
                               ) : (
                                 <>
-                                  <MessageSquare size={14} className="text-slate-700 mt-0.5 shrink-0" />
+                                  <MessageSquare size={14} className="text-slate-900 mt-0.5 shrink-0" />
                                   <span className="text-slate-700">No interaction logged</span>
                                 </>
                               )}
@@ -896,20 +890,20 @@ export default function ClientManagement() {
                           <td className="border border-slate-300 p-4 text-right">
                             <div className="flex gap-2 justify-end">
                               <button
-                                 onClick={() => { setSelectedClient(client); setIsFollowupModalOpen(true); }}
-                                 className="inline-flex items-center justify-center p-1.5 border border-blue-300 hover:bg-blue-50 text-blue-700 rounded-lg cursor-pointer transition-colors"
-                                 title="Logs & Action"
+                                onClick={() => { setSelectedClient(client); setIsFollowupModalOpen(true); }}
+                                className="inline-flex items-center justify-center p-1.5 border border-blue-300 hover:bg-blue-50 text-blue-700 rounded-lg cursor-pointer transition-colors"
+                                title="Logs & Action"
                               >
                                 <MessageSquare size={13} />
                               </button>
-                              <button 
+                              <button
                                 onClick={() => openEditClientModal(client)}
                                 className="inline-flex items-center justify-center p-1.5 border border-amber-300 hover:bg-amber-50 text-amber-700 rounded-lg cursor-pointer transition-colors"
                                 title="Edit Lead"
                               >
                                 <Edit size={13} />
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleDeleteClient(client.id)}
                                 className="inline-flex items-center justify-center p-1.5 border border-red-300 hover:bg-red-50 text-red-700 rounded-lg cursor-pointer transition-colors"
                                 title="Delete Lead"
@@ -973,7 +967,7 @@ export default function ClientManagement() {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleCreateOrUpdateClient} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -1059,9 +1053,9 @@ export default function ClientManagement() {
       {isFollowupModalOpen && selectedClient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in-fast">
           <div className="w-full max-w-4xl bg-white border border-slate-450 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[80vh] text-slate-955 relative animate-scale-up">
-            
+
             {/* CLOSE BUTTON TOP RIGHT */}
-            <button 
+            <button
               onClick={() => setIsFollowupModalOpen(false)}
               className="absolute top-4 right-4 z-10 text-slate-700 hover:text-black bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
             >
@@ -1081,37 +1075,37 @@ export default function ClientManagement() {
                 <div className="space-y-3 border-t border-slate-300 pt-3">
                   <div>
                     <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Client Name</span>
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={selectedClient.name} 
+                    <input
+                      type="text"
+                      readOnly
+                      value={selectedClient.name}
                       className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
                     />
                   </div>
                   <div>
                     <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Company</span>
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={selectedClient.company || 'Private Lead Client'} 
+                    <input
+                      type="text"
+                      readOnly
+                      value={selectedClient.company || 'Private Lead Client'}
                       className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
                     />
                   </div>
                   <div>
                     <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Email</span>
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={selectedClient.email} 
+                    <input
+                      type="text"
+                      readOnly
+                      value={selectedClient.email}
                       className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
                     />
                   </div>
                   <div>
                     <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Phone</span>
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={selectedClient.phone || '--'} 
+                    <input
+                      type="text"
+                      readOnly
+                      value={selectedClient.phone || '--'}
                       className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-normal focus:outline-none cursor-default"
                     />
                   </div>
@@ -1135,12 +1129,12 @@ export default function ClientManagement() {
             {/* RIGHT SIDE: ACTIONS AND INTERACTION ARCHIVE */}
             <div className="flex-1 p-6 flex flex-col justify-between overflow-y-auto">
               <div className="space-y-6">
-                
+
                 {/* NEW LOG ACTION FORM */}
                 <div>
                   <h4 className="text-[15px] font-bold text-slate-955 mb-3.5">Log Discussion & Update Stage</h4>
                   <form onSubmit={handleAddFollowup} className="space-y-3.5 bg-slate-50 border border-slate-400 rounded-xl p-4">
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[11px] font-medium text-slate-900 mb-1">Advance Stage To</label>
@@ -1155,9 +1149,9 @@ export default function ClientManagement() {
                             const stageIdx = STATUS_ORDER.indexOf(stage);
                             const isBackward = stageIdx < currentIdx;
                             return (
-                              <option 
-                                key={stage} 
-                                value={stage} 
+                              <option
+                                key={stage}
+                                value={stage}
                                 disabled={isBackward}
                                 className="capitalize"
                               >
@@ -1183,24 +1177,23 @@ export default function ClientManagement() {
                     {((nextStatus === 'budgetary') || (!nextStatus && selectedClient.status === 'budgetary')) && (
                       <div className="space-y-1">
                         <label className="block text-[11px] font-medium text-slate-900">Upload Budget Document</label>
-                        <div 
+                        <div
                           onDragEnter={(e) => handleFileDrag(e, 'budget', true)}
                           onDragOver={(e) => handleFileDrag(e, 'budget', true)}
                           onDragLeave={(e) => handleFileDrag(e, 'budget', false)}
                           onDrop={(e) => handleFileDrop(e, 'budget')}
-                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center ${
-                            isDragActiveBudget ? 'border-orange-500 bg-orange-50/50 shadow-md' : 'border-slate-300 bg-white'
-                          }`}
+                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center ${isDragActiveBudget ? 'border-orange-500 bg-orange-50/50 shadow-md' : 'border-slate-300 bg-white'
+                            }`}
                         >
                           <FileText className={`mx-auto mb-1.5 ${isDragActiveBudget ? 'text-orange-500 animate-bounce' : 'text-slate-500'}`} size={24} />
                           <span className="text-[12px] font-medium text-slate-955">
                             {budgetFileName ? `Selected: ${budgetFileName}` : "Drag and drop Budget PDF here or click to browse"}
                           </span>
-                          <input 
-                            type="file" 
-                            onChange={(e) => handleFileChange(e, 'budget')} 
-                            className="hidden" 
-                            id="budget-file-picker" 
+                          <input
+                            type="file"
+                            onChange={(e) => handleFileChange(e, 'budget')}
+                            className="hidden"
+                            id="budget-file-picker"
                             accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
                           />
                           <label htmlFor="budget-file-picker" className="mt-2 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-[11px] font-bold cursor-pointer inline-block transition-colors">
@@ -1213,24 +1206,23 @@ export default function ClientManagement() {
                     {((nextStatus === 'proposal') || (!nextStatus && selectedClient.status === 'proposal')) && (
                       <div className="space-y-1">
                         <label className="block text-[11px] font-medium text-slate-900">Upload Proposal Document</label>
-                        <div 
+                        <div
                           onDragEnter={(e) => handleFileDrag(e, 'proposal', true)}
                           onDragOver={(e) => handleFileDrag(e, 'proposal', true)}
                           onDragLeave={(e) => handleFileDrag(e, 'proposal', false)}
                           onDrop={(e) => handleFileDrop(e, 'proposal')}
-                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center ${
-                            isDragActiveProposal ? 'border-orange-500 bg-orange-50/50 shadow-md' : 'border-slate-300 bg-white'
-                          }`}
+                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center ${isDragActiveProposal ? 'border-orange-500 bg-orange-50/50 shadow-md' : 'border-slate-300 bg-white'
+                            }`}
                         >
                           <FileText className={`mx-auto mb-1.5 ${isDragActiveProposal ? 'text-orange-500 animate-bounce' : 'text-slate-500'}`} size={24} />
                           <span className="text-[12px] font-medium text-slate-955">
                             {proposalFileName ? `Selected: ${proposalFileName}` : "Drag and drop Proposal PDF here or click to browse"}
                           </span>
-                          <input 
-                            type="file" 
-                            onChange={(e) => handleFileChange(e, 'proposal')} 
-                            className="hidden" 
-                            id="proposal-file-picker" 
+                          <input
+                            type="file"
+                            onChange={(e) => handleFileChange(e, 'proposal')}
+                            className="hidden"
+                            id="proposal-file-picker"
                             accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
                           />
                           <label htmlFor="proposal-file-picker" className="mt-2 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-[11px] font-bold cursor-pointer inline-block transition-colors">
