@@ -70,16 +70,34 @@ export default function Header({ user, title, onMenuClick }) {
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
+  const getShortTitle = (fullTitle) => {
+    if (!fullTitle) return 'Dashboard';
+    const mappings = {
+      'Executive Admin Dashboard': 'Dashboard',
+      'Client Relationship Pipelines': 'Clients',
+      'Personnel & HR Management': 'HR Management',
+      'Corporate Projects Analytics': 'Projects',
+      'Operational Project Head Dashboard': 'Projects Board',
+      'Workspace Boards & Allocations': 'Workspaces',
+      'Team Member Performance Workspace': 'Workspace',
+      'My Tasks & Activity Board': 'My Tasks'
+    };
+    return mappings[fullTitle] || fullTitle;
+  };
+
   return (
-    <header className="bg-white/80 border-b border-slate-400 h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md">
-      <div className="flex items-center gap-3">
+    <header className="bg-white/80 border-b border-slate-400 h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md min-h-[60px]">
+      <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
         <button 
           onClick={onMenuClick}
-          className="lg:hidden p-2 -ml-2 rounded-lg text-slate-800 hover:bg-slate-100 hover:text-black focus:outline-none cursor-pointer"
+          className="lg:hidden p-2 -ml-2 rounded-lg text-slate-800 hover:bg-slate-100 hover:text-black focus:outline-none cursor-pointer shrink-0"
         >
           <Menu size={20} />
         </button>
-        <h2 className="text-[18px] sm:text-[20px] font-bold text-slate-950 tracking-tight truncate">{title || 'Dashboard'}</h2>
+        <h2 className="text-[16px] sm:text-[18px] md:text-[20px] font-bold text-slate-950 tracking-tight truncate min-w-0" title={title}>
+          <span className="sm:hidden">{getShortTitle(title)}</span>
+          <span className="hidden sm:inline">{title || 'Dashboard'}</span>
+        </h2>
       </div>
 
       <div className="flex items-center gap-4 sm:gap-6">

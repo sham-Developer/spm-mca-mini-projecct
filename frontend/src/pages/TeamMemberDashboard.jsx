@@ -6,6 +6,7 @@ import {
   CheckCircle2, 
   AlertCircle 
 } from 'lucide-react';
+import { ResponsiveContainer, PieChart, Pie, Tooltip, Cell, Legend } from 'recharts';
 import API_URL from '../config';
 
 export default function TeamMemberDashboard({ currentUserId }) {
@@ -70,6 +71,17 @@ export default function TeamMemberDashboard({ currentUserId }) {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentTasks = tasks.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(tasks.length / itemsPerPage);
+  const todoCount = tasks.filter(t => t.status === 'todo').length;
+  const inProgressCount = tasks.filter(t => t.status === 'in_progress').length;
+  const reviewCount = tasks.filter(t => t.status === 'review').length;
+  const completedCount = tasks.filter(t => t.status === 'completed').length;
+
+  const taskStatusData = [
+    { name: 'To Do', value: todoCount, color: '#94a3b8' },
+    { name: 'In Progress', value: inProgressCount, color: '#2563eb' },
+    { name: 'In Review', value: reviewCount, color: '#9333ea' },
+    { name: 'Completed', value: completedCount, color: '#059669' }
+  ].filter(item => item.value > 0);
 
   return (
     <div className="space-y-8 animate-fade-in text-slate-955 font-sans">
@@ -127,11 +139,12 @@ export default function TeamMemberDashboard({ currentUserId }) {
       </div>
 
       {/* Task progression list */}
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">My Deliverables</h3>
-          <p className="text-[12px] text-slate-600 font-medium">Review specifications and report progressions of assigned workflows</p>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
+          <div>
+            <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">My Deliverables</h3>
+            <p className="text-[12px] text-slate-600 font-medium">Review specifications and report progressions of assigned workflows</p>
+          </div>
 
         <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
           <div className="overflow-x-auto">
@@ -250,6 +263,55 @@ export default function TeamMemberDashboard({ currentUserId }) {
               </div>
             </div>
           )}
+        </div>
+      </div>
+         
+         {/* Right Column: Workload Distribution Chart */}
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">Workload Distribution</h3>
+            <p className="text-[12px] text-slate-600 font-medium">Status breakdown of your assigned tasks</p>
+          </div>
+          
+          <div className="bg-white p-5 rounded-2xl border border-slate-400 shadow-md h-[260px] flex flex-col items-center justify-center">
+            {tasks.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={taskStatusData}
+                    cx="50%"
+                    cy="40%"
+                    innerRadius={45}
+                    outerRadius={65}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {taskStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', borderWidth: '1px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}
+                    itemStyle={{ fontWeight: '700', fontSize: '11px' }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={40} 
+                    iconType="circle" 
+                    iconSize={6}
+                    formatter={(value) => {
+                      const payload = taskStatusData.find(d => d.name === value);
+                      return <span className="text-[10.5px] font-bold text-slate-800 mr-1.5">{value} ({payload?.value || 0})</span>;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-700 italic text-[12px] font-semibold">
+                No allocations assigned to analyze workload.
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

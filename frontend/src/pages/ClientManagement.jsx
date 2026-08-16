@@ -550,7 +550,8 @@ export default function ClientManagement() {
   const todayString = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-900">
+    <>
+      <div className="space-y-6 animate-fade-in text-slate-900">
       <style>{`
         @keyframes scaleUp {
           from { transform: scale(0.96); opacity: 0; }
@@ -954,6 +955,7 @@ export default function ClientManagement() {
           )}
         </>
       )}
+      </div>
 
       {/* CREATE & EDIT CLIENT MODAL */}
       {isClientModalOpen && (
@@ -1067,7 +1069,7 @@ export default function ClientManagement() {
               <div className="space-y-4">
                 <div>
                   <span className="block text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-1.5">Pipeline Stage</span>
-                  <span className="inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 bg-orange-100 border border-orange-400 text-orange-950 rounded-full font-bold tracking-wide">
+                  <span className="inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 bg-orange-100 border border-orange-400 text-orange-955 rounded-full tracking-wide">
                     {selectedClient.status}
                   </span>
                 </div>
@@ -1088,7 +1090,7 @@ export default function ClientManagement() {
                       type="text"
                       readOnly
                       value={selectedClient.company || 'Private Lead Client'}
-                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-normal focus:outline-none cursor-default"
                     />
                   </div>
                   <div>
@@ -1097,7 +1099,7 @@ export default function ClientManagement() {
                       type="text"
                       readOnly
                       value={selectedClient.email}
-                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-normal focus:outline-none cursor-default"
                     />
                   </div>
                   <div>
@@ -1118,7 +1120,7 @@ export default function ClientManagement() {
                         </div>
                       ))}
                       {projects.filter(p => p.client_id === selectedClient.id).length === 0 && (
-                        <span className="text-[12px] text-slate-700 italic font-semibold">No workspaces linked yet.</span>
+                        <span className="text-[12px] text-slate-705 italic font-semibold">No workspaces linked yet.</span>
                       )}
                     </div>
                   </div>
@@ -1149,13 +1151,8 @@ export default function ClientManagement() {
                             const stageIdx = STATUS_ORDER.indexOf(stage);
                             const isBackward = stageIdx < currentIdx;
                             return (
-                              <option
-                                key={stage}
-                                value={stage}
-                                disabled={isBackward}
-                                className="capitalize"
-                              >
-                                {stage === 'inprogress' ? 'In Progress' : stage} {isBackward ? '(Disabled)' : ''}
+                              <option key={stage} value={stage} disabled={isBackward}>
+                                {stage === 'inprogress' ? 'In Progress' : stage} {isBackward ? '(Disabled - Backward)' : ''}
                               </option>
                             );
                           })}
@@ -1163,7 +1160,7 @@ export default function ClientManagement() {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-900 mb-1">Next Followup Date</label>
+                        <label className="block text-[11px] font-medium text-slate-900 mb-1">Schedule Next Followup</label>
                         <input
                           type="date"
                           value={nextFollowupDate}
@@ -1173,87 +1170,92 @@ export default function ClientManagement() {
                       </div>
                     </div>
 
-                    {/* Conditional drop upload inputs based on budgetary or proposal stage */}
-                    {((nextStatus === 'budgetary') || (!nextStatus && selectedClient.status === 'budgetary')) && (
-                      <div className="space-y-1">
-                        <label className="block text-[11px] font-medium text-slate-900">Upload Budget Document</label>
+                    {/* BUDGET STAGE ADDITIONS */}
+                    {nextStatus === 'budgetary' && (
+                      <div className="space-y-2.5 pt-2 border-t border-slate-300 animate-fade-in-fast">
+                        <label className="block text-[11px] font-bold text-slate-800">Deposit Client Budget File (.pdf/.xlsx)</label>
                         <div
-                          onDragEnter={(e) => handleFileDrag(e, 'budget', true)}
-                          onDragOver={(e) => handleFileDrag(e, 'budget', true)}
-                          onDragLeave={(e) => handleFileDrag(e, 'budget', false)}
+                          onDragOver={(e) => handleDragOver(e, 'budget')}
+                          onDragLeave={() => setIsDragActiveBudget(false)}
                           onDrop={(e) => handleFileDrop(e, 'budget')}
-                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center ${isDragActiveBudget ? 'border-orange-500 bg-orange-50/50 shadow-md' : 'border-slate-300 bg-white'
-                            }`}
+                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${isDragActiveBudget ? 'border-orange-500 bg-orange-50/50' : 'border-slate-350 bg-white hover:bg-slate-50'}`}
                         >
-                          <FileText className={`mx-auto mb-1.5 ${isDragActiveBudget ? 'text-orange-500 animate-bounce' : 'text-slate-500'}`} size={24} />
-                          <span className="text-[12px] font-medium text-slate-955">
-                            {budgetFileName ? `Selected: ${budgetFileName}` : "Drag and drop Budget PDF here or click to browse"}
-                          </span>
-                          <input
-                            type="file"
-                            onChange={(e) => handleFileChange(e, 'budget')}
-                            className="hidden"
-                            id="budget-file-picker"
-                            accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
-                          />
-                          <label htmlFor="budget-file-picker" className="mt-2 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-[11px] font-bold cursor-pointer inline-block transition-colors">
-                            Browse File
-                          </label>
+                          <div className="flex flex-col items-center gap-1.5">
+                            <Upload size={20} className="text-slate-550" />
+                            <span className="text-[12px] font-semibold text-slate-855">
+                              {budgetFileName ? `Selected: ${budgetFileName}` : 'Drag & drop file here or click to browse'}
+                            </span>
+                            <input
+                              type="file"
+                              accept=".pdf,.xlsx,.xls,.doc,.docx"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) processFile(file, 'budget');
+                              }}
+                              className="hidden"
+                              id="budget-file-upload"
+                            />
+                            <label htmlFor="budget-file-upload" className="text-[11px] bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded border border-slate-400 font-bold text-slate-955 cursor-pointer mt-1">
+                              Browse Files
+                            </label>
+                          </div>
                         </div>
                       </div>
                     )}
 
-                    {((nextStatus === 'proposal') || (!nextStatus && selectedClient.status === 'proposal')) && (
-                      <div className="space-y-1">
-                        <label className="block text-[11px] font-medium text-slate-900">Upload Proposal Document</label>
+                    {/* PROPOSAL STAGE ADDITIONS */}
+                    {nextStatus === 'proposal' && (
+                      <div className="space-y-2.5 pt-2 border-t border-slate-300 animate-fade-in-fast">
+                        <label className="block text-[11px] font-bold text-slate-800">Deposit Proposal Document (.pdf)</label>
                         <div
-                          onDragEnter={(e) => handleFileDrag(e, 'proposal', true)}
-                          onDragOver={(e) => handleFileDrag(e, 'proposal', true)}
-                          onDragLeave={(e) => handleFileDrag(e, 'proposal', false)}
+                          onDragOver={(e) => handleDragOver(e, 'proposal')}
+                          onDragLeave={() => setIsDragActiveProposal(false)}
                           onDrop={(e) => handleFileDrop(e, 'proposal')}
-                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center ${isDragActiveProposal ? 'border-orange-500 bg-orange-50/50 shadow-md' : 'border-slate-300 bg-white'
-                            }`}
+                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${isDragActiveProposal ? 'border-orange-500 bg-orange-50/50' : 'border-slate-350 bg-white hover:bg-slate-50'}`}
                         >
-                          <FileText className={`mx-auto mb-1.5 ${isDragActiveProposal ? 'text-orange-500 animate-bounce' : 'text-slate-500'}`} size={24} />
-                          <span className="text-[12px] font-medium text-slate-955">
-                            {proposalFileName ? `Selected: ${proposalFileName}` : "Drag and drop Proposal PDF here or click to browse"}
-                          </span>
-                          <input
-                            type="file"
-                            onChange={(e) => handleFileChange(e, 'proposal')}
-                            className="hidden"
-                            id="proposal-file-picker"
-                            accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
-                          />
-                          <label htmlFor="proposal-file-picker" className="mt-2 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-[11px] font-bold cursor-pointer inline-block transition-colors">
-                            Browse File
-                          </label>
+                          <div className="flex flex-col items-center gap-1.5">
+                            <Upload size={20} className="text-slate-550" />
+                            <span className="text-[12px] font-semibold text-slate-855">
+                              {proposalFileName ? `Selected: ${proposalFileName}` : 'Drag & drop proposal here or click to browse'}
+                            </span>
+                            <input
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) processFile(file, 'proposal');
+                              }}
+                              className="hidden"
+                              id="proposal-file-upload"
+                            />
+                            <label htmlFor="proposal-file-upload" className="text-[11px] bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded border border-slate-400 font-bold text-slate-955 cursor-pointer mt-1">
+                              Browse Files
+                            </label>
+                          </div>
                         </div>
                       </div>
                     )}
 
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-900 mb-1">Meeting/Interaction Summary</label>
+                      <label className="block text-[11px] font-medium text-slate-900 mb-1">Discussion Notes / Remarks</label>
                       <textarea
+                        rows="2.5"
                         required
-                        rows="2"
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
-                        placeholder="Type summary details of follow-up call..."
-                        className="w-full bg-white border border-slate-355 rounded-lg px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                        placeholder="Log detailed updates, scope changes, or followup parameters..."
+                        className="w-full bg-white border border-slate-350 rounded-lg px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
                       ></textarea>
                     </div>
 
-                    <div className="flex justify-end pt-1">
-                      <button
-                        type="submit"
-                        disabled={isSavingFollowup}
-                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[12px] font-bold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-sm flex items-center gap-2"
-                      >
-                        {isSavingFollowup && <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-white"></div>}
-                        <span>Submit Action Entry</span>
-                      </button>
-                    </div>
+                    <button
+                      type="submit"
+                      disabled={isSavingFollowup}
+                      className="w-full py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[13.5px] font-bold shadow-md cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] mt-3"
+                    >
+                      {isSavingFollowup && <div className="animate-spin rounded-full h-3.5 w-3.5 border-t-2 border-white"></div>}
+                      <span>Submit Action Entry</span>
+                    </button>
                   </form>
                 </div>
 
@@ -1430,6 +1432,6 @@ export default function ClientManagement() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

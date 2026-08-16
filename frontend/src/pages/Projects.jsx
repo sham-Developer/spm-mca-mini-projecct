@@ -510,7 +510,8 @@ export default function Projects({ userRole, currentUserId }) {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in h-[calc(100vh-180px)] overflow-y-auto pr-2">
+    <>
+      <div className="space-y-6 animate-fade-in h-[calc(100vh-180px)] overflow-y-auto pr-2">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-[20px] font-bold text-slate-950 tracking-tight">Project Workspaces</h2>
@@ -518,206 +519,216 @@ export default function Projects({ userRole, currentUserId }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-
           {(userRole === 'admin' || userRole === 'project_head') && (
             <button
-              onClick={() => { if (isProjectModalOpen) { resetProjectForm(); } else { setIsProjectModalOpen(true); } }}
+              onClick={() => { resetProjectForm(); setIsProjectModalOpen(true); }}
               className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-[14px] font-semibold transition-all shadow-md shadow-orange-600/15 cursor-pointer"
             >
               <Plus size={16} className="stroke-[2]" />
-              <span>{editingProject ? 'Edit Workspace Form' : (isProjectModalOpen ? 'Hide Onboarding Form' : 'Onboard Project')}</span>
+              <span>Onboard Project</span>
             </button>
           )}
         </div>
       </div>
 
       {isProjectModalOpen && (
-        <div className="bg-white border border-slate-400 rounded-xl p-6 shadow-md transition-all animate-fade-in space-y-6">
-          <div>
-            <h3 className="text-[18px] font-bold text-slate-950">
-              {editingProject ? `Edit Workspace Parameters: ${editingProject.name}` : 'Onboard Corporate Workspace'}
-            </h3>
-            <p className="text-[13px] text-slate-700 font-medium">
-              {editingProject ? 'Modify client scope agreements & parameter limits' : 'Create client scope agreements & parameter limits'}
-            </p>
-          </div>
-          <form onSubmit={handleCreateProject} className="space-y-3.5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <div className="fixed top-0 left-0 h-full inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-4xl bg-white border border-slate-400 rounded-2xl p-6 shadow-xl max-h-[90vh] overflow-y-auto space-y-6">
+            <div className="flex justify-between items-start">
               <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Workspace Name</label>
-                <input
-                  type="text"
-                  required
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                />
+                <h3 className="text-[18px] font-bold text-slate-950">
+                  {editingProject ? `Edit Workspace Parameters: ${editingProject.name}` : 'Onboard Corporate Workspace'}
+                </h3>
+                <p className="text-[13px] text-slate-700 font-medium">
+                  {editingProject ? 'Modify client scope agreements & parameter limits' : 'Create client scope agreements & parameter limits'}
+                </p>
               </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Client Partner</label>
-                <select
-                  required
-                  value={client_id}
-                  onChange={(e) => setClientId(e.target.value)}
-                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                >
-                  <option value="">Select Onboarded Client</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.company || c.name}</option>)}
-                </select>
-              </div>
-
-              {userRole === 'admin' ? (
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Budget (₹)</label>
-                  <input
-                    type="number"
-                    required
-                    value={budget}
-                    onChange={(e) => setBudget(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                    placeholder="e.g. 500000"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Budget (₹)</label>
-                  <input
-                    type="text"
-                    disabled
-                    value="Managed by Admin"
-                    className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-700 text-[13px] font-medium cursor-not-allowed"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Category</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Engineering"
-                  value={projectCategory}
-                  onChange={(e) => setProjectCategory(e.target.value)}
-                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Department</label>
-                <input
-                  type="text"
-                  placeholder="e.g. R&D"
-                  value={projectDepartment}
-                  onChange={(e) => setProjectDepartment(e.target.value)}
-                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Priority</label>
-                <select
-                  value={projectPriority}
-                  onChange={(e) => setProjectPriority(e.target.value)}
-                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                >
-                  <option value="High">High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Status</label>
-                <select
-                  value={projectStatus}
-                  onChange={(e) => setProjectStatus(e.target.value)}
-                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-bold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                >
-                  <option value="planning">Planning</option>
-                  <option value="active">Active</option>
-                  <option value="on_hold">On Hold</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-slate-800 mb-1">Brief Description</label>
-              <textarea
-                rows="2"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter scope parameters & parameters..."
-                className="w-full bg-white border border-slate-355 rounded-2xl px-3.5 py-2 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-              ></textarea>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Start Date</label>
-                <input
-                  type="date"
-                  required
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">End Date</label>
-                <input
-                  type="date"
-                  required
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                />
-              </div>
-
-              {userRole === 'admin' ? (
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-805 mb-1">Assign Project Head</label>
-                  <select
-                    value={projectHeadId}
-                    onChange={(e) => setProjectHeadId(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  >
-                    <option value="">Select Project Head</option>
-                    {projectHeads.map(ph => <option key={ph.id} value={ph.id}>{ph.full_name}</option>)}
-                  </select>
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-805 mb-1">Project Head</label>
-                  <input
-                    type="text"
-                    disabled
-                    value="Self (Project Head)"
-                    className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-700 text-[13px] font-medium cursor-not-allowed"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={resetProjectForm}
-                className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
+                className="text-slate-500 hover:text-slate-800 transition-colors p-1 cursor-pointer"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[13px] font-semibold shadow-md shadow-orange-600/15 cursor-pointer"
-              >
-                {editingProject ? 'Save Changes' : 'Save Project'}
+                <X size={20} />
               </button>
             </div>
-          </form>
+            <form onSubmit={handleCreateProject} className="space-y-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Workspace Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Client Partner</label>
+                  <select
+                    required
+                    value={client_id}
+                    onChange={(e) => setClientId(e.target.value)}
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  >
+                    <option value="">Select Onboarded Client</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.company || c.name}</option>)}
+                  </select>
+                </div>
+
+                {userRole === 'admin' ? (
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Budget (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                      className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                      placeholder="e.g. 500000"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Budget (₹)</label>
+                    <input
+                      type="text"
+                      disabled
+                      value="Managed by Admin"
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-700 text-[13px] font-medium cursor-not-allowed"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Category</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Engineering"
+                    value={projectCategory}
+                    onChange={(e) => setProjectCategory(e.target.value)}
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Department</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. R&D"
+                    value={projectDepartment}
+                    onChange={(e) => setProjectDepartment(e.target.value)}
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Priority</label>
+                  <select
+                    value={projectPriority}
+                    onChange={(e) => setProjectPriority(e.target.value)}
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  >
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Status</label>
+                  <select
+                    value={projectStatus}
+                    onChange={(e) => setProjectStatus(e.target.value)}
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-bold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  >
+                    <option value="planning">Planning</option>
+                    <option value="active">Active</option>
+                    <option value="on_hold">On Hold</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-800 mb-1">Brief Description</label>
+                <textarea
+                  rows="2"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter scope parameters & parameters..."
+                  className="w-full bg-white border border-slate-355 rounded-2xl px-3.5 py-2 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                ></textarea>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-800 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  />
+                </div>
+
+                {userRole === 'admin' ? (
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-850 mb-1">Assign Project Head</label>
+                    <select
+                      value={projectHeadId}
+                      onChange={(e) => setProjectHeadId(e.target.value)}
+                      className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    >
+                      <option value="">Select Project Head</option>
+                      {projectHeads.map(ph => <option key={ph.id} value={ph.id}>{ph.full_name}</option>)}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-850 mb-1">Project Head</label>
+                    <input
+                      type="text"
+                      disabled
+                      value="Self (Project Head)"
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-700 text-[13px] font-medium cursor-not-allowed"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={resetProjectForm}
+                  className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[13px] font-semibold shadow-md shadow-orange-600/15 cursor-pointer"
+                >
+                  {editingProject ? 'Save Changes' : 'Save Project'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -1060,7 +1071,7 @@ export default function Projects({ userRole, currentUserId }) {
 
 
                       {/* Tasks Listing table */}
-                      <div className="bg-white border border-slate-400 rounded-2xl shadow-sm overflow-hidden">
+                      <div className="bg-white rounded-[20px] shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
                           <table className="w-full border-collapse">
                             <thead>
@@ -1183,24 +1194,24 @@ export default function Projects({ userRole, currentUserId }) {
                   {projectViewTab === 'reports' && (
                     <div className="animate-fade-in">
                       {/* Developer Progress Reports logs */}
-                      <div className="bg-white border border-slate-400 rounded-2xl p-5 shadow-md space-y-4 overflow-hidden">
+                      <div className="bg-white rounded-[20px] p-5 shadow-md space-y-4 overflow-hidden">
                         <h4 className="text-[13px] font-bold text-slate-950 uppercase tracking-widest flex items-center gap-1.5">
                           <ClipboardList size={14} /> Developer Progress Reports
                         </h4>
-                        <div className="max-h-96 overflow-y-auto">
-                          <table className="w-full border-collapse">
+                        <div className="max-h-96 overflow-y-auto border border-slate-300 rounded-[20px]">
+                          <table className="w-full border-separate border-spacing-0">
                             <thead>
                               <tr className="bg-slate-700 text-white text-[11px] uppercase">
-                                <th className="px-3 py-2 text-left border border-slate-400">S.No</th>
-                                <th className="px-3 py-2 text-left border border-slate-400">Developer</th>
-                                <th className="px-3 py-2 text-left border border-slate-400">Task Title</th>
-                                <th className="px-3 py-2 text-left border border-slate-400">Progress</th>
-                                <th className="px-3 py-2 text-left border border-slate-400">Date Submitted</th>
-                                <th className="px-3 py-2 text-left border border-slate-400">Status</th>
-                                <th className="px-3 py-2 text-left border border-slate-400">Remarks</th>
+                                <th className="px-3 py-2 text-left border-r border-b border-slate-400 rounded-tl-[19px]">S.No</th>
+                                <th className="px-3 py-2 text-left border-r border-b border-slate-400">Developer</th>
+                                <th className="px-3 py-2 text-left border-r border-b border-slate-400">Task Title</th>
+                                <th className="px-3 py-2 text-left border-r border-b border-slate-400">Progress</th>
+                                <th className="px-3 py-2 text-left border-r border-b border-slate-400">Date Submitted</th>
+                                <th className="px-3 py-2 text-left border-r border-b border-slate-400">Status</th>
+                                <th className="px-3 py-2 text-left border-b border-slate-400 rounded-tr-[19px]">Remarks</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-300 text-[12px] font-medium">
+                            <tbody className="divide-y divide-slate-200 text-[12px] font-medium">
                               {reports
                                 .filter(r => {
                                   const task = tasks.find(t => t.id === r.task_id);
@@ -1208,22 +1219,22 @@ export default function Projects({ userRole, currentUserId }) {
                                 })
                                 .map((rep, index) => (
                                   <tr key={rep.id} className="hover:bg-slate-50">
-                                    <td className="px-3 py-2 font-bold text-slate-800 border border-slate-300">{index + 1}</td>
-                                    <td className="px-3 py-2 font-semibold text-slate-900 border border-slate-300">
+                                    <td className="px-3 py-2 font-bold text-slate-800 border-r border-slate-200">{index + 1}</td>
+                                    <td className="px-3 py-2 font-semibold text-slate-900 border-r border-slate-200">
                                       {rep.user?.full_name || teamMembers.find(m => m.id === rep.submitted_by)?.full_name || 'Developer'}
                                     </td>
-                                    <td className="px-3 py-2 text-slate-800 border border-slate-300">
+                                    <td className="px-3 py-2 text-slate-800 border-r border-slate-200">
                                       {rep.task?.title || tasks.find(t => t.id === rep.task_id)?.title || 'Task'}
                                     </td>
-                                    <td className="px-3 py-2 font-bold text-slate-900 border border-slate-300">
+                                    <td className="px-3 py-2 font-bold text-slate-900 border-r border-slate-200">
                                       <span className="bg-orange-50 border border-orange-200 text-orange-800 px-2 py-0.5 rounded-md text-[11px]">
                                         {rep.progress ?? (tasks.find(t => t.id === rep.task_id)?.progress || 0)}%
                                       </span>
                                     </td>
-                                    <td className="px-3 py-2 text-slate-800 border border-slate-300 font-semibold">
+                                    <td className="px-3 py-2 text-slate-800 border-r border-slate-200 font-semibold">
                                       {formatDate(rep.created_at)}
                                     </td>
-                                    <td className="px-3 py-2 border border-slate-300">
+                                    <td className="px-3 py-2 border-r border-slate-200">
                                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${
                                         rep.status === 'approved' 
                                           ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
@@ -1232,7 +1243,7 @@ export default function Projects({ userRole, currentUserId }) {
                                         {rep.status === 'approved' ? 'Approved' : 'Pending Review'}
                                       </span>
                                     </td>
-                                    <td className="px-3 py-2 text-slate-700 border border-slate-300" title={rep.content}>
+                                    <td className="px-3 py-2 text-slate-700" title={rep.content}>
                                       {rep.content}
                                     </td>
                                   </tr>
@@ -1356,6 +1367,7 @@ export default function Projects({ userRole, currentUserId }) {
           )}
         </>
       )}
+      </div>
 
       {/* EXTEND TASK DEADLINE MODAL */}
       {isRequestModalOpen && (
@@ -1400,7 +1412,7 @@ export default function Projects({ userRole, currentUserId }) {
                 <button
                   type="button"
                   onClick={() => setIsRequestModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-850 rounded-xl text-[14px] font-bold border border-slate-400 cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-855 rounded-xl text-[14px] font-bold border border-slate-400 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1422,7 +1434,7 @@ export default function Projects({ userRole, currentUserId }) {
           <div className="w-full max-w-xl bg-white border border-slate-450 rounded-2xl p-6 space-y-5 shadow-2xl animate-scale-up text-slate-955">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3.5">
               <div>
-                <h3 className="text-[17px] font-bold text-slate-950">
+                <h3 className="text-[17px] font-bold text-slate-955">
                   {selectedTask ? `Progress Report: ${selectedTask.title}` : 'Submit Task Progress Report'}
                 </h3>
                 <p className="text-[12px] text-slate-600 font-medium">Log new progression updates or inspect previous report logs</p>
@@ -1583,7 +1595,7 @@ export default function Projects({ userRole, currentUserId }) {
                     ))}
 
                   {reports.filter(r => r.task_id === selectedTask?.id).length === 0 && (
-                    <div className="text-center py-10 text-slate-600 font-semibold text-[13px]">
+                    <div className="text-center py-10 text-slate-650 font-semibold text-[13px]">
                       No report history logged for this task yet.
                     </div>
                   )}
@@ -1647,7 +1659,7 @@ export default function Projects({ userRole, currentUserId }) {
             <div className="flex justify-end pt-4">
               <button
                 onClick={() => setIsReviewRequestsModalOpen(false)}
-                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-850 rounded-xl text-[14px] font-bold border border-slate-400 cursor-pointer"
+                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-855 rounded-xl text-[14px] font-bold border border-slate-400 cursor-pointer"
               >
                 Close Window
               </button>
@@ -1663,7 +1675,7 @@ export default function Projects({ userRole, currentUserId }) {
             <div className="flex items-start gap-3">
               <AlertCircle className="text-red-650 shrink-0 mt-0.5" size={24} />
               <div>
-                <h3 className="text-[18px] font-bold text-slate-950">Confirm Project Deletion</h3>
+                <h3 className="text-[18px] font-bold text-slate-955">Confirm Project Deletion</h3>
                 <p className="text-[13px] text-slate-800 font-semibold mt-1">
                   You are about to delete <strong>{projectToDelete.name}</strong>. This will delete all tasks and reports associated with this workspace permanently.
                 </p>
@@ -1703,6 +1715,6 @@ export default function Projects({ userRole, currentUserId }) {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
-}
+};

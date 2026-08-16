@@ -325,7 +325,8 @@ export default function HRManagement() {
   const isInternshipDisabled = isEditing && originalEmpType === 'on role';
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-900 font-medium">
+    <>
+      <div className="space-y-6 animate-fade-in text-slate-900 font-medium">
       <style>{`
         @keyframes scaleUp {
           from { transform: scale(0.96); opacity: 0; }
@@ -571,6 +572,7 @@ export default function HRManagement() {
           )}
         </div>
       )}
+      </div>
 
       {/* COMBINED VIEW / EDIT & DOCUMENT MANAGEMENT MODAL */}
       {isFormModalOpen && (
@@ -705,32 +707,6 @@ export default function HRManagement() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Date of Joining</label>
-                      <input
-                        type="date"
-                        required
-                        value={joinsDate}
-                        onChange={(e) => setJoinsDate(e.target.value)}
-                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Employment Type</label>
-                      <select
-                        value={employmentType}
-                        onChange={(e) => setEmploymentType(e.target.value)}
-                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                      >
-                        <option value="on role">On Role</option>
-                        <option value="internship" disabled={isInternshipDisabled}>
-                          Internship {isInternshipDisabled ? '(Disabled - Promoted to On Role)' : ''}
-                        </option>
-                      </select>
-                    </div>
-                    <div>
                       <label className="block text-[11px] font-bold text-slate-800 mb-1">Status</label>
                       <select
                         value={status}
@@ -743,93 +719,125 @@ export default function HRManagement() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Date of Joining</label>
+                      <input
+                        type="date"
+                        required
+                        value={joinsDate}
+                        onChange={(e) => setJoinsDate(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-800 mb-1">Employment Type</label>
+                      <select
+                        value={employmentType}
+                        onChange={(e) => setEmploymentType(e.target.value)}
+                        className="w-full bg-white border border-slate-355 rounded-full px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                      >
+                        <option value="internship" disabled={isInternshipDisabled}>Internship {isInternshipDisabled ? '(Disabled - Staff Guard)' : ''}</option>
+                        <option value="on role">On Role</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-[11px] font-bold text-slate-800 mb-1">Residential Address</label>
                     <textarea
                       rows="2"
-                      placeholder="Enter permanent or communication address..."
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       className="w-full bg-white border border-slate-355 rounded-2xl px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
-                    ></textarea>
-                  </div>
-                </div>
-
-                {/* BOTTOM: DOCUMENT UPLOAD & MANAGEMENT */}
-                <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-5">
-                  <div>
-                    <h4 className="text-[15px] font-bold text-slate-955 mb-1.5">Document Deposits & Credentials</h4>
-                    <p className="text-[12px] text-slate-800">Add credentials like ID proofs, certificates, or letters</p>
+                    />
                   </div>
 
-                  {/* Upload New Document Box */}
-                  <div className="bg-white border border-slate-350 rounded-xl p-4 space-y-3.5 shadow-sm">
-                    <h5 className="text-[12px] font-bold text-slate-900 uppercase tracking-wider">Deposit New Credential</h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-end">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-750 uppercase mb-1">Document Label</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Identity Proof"
-                          value={newDocLabel}
-                          onChange={(e) => setNewDocLabel(e.target.value)}
-                          className="w-full bg-white border border-slate-350 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 border border-dashed border-slate-350 rounded-full p-2 text-center bg-slate-50 text-[11px] truncate">
-                          {uploadingDocName ? `Selected: ${uploadingDocName}` : 'Select a PDF / Image'}
-                        </div>
-                        <label className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 px-3 py-1.5 rounded-full cursor-pointer text-[11px] font-bold flex items-center gap-1 shrink-0">
-                          <Upload size={12} />
-                          <span>Browse</span>
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
-                            onChange={handleUploadNewDoc}
-                          />
-                        </label>
-                      </div>
+                  {/* DOCUMENT DEPOSIT BOX */}
+                  <div className="border-t border-slate-300 pt-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-[13px] font-bold text-orange-600 uppercase tracking-wider">Deposited Documents</h4>
                     </div>
 
-                    <div className="flex justify-end pt-1">
+                    {/* NEW DOCUMENT INPUT */}
+                    <div className="bg-slate-50 border border-slate-300 rounded-2xl p-4 space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-700 mb-1 uppercase">Document Label</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Pan Card, Offer Letter"
+                            value={newDocLabel}
+                            onChange={(e) => setNewDocLabel(e.target.value)}
+                            className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[12px] font-medium focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-700 mb-1 uppercase">Deposit File (.pdf, images)</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="file"
+                              accept=".pdf,.png,.jpg,.jpeg"
+                              id="hr-doc-picker"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  setUploadingDocName(file.name);
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    setNewDocBase64(reader.result);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="hidden"
+                            />
+                            <label htmlFor="hr-doc-picker" className="bg-white border border-slate-300 text-slate-950 hover:bg-slate-50 px-3.5 py-1.5 rounded-full cursor-pointer text-[12px] font-bold shadow-sm inline-flex items-center gap-1.5 transition-colors">
+                              <Upload size={14} />
+                              <span>{uploadingDocName ? 'Replace File' : 'Choose File'}</span>
+                            </label>
+                            {uploadingDocName && (
+                              <span className="text-[11px] text-slate-700 truncate max-w-[120px] font-semibold" title={uploadingDocName}>
+                                {uploadingDocName}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       <button
                         type="button"
-                        onClick={handleDepositNewDoc}
-                        className="px-4 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[11px] font-bold transition-colors cursor-pointer"
+                        onClick={handleAddDocument}
+                        className="w-full bg-slate-200 hover:bg-slate-300 text-slate-900 border border-slate-300 py-1.5 rounded-full text-[12px] font-bold shadow-sm cursor-pointer transition-colors"
                       >
-                        Add Document
+                        Add to Profile Documents
                       </button>
                     </div>
-                  </div>
 
-                  {/* List of Deposited Documents */}
-                  <div className="space-y-2.5">
-                    <span className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider border-b border-slate-250 pb-1">Current Documents ({formDocuments.length})</span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                    {/* DOCUMENTS LIST */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                       {formDocuments.map((doc, idx) => (
-                        <div key={idx} className="flex items-center justify-between bg-white border border-slate-300 rounded-xl p-2.5 text-[12px] shadow-sm hover:border-slate-400 transition-all">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <FileText size={14} className="text-slate-700 shrink-0" />
-                            <span className="font-semibold text-slate-955 truncate max-w-[150px]">{doc.name}</span>
+                        <div key={idx} className="bg-white border border-slate-300 rounded-xl p-3 flex justify-between items-center shadow-sm">
+                          <div className="flex items-center gap-2 overflow-hidden mr-2">
+                            <FileText size={16} className="text-orange-600 shrink-0" />
+                            <div className="overflow-hidden">
+                              <span className="block text-[12.5px] font-bold text-slate-955 truncate leading-tight">{doc.label}</span>
+                              <span className="block text-[9.5px] text-slate-700 font-semibold truncate mt-0.5">{doc.filename}</span>
+                            </div>
                           </div>
-                          <div className="flex gap-1.5 shrink-0">
-                            {doc.file && (
-                              <button
-                                type="button"
-                                onClick={() => openBase64File(doc.file, doc.name)}
-                                className="p-1 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded text-slate-900 cursor-pointer"
-                                title="View Document"
-                              >
-                                <Eye size={12} />
-                              </button>
-                            )}
+                          <div className="flex gap-1 shrink-0">
                             <button
                               type="button"
-                              onClick={() => handleDeleteFormDoc(idx)}
-                              className="p-1 bg-red-50 hover:bg-red-100 border border-red-200 rounded text-red-700 cursor-pointer"
+                              onClick={() => openBase64File(doc.file_data, doc.filename)}
+                              className="p-1.5 bg-slate-50 border border-slate-300 hover:bg-slate-100 rounded text-slate-800 cursor-pointer"
+                              title="View Document"
+                            >
+                              <Eye size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDocument(idx)}
+                              className="p-1.5 bg-red-50 border border-red-300 hover:bg-red-100 rounded text-red-700 cursor-pointer"
                               title="Delete Document"
                             >
                               <Trash2 size={12} />
@@ -837,9 +845,6 @@ export default function HRManagement() {
                           </div>
                         </div>
                       ))}
-                      {formDocuments.length === 0 && (
-                        <div className="col-span-full text-center p-6 text-slate-700 italic text-[12px]">No documents deposited for this profile yet.</div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -867,6 +872,6 @@ export default function HRManagement() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
