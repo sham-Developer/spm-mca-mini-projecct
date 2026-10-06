@@ -33,14 +33,14 @@ const STATUS_THEMES = {
     badge: 'bg-sky-200/80 text-sky-950 border-sky-400'
   },
   inprogress: {
-    bg: 'bg-amber-55/60 border-amber-300',
+    bg: 'bg-amber-50/60 border-amber-300',
     headerBg: 'bg-amber-100 text-amber-950 border-amber-300',
     badge: 'bg-amber-200/80 text-amber-950 border-amber-400'
   },
   budgetary: {
     bg: 'bg-violet-50 border-violet-300',
-    headerBg: 'bg-violet-100 text-violet-955 border-violet-300',
-    badge: 'bg-violet-200/80 text-violet-955 border-violet-400'
+    headerBg: 'bg-violet-100 text-violet-950 border-violet-300',
+    badge: 'bg-violet-200/80 text-violet-950 border-violet-400'
   },
   proposal: {
     bg: 'bg-rose-50 border-rose-300',
@@ -573,21 +573,21 @@ export default function ClientManagement() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-[20px] font-bold text-orange-600 tracking-tight">Clients & Leads Pipeline</h2>
-          <p className="text-[13px] text-slate-800 font-medium">Manage corporate accounts, drag stages, log budgets and track projects</p>
+          <p className="text-[13px] text-slate-900 font-medium">Manage corporate accounts, drag stages, log budgets and track projects</p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="bg-white border border-slate-400 rounded-xl p-1 flex items-center shadow-sm">
             <button
               onClick={() => setViewMode('kanban')}
-              className={`p-2 rounded-lg flex items-center gap-1.5 text-[13px] font-medium cursor-pointer transition-colors ${viewMode === 'kanban' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-800 hover:bg-slate-50'}`}
+              className={`p-2 rounded-lg flex items-center gap-1.5 text-[13px] font-medium cursor-pointer transition-colors ${viewMode === 'kanban' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-900 hover:bg-slate-50'}`}
             >
               <Columns size={16} />
               <span>Kanban Board</span>
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`p-2 rounded-lg flex items-center gap-1.5 text-[13px] font-medium cursor-pointer transition-colors ${viewMode === 'table' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-800 hover:bg-slate-50'}`}
+              className={`p-2 rounded-lg flex items-center gap-1.5 text-[13px] font-medium cursor-pointer transition-colors ${viewMode === 'table' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-900 hover:bg-slate-50'}`}
             >
               <LayoutGrid size={16} />
               <span>Table View</span>
@@ -609,20 +609,20 @@ export default function ClientManagement() {
 
         {/* Left Side: Search Keyword */}
         <div className="flex items-center bg-white border border-slate-400 rounded-xl px-3.5 py-1.5 shadow-inner flex-1 max-w-md">
-          <Search size={16} className="text-slate-600 mr-2" />
+          <Search size={16} className="text-slate-900 mr-2" />
           <input
             type="text"
             placeholder="Search by name, company or email..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-transparent text-[13px] text-slate-950 focus:outline-none placeholder:text-slate-500 font-medium py-1 border-none"
+            className="w-full bg-transparent text-[13px] text-slate-950 focus:outline-none placeholder:text-slate-900 font-medium py-1 border-none"
           />
         </div>
 
         {/* Right Side: Date Range Filters & Clear Button */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-bold text-slate-950">
-            <span className="text-slate-800 font-medium">Activity From:</span>
+            <span className="text-slate-900 font-medium">Activity From:</span>
             <input
               type="date"
               value={filterStartDate}
@@ -631,13 +631,13 @@ export default function ClientManagement() {
             />
           </div>
 
-          <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-bold text-slate-955">
-            <span className="text-slate-800 font-medium">To:</span>
+          <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-bold text-slate-950">
+            <span className="text-slate-900 font-medium">To:</span>
             <input
               type="date"
               value={filterEndDate}
               onChange={(e) => { setFilterEndDate(e.target.value); setCurrentPage(1); }}
-              className="bg-transparent border-none text-[12px] font-bold text-slate-955 focus:outline-none cursor-pointer"
+              className="bg-transparent border-none text-[12px] font-bold text-slate-950 focus:outline-none cursor-pointer"
             />
           </div>
 
@@ -700,23 +700,23 @@ export default function ClientManagement() {
                             key={client.id}
                             draggable
                             onDragStart={(e) => handleDragStart(e, client)}
-                            className={`bg-white border rounded-xl p-4 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-slate-500 hover:ring-4 hover:ring-orange-500/5 transition-all duration-300 cursor-grab active:cursor-grabbing text-slate-955 ${isActionDue ? 'border-red-500 bg-red-50/50 shadow-red-200/50 shadow-sm' : 'border-slate-400'
+                            className={`bg-white border rounded-xl p-4 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-slate-500 hover:ring-4 hover:ring-orange-500/5 transition-all duration-300 cursor-grab active:cursor-grabbing text-slate-950 ${isActionDue ? 'border-red-500 bg-red-50/50 shadow-red-200/50 shadow-sm' : 'border-slate-400'
                               }`}
                           >
                             <div className="flex justify-between items-start gap-1 mb-1">
-                              <h4 className="text-[14px] font-bold text-slate-955 leading-tight">{client.name}</h4>
+                              <h4 className="text-[14px] font-bold text-slate-950 leading-tight">{client.name}</h4>
                               {isActionDue && (
                                 <span className="bg-red-650 text-white text-[9px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0">
                                   Action Due
                                 </span>
                               )}
                             </div>
-                            <span className="block text-[12px] font-medium text-slate-800 mb-2">{client.company || 'Private Client'}</span>
+                            <span className="block text-[12px] font-medium text-slate-900 mb-2">{client.company || 'Private Client'}</span>
 
                             <div className="space-y-1 text-[11px] text-slate-850 font-medium mb-3">
                               <div className="truncate">{client.email}</div>
                               <div>{client.phone || '--'}</div>
-                              <div className="text-[10px] text-slate-700 pt-1 font-semibold">
+                              <div className="text-[10px] text-slate-900 pt-1 font-semibold">
                                 Last Activity: {formatDateToDMY(lastEditedRaw)}
                               </div>
                               {client.next_followup_date && (
@@ -725,7 +725,7 @@ export default function ClientManagement() {
                                 </div>
                               )}
                               {clientProjects.length > 0 && (
-                                <div className="mt-2 text-[10px] text-slate-955 font-medium bg-emerald-50/55 border border-emerald-350 rounded px-1.5 py-0.5 inline-block">
+                                <div className="mt-2 text-[10px] text-slate-950 font-medium bg-emerald-50/55 border border-emerald-350 rounded px-1.5 py-0.5 inline-block">
                                   {clientProjects.length} Projects linked
                                 </div>
                               )}
@@ -734,14 +734,14 @@ export default function ClientManagement() {
                             <div className="flex justify-between items-center gap-1.5 border-t border-slate-305 pt-3">
                               <button
                                 onClick={() => { setSelectedClient(client); setIsFollowupModalOpen(true); }}
-                                className="w-full py-1.5 bg-slate-50 border border-slate-400 hover:bg-slate-100 text-slate-955 rounded-lg text-[11px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1"
+                                className="w-full py-1.5 bg-slate-50 border border-slate-400 hover:bg-slate-100 text-slate-950 rounded-lg text-[11px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1"
                               >
                                 <MessageSquare size={12} />
                                 <span>Log Action</span>
                               </button>
                               <button
                                 onClick={() => openEditClientModal(client)}
-                                className="p-1.5 bg-slate-50 border border-slate-400 hover:bg-slate-100 text-slate-800 rounded-lg cursor-pointer transition-colors"
+                                className="p-1.5 bg-slate-50 border border-slate-400 hover:bg-slate-100 text-slate-900 rounded-lg cursor-pointer transition-colors"
                                 title="Edit Client"
                               >
                                 <Edit size={12} />
@@ -758,7 +758,7 @@ export default function ClientManagement() {
                         );
                       })}
                       {columnClients.length === 0 && (
-                        <div className="border border-dashed border-slate-400 rounded-xl flex items-center justify-center p-4 text-center text-[12px] font-medium text-slate-700 min-h-[100px] bg-slate-50/20">
+                        <div className="border border-dashed border-slate-400 rounded-xl flex items-center justify-center p-4 text-center text-[12px] font-medium text-slate-900 min-h-[100px] bg-slate-50/20">
                           Drag leads here
                         </div>
                       )}
@@ -776,13 +776,13 @@ export default function ClientManagement() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-[#3715ca] text-white">
-                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider w-16 text-center">S.No.</th>
-                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Client / Company</th>
-                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Contact</th>
-                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Pipeline Stage</th>
-                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Linked Workspaces</th>
-                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Last Interaction</th>
-                      <th className="p-4 text-[12px] font-bold uppercase tracking-wider">Actions</th>
+                      <th className="p-4 text-[12px] font-semibold uppercase tracking-wider w-16 text-center">S.No.</th>
+                      <th className="p-4 text-[12px] font-semibold uppercase tracking-wider">Client / Company</th>
+                      <th className="p-4 text-[12px] font-semibold uppercase tracking-wider">Contact</th>
+                      <th className="p-4 text-[12px] font-semibold uppercase tracking-wider">Pipeline Stage</th>
+                      <th className="p-4 text-[12px] font-semibold uppercase tracking-wider">Linked Workspaces</th>
+                      <th className="p-4 text-[12px] font-semibold uppercase tracking-wider">Last Interaction</th>
+                      <th className="p-4 text-[12px] font-semibold uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300 text-slate-950 font-medium">
@@ -796,12 +796,12 @@ export default function ClientManagement() {
                       // Map status order index to a color index to rotate circle avatars
                       const colorIndex = STATUS_ORDER.indexOf(client.status);
                       const avatarColors = [
-                        'bg-orange-150 text-orange-800 border-orange-800',
-                        'bg-yellow-150 text-yellow-800 border-yellow-800',
-                        'bg-purple-150 text-purple-800 border-purple-800',
-                        'bg-pink-150 text-pink-800 border-pink-800',
-                        'bg-blue-150 text-blue-800 border-blue-800',
-                        'bg-emerald-150 text-emerald-805 border-emerald-800'
+                        'bg-orange-100 text-orange-800 border-orange-300',
+                        'bg-yellow-100 text-yellow-800 border-yellow-300',
+                        'bg-purple-100 text-purple-800 border-purple-300',
+                        'bg-pink-100 text-pink-800 border-pink-300',
+                        'bg-blue-100 text-blue-800 border-blue-300',
+                        'bg-emerald-100 text-emerald-800 border-emerald-300'
                       ];
                       const avatarColorClass = avatarColors[colorIndex >= 0 ? colorIndex : 0];
 
@@ -810,17 +810,17 @@ export default function ClientManagement() {
                           key={client.id}
                           className={`hover:bg-slate-50/80 transition-colors ${isActionDue ? 'bg-red-50/50 hover:bg-red-100/50' : ''}`}
                         >
-                          <td className={`border border-slate-300 p-4 text-[13px] font-bold text-center ${isActionDue ? 'border-l-4 border-l-red-500' : ''}`}>
+                          <td className={`border border-slate-300 p-4 text-[13px] font-medium text-center ${isActionDue ? 'border-l-4 border-l-red-500' : ''}`}>
                             {indexOfFirstItem + index + 1}
                           </td>
                           <td className="border border-slate-300 p-4">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full border flex items-center justify-center font-bold text-[14px] shrink-0 ${avatarColorClass}`}>
+                              <div className={`w-10 h-10 rounded-full border flex items-center justify-center font-medium text-[14px] shrink-0 ${avatarColorClass}`}>
                                 <Building size={18} className="stroke-[2.5]" />
                               </div>
                               <div>
-                                <span className="block text-sm font-bold text-slate-950 leading-relaxed capitalize">{client.name}</span>
-                                <span className="block text-xs text-slate-700 font-medium mt-1">{client.company || 'Private Client'}</span>
+                                <span className="block text-sm font-medium text-slate-950 leading-relaxed capitalize">{client.name}</span>
+                                <span className="block text-xs text-slate-900 font-medium mt-1">{client.company || 'Private Client'}</span>
                               </div>
                             </div>
                           </td>
@@ -883,7 +883,7 @@ export default function ClientManagement() {
                               ) : (
                                 <>
                                   <MessageSquare size={14} className="text-slate-900 mt-0.5 shrink-0" />
-                                  <span className="text-slate-700">No interaction logged</span>
+                                  <span className="text-slate-900">No interaction logged</span>
                                 </>
                               )}
                             </div>
@@ -918,7 +918,7 @@ export default function ClientManagement() {
                     })}
                     {filteredClients.length === 0 && (
                       <tr>
-                        <td colSpan="8" className="border border-slate-300 p-8 text-center text-slate-750 text-[13px] font-bold">No matching client records found.</td>
+                        <td colSpan="8" className="border border-slate-300 p-8 text-center text-slate-750 text-[13px] font-normal">No matching client records found.</td>
                       </tr>
                     )}
                   </tbody>
@@ -929,7 +929,7 @@ export default function ClientManagement() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between px-4 py-3 bg-slate-100 border-t border-slate-400 sm:px-6">
                   <div>
-                    <p className="text-xs text-slate-955 font-medium">
+                    <p className="text-xs text-slate-950 font-medium">
                       Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{Math.min(indexOfLastItem, filteredClients.length)}</span> of <span className="font-bold">{filteredClients.length}</span> results
                     </p>
                   </div>
@@ -937,14 +937,14 @@ export default function ClientManagement() {
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-bold text-slate-955 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-bold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                     >
                       Prev
                     </button>
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-bold text-slate-955 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-bold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                     >
                       Next
                     </button>
@@ -960,12 +960,12 @@ export default function ClientManagement() {
       {/* CREATE & EDIT CLIENT MODAL */}
       {isClientModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in-fast">
-          <div className="w-full max-w-lg bg-white border border-slate-450 rounded-2xl p-6 space-y-6 shadow-2xl animate-scale-up text-slate-955">
+          <div className="w-full max-w-lg bg-white border border-slate-400 rounded-2xl p-6 space-y-6 shadow-2xl animate-scale-up text-slate-950">
             <div className="flex justify-between items-center border-b border-slate-200 pb-3">
               <h3 className="text-[17px] font-bold text-orange-600">
                 {isEditingClient ? 'Edit Lead/Client Details' : 'Add New Sales Lead'}
               </h3>
-              <button onClick={() => setIsClientModalOpen(false)} className="text-slate-700 hover:text-black transition-colors cursor-pointer">
+              <button onClick={() => setIsClientModalOpen(false)} className="text-slate-900 hover:text-black transition-colors cursor-pointer">
                 <X size={20} />
               </button>
             </div>
@@ -973,60 +973,60 @@ export default function ClientManagement() {
             <form onSubmit={handleCreateOrUpdateClient} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[12px] font-medium text-slate-800 mb-1.5">Client Full Name</label>
+                  <label className="block text-[12px] font-medium text-slate-900 mb-1.5">Client Full Name</label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-4.5 py-2 text-slate-950 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[12px] font-medium text-slate-800 mb-1.5">Company Name</label>
+                  <label className="block text-[12px] font-medium text-slate-900 mb-1.5">Company Name</label>
                   <input
                     type="text"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-4.5 py-2 text-slate-950 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[12px] font-medium text-slate-800 mb-1.5">Email Address</label>
+                  <label className="block text-[12px] font-medium text-slate-900 mb-1.5">Email Address</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-4.5 py-2 text-slate-950 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[12px] font-medium text-slate-800 mb-1.5">Phone Number</label>
+                  <label className="block text-[12px] font-medium text-slate-900 mb-1.5">Phone Number</label>
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-4.5 py-2 text-slate-950 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-medium text-slate-800 mb-1.5">
-                  Associate Project Workspace(s) <span className="font-normal text-slate-700">(optional)</span>
+                <label className="block text-[12px] font-medium text-slate-900 mb-1.5">
+                  Associate Project Workspace(s) <span className="font-normal text-slate-900">(optional)</span>
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Website Overhaul, Marketing Campaign"
                   value={newProjectsText}
                   onChange={(e) => setNewProjectsText(e.target.value)}
-                  className="w-full bg-white border border-slate-355 rounded-full px-4.5 py-2 text-slate-955 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="w-full bg-white border border-slate-300 rounded-full px-4.5 py-2 text-slate-950 text-[14px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 />
-                <span className="text-[11px] text-slate-700 font-medium mt-1 block">Specify comma-separated project names to auto-provision associated workspaces.</span>
+                <span className="text-[11px] text-slate-900 font-medium mt-1 block">Specify comma-separated project names to auto-provision associated workspaces.</span>
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-300">
@@ -1054,12 +1054,12 @@ export default function ClientManagement() {
       {/* RICH FOLLOW UP AND CONTEXT POPUP */}
       {isFollowupModalOpen && selectedClient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in-fast">
-          <div className="w-full max-w-4xl bg-white border border-slate-450 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[80vh] text-slate-955 relative animate-scale-up">
+          <div className="w-full max-w-4xl bg-white border border-slate-400 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[80vh] text-slate-950 relative animate-scale-up">
 
             {/* CLOSE BUTTON TOP RIGHT */}
             <button
               onClick={() => setIsFollowupModalOpen(false)}
-              className="absolute top-4 right-4 z-10 text-slate-700 hover:text-black bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 z-10 text-slate-900 hover:text-black bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -1068,8 +1068,8 @@ export default function ClientManagement() {
             <div className="md:w-1/3 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-400 p-5 flex flex-col justify-between overflow-y-auto">
               <div className="space-y-4">
                 <div>
-                  <span className="block text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-1.5">Pipeline Stage</span>
-                  <span className="inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 bg-orange-100 border border-orange-400 text-orange-955 rounded-full tracking-wide">
+                  <span className="block text-[11px] font-bold text-slate-900 uppercase tracking-widest mb-1.5">Pipeline Stage</span>
+                  <span className="inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 bg-orange-100 border border-orange-400 text-orange-950 rounded-full tracking-wide">
                     {selectedClient.status}
                   </span>
                 </div>
@@ -1090,7 +1090,7 @@ export default function ClientManagement() {
                       type="text"
                       readOnly
                       value={selectedClient.company || 'Private Lead Client'}
-                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-normal focus:outline-none cursor-default"
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
                     />
                   </div>
                   <div>
@@ -1099,7 +1099,7 @@ export default function ClientManagement() {
                       type="text"
                       readOnly
                       value={selectedClient.email}
-                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-normal focus:outline-none cursor-default"
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
                     />
                   </div>
                   <div>
@@ -1108,14 +1108,14 @@ export default function ClientManagement() {
                       type="text"
                       readOnly
                       value={selectedClient.phone || '--'}
-                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-normal focus:outline-none cursor-default"
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-normal focus:outline-none cursor-default"
                     />
                   </div>
                   <div>
                     <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Linked Workspaces</span>
                     <div className="mt-1.5 space-y-1">
                       {projects.filter(p => p.client_id === selectedClient.id).map(proj => (
-                        <div key={proj.id} className="text-[12px] font-bold text-slate-955 bg-white border border-slate-350 rounded px-2.5 py-1">
+                        <div key={proj.id} className="text-[12px] font-bold text-slate-950 bg-white border border-slate-350 rounded px-2.5 py-1">
                           {proj.name}
                         </div>
                       ))}
@@ -1134,7 +1134,7 @@ export default function ClientManagement() {
 
                 {/* NEW LOG ACTION FORM */}
                 <div>
-                  <h4 className="text-[15px] font-bold text-slate-955 mb-3.5">Log Discussion & Update Stage</h4>
+                  <h4 className="text-[15px] font-bold text-slate-950 mb-3.5">Log Discussion & Update Stage</h4>
                   <form onSubmit={handleAddFollowup} className="space-y-3.5 bg-slate-50 border border-slate-400 rounded-xl p-4">
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1143,7 +1143,7 @@ export default function ClientManagement() {
                         <select
                           value={nextStatus}
                           onChange={(e) => { setNextStatus(e.target.value); setBudgetFileName(''); setBudgetBase64(''); setProposalFileName(''); setProposalBase64(''); }}
-                          className="w-full bg-white border border-slate-350 rounded-lg px-2.5 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                          className="w-full bg-white border border-slate-350 rounded-lg px-2.5 py-2 text-slate-950 text-[13px] font-medium focus:outline-none"
                         >
                           <option value="">Keep current ({selectedClient.status})</option>
                           {STATUS_ORDER.map((stage) => {
@@ -1165,7 +1165,7 @@ export default function ClientManagement() {
                           type="date"
                           value={nextFollowupDate}
                           onChange={(e) => setNextFollowupDate(e.target.value)}
-                          className="w-full bg-white border border-slate-350 rounded-lg px-2.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none"
+                          className="w-full bg-white border border-slate-350 rounded-lg px-2.5 py-1.5 text-slate-950 text-[13px] font-medium focus:outline-none"
                         />
                       </div>
                     </div>
@@ -1173,7 +1173,7 @@ export default function ClientManagement() {
                     {/* BUDGET STAGE ADDITIONS */}
                     {nextStatus === 'budgetary' && (
                       <div className="space-y-2.5 pt-2 border-t border-slate-300 animate-fade-in-fast">
-                        <label className="block text-[11px] font-bold text-slate-800">Deposit Client Budget File (.pdf/.xlsx)</label>
+                        <label className="block text-[11px] font-medium text-slate-900">Deposit Client Budget File (.pdf/.xlsx)</label>
                         <div
                           onDragOver={(e) => handleDragOver(e, 'budget')}
                           onDragLeave={() => setIsDragActiveBudget(false)}
@@ -1195,7 +1195,7 @@ export default function ClientManagement() {
                               className="hidden"
                               id="budget-file-upload"
                             />
-                            <label htmlFor="budget-file-upload" className="text-[11px] bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded border border-slate-400 font-bold text-slate-955 cursor-pointer mt-1">
+                            <label htmlFor="budget-file-upload" className="text-[11px] bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded border border-slate-400 font-medium text-slate-950 cursor-pointer mt-1">
                               Browse Files
                             </label>
                           </div>
@@ -1206,7 +1206,7 @@ export default function ClientManagement() {
                     {/* PROPOSAL STAGE ADDITIONS */}
                     {nextStatus === 'proposal' && (
                       <div className="space-y-2.5 pt-2 border-t border-slate-300 animate-fade-in-fast">
-                        <label className="block text-[11px] font-bold text-slate-800">Deposit Proposal Document (.pdf)</label>
+                        <label className="block text-[11px] font-medium text-slate-900">Deposit Proposal Document (.pdf)</label>
                         <div
                           onDragOver={(e) => handleDragOver(e, 'proposal')}
                           onDragLeave={() => setIsDragActiveProposal(false)}
@@ -1228,7 +1228,7 @@ export default function ClientManagement() {
                               className="hidden"
                               id="proposal-file-upload"
                             />
-                            <label htmlFor="proposal-file-upload" className="text-[11px] bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded border border-slate-400 font-bold text-slate-955 cursor-pointer mt-1">
+                            <label htmlFor="proposal-file-upload" className="text-[11px] bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded border border-slate-400 font-medium text-slate-950 cursor-pointer mt-1">
                               Browse Files
                             </label>
                           </div>
@@ -1244,7 +1244,7 @@ export default function ClientManagement() {
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
                         placeholder="Log detailed updates, scope changes, or followup parameters..."
-                        className="w-full bg-white border border-slate-350 rounded-lg px-3 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                        className="w-full bg-white border border-slate-350 rounded-lg px-3 py-2 text-slate-950 text-[13px] font-medium focus:outline-none"
                       ></textarea>
                     </div>
 
@@ -1261,14 +1261,14 @@ export default function ClientManagement() {
 
                 {/* ARCHIVED FOLLOWUPS LIST */}
                 <div className="space-y-3.5">
-                  <h4 className="text-[15px] font-bold text-slate-955 border-b border-slate-300 pb-2 font-bold">Interaction Log & Files History</h4>
+                  <h4 className="text-[15px] font-bold text-slate-950 border-b border-slate-300 pb-2 font-bold">Interaction Log & Files History</h4>
                   <div className="flex flex-col-reverse gap-3 max-h-[250px] overflow-y-auto pr-1">
                     {selectedClient.follow_up_notes?.map((entry, index) => {
                       const isEditing = editingNoteIndex === index;
 
                       return (
-                        <div key={index} className="p-3 bg-white border border-slate-300 rounded-xl space-y-2 shadow-sm text-slate-955 hover:border-slate-400 transition-all">
-                          <div className="flex items-center justify-between text-[11px] font-medium text-slate-800">
+                        <div key={index} className="p-3 bg-white border border-slate-300 rounded-xl space-y-2 shadow-sm text-slate-950 hover:border-slate-400 transition-all">
+                          <div className="flex items-center justify-between text-[11px] font-medium text-slate-900">
                             <div className="flex items-center gap-1.5">
                               <Calendar size={12} />
                               <span>{formatDateToDMY(entry.date)}</span>
@@ -1289,38 +1289,38 @@ export default function ClientManagement() {
 
                           {/* Editable Note Form Block */}
                           {isEditing ? (
-                            <div className="space-y-3 p-3 bg-slate-50 border border-slate-300 rounded-xl mt-2 text-slate-955">
+                            <div className="space-y-3 p-3 bg-slate-50 border border-slate-300 rounded-xl mt-2 text-slate-950">
                               <div>
-                                <label className="block text-[11px] font-bold text-slate-800 uppercase mb-1">Meeting/Interaction Summary</label>
+                                <label className="block text-[11px] font-medium text-slate-900 uppercase mb-1">Meeting/Interaction Summary</label>
                                 <textarea
                                   value={editingNoteText}
                                   onChange={(e) => setEditingNoteText(e.target.value)}
-                                  className="w-full bg-white border border-slate-350 rounded-lg p-2 text-[12px] text-slate-955 font-medium focus:outline-none"
+                                  className="w-full bg-white border border-slate-350 rounded-lg p-2 text-[12px] text-slate-950 font-medium focus:outline-none"
                                   rows="2"
                                 />
                               </div>
 
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                  <label className="block text-[11px] font-bold text-black uppercase mb-1">Next Followup Date</label>
+                                  <label className="block text-[11px] font-medium text-black uppercase mb-1">Next Followup Date</label>
                                   <input
                                     type="date"
                                     value={editingFollowupDate}
                                     onChange={(e) => setEditingFollowupDate(e.target.value)}
-                                    className="w-full bg-white border border-slate-350 rounded-lg px-2 py-1 text-slate-955 text-[12px] font-medium focus:outline-none"
+                                    className="w-full bg-white border border-slate-350 rounded-lg px-2 py-1 text-slate-950 text-[12px] font-medium focus:outline-none"
                                   />
                                 </div>
 
                                 {(entry.status_to === 'budgetary' || entry.status_to === 'proposal') && (
                                   <div>
-                                    <label className="block text-[11px] font-bold text-black uppercase mb-1">
+                                    <label className="block text-[11px] font-medium text-black uppercase mb-1">
                                       Replace {entry.status_to === 'budgetary' ? 'Budget' : 'Proposal'} Document
                                     </label>
-                                    <div className="flex items-center justify-between bg-white border border-slate-350 rounded-lg px-2 py-1 text-slate-955 text-[12px]">
+                                    <div className="flex items-center justify-between bg-white border border-slate-350 rounded-lg px-2 py-1 text-slate-950 text-[12px]">
                                       <span className="truncate max-w-[120px] font-medium">
                                         {editingFileName || 'No file selected'}
                                       </span>
-                                      <label className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 px-2 py-0.5 rounded cursor-pointer text-[10px] font-bold flex items-center gap-1">
+                                      <label className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 px-2 py-0.5 rounded cursor-pointer text-[10px] font-medium flex items-center gap-1">
                                         <Upload size={10} />
                                         <span>Browse</span>
                                         <input
@@ -1368,7 +1368,7 @@ export default function ClientManagement() {
                             </div>
                           ) : (
                             <div className="flex items-start justify-between gap-4">
-                              <p className="text-[13px] font-medium text-slate-955 italic">"{entry.note}"</p>
+                              <p className="text-[13px] font-medium text-slate-950 italic">"{entry.note}"</p>
                               <button
                                 onClick={() => {
                                   setEditingNoteIndex(index);
@@ -1421,7 +1421,7 @@ export default function ClientManagement() {
                       );
                     })}
                     {(!selectedClient.follow_up_notes || selectedClient.follow_up_notes.length === 0) && (
-                      <div className="p-8 text-center text-slate-700 italic text-[12px] font-medium">No interaction history registered yet.</div>
+                      <div className="p-8 text-center text-slate-900 italic text-[12px] font-medium">No interaction history registered yet.</div>
                     )}
                   </div>
                 </div>

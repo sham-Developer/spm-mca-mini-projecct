@@ -22,7 +22,8 @@ import {
   PieChart,
   Info,
   BookOpen,
-  X
+  X,
+  ChevronDown
 } from 'lucide-react';
 import API_URL from '../config';
 
@@ -48,6 +49,7 @@ export default function Projects({ userRole, currentUserId }) {
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'detail'
   const [projectInnerTab, setProjectInnerTab] = useState('overview'); // 'overview' or 'resources'
   const [projectViewTab, setProjectViewTab] = useState('list'); // 'list', 'reports'
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'planning', 'on_hold', 'completed'
 
   // Modal control states
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -98,6 +100,9 @@ export default function Projects({ userRole, currentUserId }) {
     setEditingProject(proj);
     setProjectName(proj.name || '');
     setClientId(proj.client_id || '');
+    const matchedClient = clients.find(c => c.id === proj.client_id);
+    setClientPartnerInput(matchedClient ? (matchedClient.company || matchedClient.name) : '');
+    setIsClientDropdownOpen(false);
     setDescription(proj.description || '');
     setStartDate(proj.start_date ? proj.start_date.split('T')[0] : '');
     setEndDate(proj.end_date ? proj.end_date.split('T')[0] : '');
@@ -114,6 +119,8 @@ export default function Projects({ userRole, currentUserId }) {
     setIsProjectModalOpen(false);
     setProjectName('');
     setClientId('');
+    setClientPartnerInput('');
+    setIsClientDropdownOpen(false);
     setNewClientCompany('');
     setDescription('');
     setStartDate('');
@@ -132,6 +139,8 @@ export default function Projects({ userRole, currentUserId }) {
   const [companyMode, setCompanyMode] = useState('existing'); // 'existing' or 'new'
   const [newClientCompany, setNewClientCompany] = useState('');
   const [client_id, setClientId] = useState('');
+  const [clientPartnerInput, setClientPartnerInput] = useState('');
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -264,22 +273,32 @@ export default function Projects({ userRole, currentUserId }) {
     try {
       let activeClientId = client_id;
 
-      if (companyMode === 'new' && newClientCompany) {
-        // Create new client onboarded dynamically
-        const clientRes = await fetch(`${API_URL}/clients`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: newClientCompany,
-            company: newClientCompany,
-            email: `${newClientCompany.toLowerCase().replace(/\s+/g, '')}@example.com`,
-            phone: '9876543210',
-            status: 'onboarded'
-          })
-        });
-        if (clientRes.ok) {
-          const clientData = await clientRes.json();
-          activeClientId = clientData.id;
+      // Check if user entered a custom client partner name that doesn't match current client_id
+      const trimmedInput = (clientPartnerInput || '').trim();
+      if (trimmedInput) {
+        const matched = clients.find(c => 
+          (c.company && c.company.toLowerCase() === trimmedInput.toLowerCase()) ||
+          (c.name && c.name.toLowerCase() === trimmedInput.toLowerCase())
+        );
+        if (matched) {
+          activeClientId = matched.id;
+        } else if (!activeClientId) {
+          // User typed a brand new custom client partner: automatically onboard client
+          const clientRes = await fetch(`${API_URL}/clients`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: trimmedInput,
+              company: trimmedInput,
+              email: `${trimmedInput.toLowerCase().replace(/[^a-z0-9]/g, '')}@partner.com`,
+              phone: '9876543210',
+              status: 'onboarded'
+            })
+          });
+          if (clientRes.ok) {
+            const clientData = await clientRes.json();
+            activeClientId = clientData.id;
+          }
         }
       }
 
@@ -487,17 +506,33 @@ export default function Projects({ userRole, currentUserId }) {
     }
   };
 
-  // Filter projects depending on roles
-  const displayedProjects = projects.filter(p => {
+  // Role-accessible projects
+  const roleProjects = projects.filter(p => {
     if (userRole === 'admin') return true;
     if (userRole === 'project_head') return p.project_head_id === currentUserId;
-    // For team member, check if they have a task in the project
     if (userRole === 'team_member') {
-      const projectTaskAssigned = tasks.some(t => t.project_id === p.id && t.assigned_to === currentUserId);
-      return projectTaskAssigned;
+      return tasks.some(t => t.project_id === p.id && t.assigned_to === currentUserId);
     }
     return false;
   });
+
+  // Filter projects depending on roles & active status tab + sort active first
+  const displayedProjects = roleProjects
+    .filter(p => {
+      if (statusFilter === 'all') return true;
+      return (p.status || 'planning').toLowerCase() === statusFilter.toLowerCase();
+    })
+    .sort((a, b) => {
+      // Status priority order: active (1) -> planning (2) -> on_hold (3) -> completed (4)
+      const priorityOrder = { active: 1, planning: 2, on_hold: 3, completed: 4 };
+      const statusA = (a.status || 'planning').toLowerCase();
+      const statusB = (b.status || 'planning').toLowerCase();
+      const rankA = priorityOrder[statusA] || 99;
+      const rankB = priorityOrder[statusB] || 99;
+      if (rankA !== rankB) return rankA - rankB;
+      // Secondary sort: most recently created / updated first
+      return new Date(b.created_at || b.start_date || 0) - new Date(a.created_at || a.start_date || 0);
+    });
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
@@ -515,7 +550,7 @@ export default function Projects({ userRole, currentUserId }) {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-[20px] font-bold text-slate-950 tracking-tight">Project Workspaces</h2>
-          <p className="text-[13px] text-slate-700 font-medium">Track deadlines, allocate workforce, and review progression metrics</p>
+          <p className="text-[13px] text-slate-900 font-medium">Track deadlines, allocate workforce, and review progression metrics</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -531,6 +566,46 @@ export default function Projects({ userRole, currentUserId }) {
         </div>
       </div>
 
+      {/* STATUS FILTER TABS (Active projects prioritized) */}
+      {viewMode === 'list' && (
+        <div className="flex items-center gap-2 border-b border-slate-300 pb-2 overflow-x-auto">
+          {[
+            { id: 'all', label: 'All Projects', count: roleProjects.length },
+            { id: 'active', label: 'Active', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'active').length },
+            { id: 'planning', label: 'Planning', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'planning').length },
+            { id: 'on_hold', label: 'On Hold', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'on_hold').length },
+            { id: 'completed', label: 'Completed', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'completed').length },
+          ].map((tab) => {
+            const isSelected = statusFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setStatusFilter(tab.id);
+                  setProjectsCurrentPage(1);
+                }}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+                  isSelected
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${
+                  isSelected 
+                    ? 'bg-slate-700 text-white' 
+                    : tab.id === 'active' && tab.count > 0 
+                    ? 'bg-emerald-100 text-emerald-950 font-bold' 
+                    : 'bg-slate-100 text-slate-900'
+                }`}>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {isProjectModalOpen && (
         <div className="fixed top-0 left-0 h-full inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-4xl bg-white border border-slate-400 rounded-2xl p-6 shadow-xl max-h-[90vh] overflow-y-auto space-y-6">
@@ -539,14 +614,14 @@ export default function Projects({ userRole, currentUserId }) {
                 <h3 className="text-[18px] font-bold text-slate-950">
                   {editingProject ? `Edit Workspace Parameters: ${editingProject.name}` : 'Onboard Corporate Workspace'}
                 </h3>
-                <p className="text-[13px] text-slate-700 font-medium">
+                <p className="text-[13px] text-slate-900 font-medium">
                   {editingProject ? 'Modify client scope agreements & parameter limits' : 'Create client scope agreements & parameter limits'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={resetProjectForm}
-                className="text-slate-500 hover:text-slate-800 transition-colors p-1 cursor-pointer"
+                className="text-slate-900 hover:text-slate-900 transition-colors p-1 cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -554,49 +629,140 @@ export default function Projects({ userRole, currentUserId }) {
             <form onSubmit={handleCreateProject} className="space-y-3.5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Workspace Name</label>
+                  <label className="block text-[11px] font-medium text-slate-900 mb-1">Project Workspace Name</label>
                   <input
                     type="text"
                     required
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Client Partner</label>
-                  <select
-                    required
-                    value={client_id}
-                    onChange={(e) => setClientId(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  >
-                    <option value="">Select Onboarded Client</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.company || c.name}</option>)}
-                  </select>
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-medium text-slate-900">Client Partner</label>
+                    <span className="text-[10px] text-slate-900 font-normal">Select or type custom</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Acme Corp or type custom partner..."
+                      value={clientPartnerInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setClientPartnerInput(val);
+                        setIsClientDropdownOpen(true);
+                        // Check if exact match
+                        const match = clients.find(c => 
+                          (c.company && c.company.toLowerCase() === val.toLowerCase()) ||
+                          (c.name && c.name.toLowerCase() === val.toLowerCase())
+                        );
+                        setClientId(match ? match.id : '');
+                      }}
+                      onFocus={() => setIsClientDropdownOpen(true)}
+                      onBlur={() => {
+                        // Delay closing so clicks on dropdown items register
+                        setTimeout(() => setIsClientDropdownOpen(false), 200);
+                      }}
+                      className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 pr-8"
+                    />
+                    <button
+                      type="button"
+                      tabIndex="-1"
+                      onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-900 hover:text-black cursor-pointer p-0.5"
+                    >
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${isClientDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* AUTOCOMPLETE SUGGESTIONS POPUP */}
+                  {isClientDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto animate-fade-in divide-y divide-slate-100">
+                      {/* Filtered Onboarded Clients */}
+                      {clients
+                        .filter(c => {
+                          const query = (clientPartnerInput || '').toLowerCase().trim();
+                          if (!query) return true;
+                          const name = (c.name || '').toLowerCase();
+                          const comp = (c.company || '').toLowerCase();
+                          return name.includes(query) || comp.includes(query);
+                        })
+                        .map(c => (
+                          <div
+                            key={c.id}
+                            onMouseDown={() => {
+                              const displayName = c.company || c.name;
+                              setClientPartnerInput(displayName);
+                              setClientId(c.id);
+                              setIsClientDropdownOpen(false);
+                            }}
+                            className="px-3.5 py-2 hover:bg-orange-50 cursor-pointer flex items-center justify-between text-left transition-colors"
+                          >
+                            <div>
+                              <span className="block text-[13px] font-medium text-slate-950">{c.company || c.name}</span>
+                              {c.company && c.name && c.company !== c.name && (
+                                <span className="block text-[11px] text-slate-900 font-normal">Contact: {c.name}</span>
+                              )}
+                            </div>
+                            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-900 border border-slate-200 font-medium shrink-0 ml-2">
+                              Onboarded
+                            </span>
+                          </div>
+                        ))}
+
+                      {/* If typed something that isn't already in list, allow custom onboard */}
+                      {clientPartnerInput.trim() && !clients.some(c => (c.company || c.name || '').toLowerCase() === clientPartnerInput.trim().toLowerCase()) && (
+                        <div
+                          onMouseDown={() => {
+                            setClientId('');
+                            setIsClientDropdownOpen(false);
+                          }}
+                          className="px-3.5 py-2.5 bg-orange-50 hover:bg-orange-100 cursor-pointer flex items-center justify-between transition-colors border-t border-orange-200"
+                        >
+                          <div>
+                            <span className="block text-[12.5px] font-medium text-orange-950">
+                              Use custom: <span className="underline decoration-orange-400 font-semibold">{clientPartnerInput.trim()}</span>
+                            </span>
+                            <span className="block text-[10.5px] text-slate-900 font-normal">Will create a new client partner profile automatically</span>
+                          </div>
+                          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-600 text-white font-medium shrink-0 ml-2">
+                            + Custom
+                          </span>
+                        </div>
+                      )}
+
+                      {clients.length === 0 && !clientPartnerInput.trim() && (
+                        <div className="px-3.5 py-3 text-center text-slate-900 text-[12px] font-normal">
+                          Type any custom partner name above
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {userRole === 'admin' ? (
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Budget (₹)</label>
+                    <label className="block text-[11px] font-medium text-slate-900 mb-1">Project Budget (₹)</label>
                     <input
                       type="number"
                       required
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
-                      className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                      className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                       placeholder="e.g. 500000"
                     />
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Budget (₹)</label>
+                    <label className="block text-[11px] font-medium text-slate-900 mb-1">Project Budget (₹)</label>
                     <input
                       type="text"
                       disabled
                       value="Managed by Admin"
-                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-700 text-[13px] font-medium cursor-not-allowed"
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-900 text-[13px] font-medium cursor-not-allowed"
                     />
                   </div>
                 )}
@@ -604,33 +770,33 @@ export default function Projects({ userRole, currentUserId }) {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Category</label>
+                  <label className="block text-[11px] font-medium text-slate-900 mb-1">Project Category</label>
                   <input
                     type="text"
                     placeholder="e.g. Engineering"
                     value={projectCategory}
                     onChange={(e) => setProjectCategory(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Department</label>
+                  <label className="block text-[11px] font-medium text-slate-900 mb-1">Project Department</label>
                   <input
                     type="text"
                     placeholder="e.g. R&D"
                     value={projectDepartment}
                     onChange={(e) => setProjectDepartment(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Priority</label>
+                  <label className="block text-[11px] font-medium text-slate-900 mb-1">Project Priority</label>
                   <select
                     value={projectPriority}
                     onChange={(e) => setProjectPriority(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   >
                     <option value="High">High</option>
                     <option value="Medium">Medium</option>
@@ -639,11 +805,11 @@ export default function Projects({ userRole, currentUserId }) {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Project Status</label>
+                  <label className="block text-[11px] font-medium text-slate-900 mb-1">Project Status</label>
                   <select
                     value={projectStatus}
                     onChange={(e) => setProjectStatus(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-bold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[12px] font-bold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   >
                     <option value="planning">Planning</option>
                     <option value="active">Active</option>
@@ -654,46 +820,46 @@ export default function Projects({ userRole, currentUserId }) {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Brief Description</label>
+                <label className="block text-[11px] font-medium text-slate-900 mb-1">Brief Description</label>
                 <textarea
                   rows="2"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Enter scope parameters & parameters..."
-                  className="w-full bg-white border border-slate-355 rounded-2xl px-3.5 py-2 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="w-full bg-white border border-slate-300 rounded-2xl px-3.5 py-2 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 ></textarea>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">Start Date</label>
+                  <label className="block text-[11px] font-medium text-slate-900 mb-1">Start Date</label>
                   <input
                     type="date"
                     required
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">End Date</label>
+                  <label className="block text-[11px] font-medium text-slate-900 mb-1">End Date</label>
                   <input
                     type="date"
                     required
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[12px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
 
                 {userRole === 'admin' ? (
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-850 mb-1">Assign Project Head</label>
+                    <label className="block text-[11px] font-medium text-slate-850 mb-1">Assign Project Head</label>
                     <select
                       value={projectHeadId}
                       onChange={(e) => setProjectHeadId(e.target.value)}
-                      className="w-full bg-white border border-slate-355 rounded-full px-3.5 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                      className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                     >
                       <option value="">Select Project Head</option>
                       {projectHeads.map(ph => <option key={ph.id} value={ph.id}>{ph.full_name}</option>)}
@@ -701,12 +867,12 @@ export default function Projects({ userRole, currentUserId }) {
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-850 mb-1">Project Head</label>
+                    <label className="block text-[11px] font-medium text-slate-850 mb-1">Project Head</label>
                     <input
                       type="text"
                       disabled
                       value="Self (Project Head)"
-                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-700 text-[13px] font-medium cursor-not-allowed"
+                      className="w-full bg-slate-100 border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-900 text-[13px] font-medium cursor-not-allowed"
                     />
                   </div>
                 )}
@@ -747,14 +913,14 @@ export default function Projects({ userRole, currentUserId }) {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-[#3715ca] text-white">
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300 w-16">S.No.</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Workspace Name</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Client Partner</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Start Date</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">End Date</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Project Head</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-left border border-slate-300">Status</th>
-                      <th className="px-4 py-3 text-[12px] font-bold text-center border border-slate-300">Actions</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-left border border-slate-300 w-16">S.No.</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-left border border-slate-300">Workspace Name</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-left border border-slate-300">Client Partner</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-left border border-slate-300">Start Date</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-left border border-slate-300">End Date</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-left border border-slate-300">Project Head</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-left border border-slate-300">Status</th>
+                      <th className="px-4 py-3 text-[12px] font-semibold text-center border border-slate-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300">
@@ -763,9 +929,9 @@ export default function Projects({ userRole, currentUserId }) {
                       .map((proj, idx) => {
                         const serialNum = (projectsCurrentPage - 1) * projectsItemsPerPage + idx + 1;
                         return (
-                          <tr key={proj.id} className="hover:bg-slate-50 transition-colors text-slate-955 font-medium">
-                            <td className="px-4 py-3.5 text-[13px] font-bold text-slate-900 border border-slate-300">{serialNum}</td>
-                            <td className="px-4 py-3.5 text-[14px] font-semibold text-slate-950 border border-slate-300">
+                          <tr key={proj.id} className="hover:bg-slate-50 transition-colors text-slate-950 font-medium">
+                            <td className="px-4 py-3.5 text-[13px] font-normal text-slate-900 border border-slate-300">{serialNum}</td>
+                            <td className="px-4 py-3.5 text-[14px] font-normal text-slate-950 border border-slate-300">
                               <span className="cursor-pointer hover:text-orange-600 block" onClick={() => { setSelectedProject(proj); setViewMode('detail'); }}>
                                 {proj.name}
                               </span>
@@ -790,14 +956,14 @@ export default function Projects({ userRole, currentUserId }) {
                                 <select
                                   value={proj.status || 'planning'}
                                   onChange={(e) => handleUpdateProjectStatus(proj.id, e.target.value)}
-                                  className={`text-[11px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md cursor-pointer outline-none focus:outline-none transition-colors ${
+                                  className={`text-[11px] uppercase tracking-wider font-medium px-2.5 py-1 rounded-md cursor-pointer outline-none focus:outline-none transition-colors ${
                                     proj.status === 'active'
                                       ? 'bg-blue-100 text-blue-950'
                                       : proj.status === 'completed'
                                       ? 'bg-emerald-100 text-emerald-950'
                                       : proj.status === 'on_hold'
-                                      ? 'bg-amber-100 text-amber-955'
-                                      : 'bg-orange-100 text-orange-955'
+                                      ? 'bg-amber-100 text-amber-950'
+                                      : 'bg-orange-100 text-orange-950'
                                   }`}
                                 >
                                   <option value="planning">Planning</option>
@@ -806,14 +972,14 @@ export default function Projects({ userRole, currentUserId }) {
                                   <option value="completed">Completed</option>
                                 </select>
                               ) : (
-                                <span className={`text-[11px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-md border ${
+                                <span className={`text-[11px] uppercase tracking-wider font-medium px-2.5 py-0.5 rounded-md border ${
                                   proj.status === 'active'
                                     ? 'bg-blue-100 text-blue-950 border-blue-400'
                                     : proj.status === 'completed'
                                     ? 'bg-emerald-100 text-emerald-950 border-emerald-400'
                                     : proj.status === 'on_hold'
-                                    ? 'bg-amber-100 text-amber-955 border-amber-400'
-                                    : 'bg-orange-100 text-orange-955 border-orange-400'
+                                    ? 'bg-amber-100 text-amber-950 border-amber-400'
+                                    : 'bg-orange-100 text-orange-950 border-orange-400'
                                 }`}>
                                   {proj.status || 'planning'}
                                 </span>
@@ -823,7 +989,7 @@ export default function Projects({ userRole, currentUserId }) {
                               <div className="flex items-center justify-center gap-2">
                                 <button
                                   onClick={() => { setSelectedProject(proj); setViewMode('detail'); }}
-                                  className="px-3.5 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[12px] font-bold shadow-md cursor-pointer transition-colors whitespace-nowrap"
+                                  className="px-3.5 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[12px] font-medium shadow-md cursor-pointer transition-colors whitespace-nowrap"
                                 >
                                   View Workspace
                                 </button>
@@ -852,7 +1018,7 @@ export default function Projects({ userRole, currentUserId }) {
                       })}
                     {displayedProjects.length === 0 && (
                       <tr>
-                        <td colSpan={8} className="text-center p-8 text-slate-805 font-bold text-[14px]">
+                        <td colSpan={8} className="text-center p-8 text-slate-900 font-normal text-[14px]">
                           No projects workspace boards found.
                         </td>
                       </tr>
@@ -864,21 +1030,21 @@ export default function Projects({ userRole, currentUserId }) {
               {/* PAGINATION PANEL */}
               {displayedProjects.length > 5 && (
                 <div className="p-4 border-t border-slate-300 bg-slate-50 flex items-center justify-between">
-                  <span className="text-[12px] text-slate-800 font-bold">
+                  <span className="text-[12px] text-slate-900 font-bold">
                     Showing Page {projectsCurrentPage} of {Math.ceil(displayedProjects.length / projectsItemsPerPage)}
                   </span>
                   <div className="flex gap-2">
                     <button
                       disabled={projectsCurrentPage === 1}
                       onClick={() => setProjectsCurrentPage(projectsCurrentPage - 1)}
-                      className="px-3 py-1 bg-white border border-slate-400 rounded text-[12px] font-bold text-slate-800 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1 bg-white border border-slate-400 rounded text-[12px] font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                     >
                       Prev
                     </button>
                     <button
                       disabled={projectsCurrentPage >= Math.ceil(displayedProjects.length / projectsItemsPerPage)}
                       onClick={() => setProjectsCurrentPage(projectsCurrentPage + 1)}
-                      className="px-3 py-1 bg-white border border-slate-400 rounded text-[12px] font-bold text-slate-800 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1 bg-white border border-slate-400 rounded text-[12px] font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                     >
                       Next
                     </button>
@@ -892,13 +1058,13 @@ export default function Projects({ userRole, currentUserId }) {
           {/* 3. GO TO PAGE INNER VIEW PANEL (Matching Mockup 1 style) */}
           {/* ========================================================= */}
           {viewMode === 'detail' && selectedProject && (
-            <div className="space-y-3 transition-all animate-fade-in">
+            <div className="space-y-4 transition-all animate-fade-in">
               
               {/* TOP INNER PAGE HEADER NAVIGATION */}
-              <div className="flex items-center gap-2 bg-white px-2.5 py-1.5 border border-slate-400 rounded-xl shadow-sm">
+              <div className="flex items-center gap-2 bg-white px-3 py-2 border border-slate-300 rounded-xl shadow-xs">
                 <button
                   onClick={() => { setViewMode('list'); setSelectedProject(null); }}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg text-[12px] font-bold text-slate-800 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-lg text-[12px] font-medium text-slate-900 transition-colors cursor-pointer"
                 >
                   <ArrowLeft size={13} />
                   <span>Back to Workspaces</span>
@@ -908,23 +1074,23 @@ export default function Projects({ userRole, currentUserId }) {
               {/* OVERVIEW CONTENT VIEW */}
               <>
                   {/* KPI ANALYTICS STATS ROW (6 detailed counters) */}
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-2.5">
                     {/* Status Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
-                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Project Status</div>
+                    <div className="bg-white border border-slate-300 rounded-xl p-3 flex flex-col justify-between shadow-xs">
+                      <div className="text-[11px] text-slate-900 font-medium uppercase tracking-wider">Project Status</div>
                       <div className="mt-1">
                         {userRole === 'admin' || userRole === 'project_head' ? (
                           <select
                             value={selectedProject.status || 'planning'}
                             onChange={(e) => handleUpdateProjectStatus(selectedProject.id, e.target.value)}
-                            className={`text-[11px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md border cursor-pointer focus:outline-none transition-colors w-full ${
+                            className={`text-[11px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-md border cursor-pointer focus:outline-none transition-colors w-full ${
                               selectedProject.status === 'active'
-                                ? 'bg-blue-100 text-blue-955 border-blue-400'
+                                ? 'bg-blue-100 text-blue-950 border-blue-400'
                                 : selectedProject.status === 'completed'
-                                ? 'bg-emerald-100 text-emerald-955 border-emerald-400'
+                                ? 'bg-emerald-100 text-emerald-950 border-emerald-400'
                                 : selectedProject.status === 'on_hold'
-                                ? 'bg-amber-100 text-amber-955 border-amber-400'
-                                : 'bg-orange-100 text-orange-955 border-orange-400'
+                                ? 'bg-amber-100 text-amber-950 border-amber-400'
+                                : 'bg-orange-100 text-orange-950 border-orange-400'
                             }`}
                           >
                             <option value="planning">Planning</option>
@@ -933,14 +1099,14 @@ export default function Projects({ userRole, currentUserId }) {
                             <option value="completed">Completed</option>
                           </select>
                         ) : (
-                          <span className={`text-[11px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md border inline-block ${
+                          <span className={`text-[11px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-md border inline-block ${
                             selectedProject.status === 'active'
-                              ? 'bg-blue-100 text-blue-955 border-blue-400'
+                              ? 'bg-blue-100 text-blue-950 border-blue-400'
                               : selectedProject.status === 'completed'
-                              ? 'bg-emerald-100 text-emerald-955 border-emerald-400'
+                              ? 'bg-emerald-100 text-emerald-950 border-emerald-400'
                               : selectedProject.status === 'on_hold'
-                              ? 'bg-amber-100 text-amber-955 border-amber-400'
-                              : 'bg-orange-100 text-orange-955 border-orange-400'
+                              ? 'bg-amber-100 text-amber-950 border-amber-400'
+                              : 'bg-orange-100 text-orange-950 border-orange-400'
                           }`}>
                             {selectedProject.status || 'planning'}
                           </span>
@@ -948,85 +1114,85 @@ export default function Projects({ userRole, currentUserId }) {
                       </div>
                     </div>
                     {/* Total Tasks Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
-                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Total Tasks</div>
-                      <div className="text-[22px] font-bold text-slate-950 mt-1">
+                    <div className="bg-white border border-slate-300 rounded-xl p-3 flex flex-col justify-between shadow-xs">
+                      <div className="text-[11px] text-slate-900 font-medium uppercase tracking-wider">Total Tasks</div>
+                      <div className="text-[22px] font-semibold text-slate-950 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id).length}
                       </div>
                     </div>
                     {/* Completed Tasks Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
-                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Completed</div>
-                      <div className="text-[22px] font-bold text-emerald-700 mt-1">
+                    <div className="bg-white border border-slate-300 rounded-xl p-3 flex flex-col justify-between shadow-xs">
+                      <div className="text-[11px] text-slate-900 font-medium uppercase tracking-wider">Completed</div>
+                      <div className="text-[22px] font-semibold text-emerald-800 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id && t.status === 'completed').length}
                       </div>
                     </div>
                     {/* Ongoing Tasks Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
-                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Ongoing</div>
-                      <div className="text-[22px] font-bold text-blue-700 mt-1">
+                    <div className="bg-white border border-slate-300 rounded-xl p-3 flex flex-col justify-between shadow-xs">
+                      <div className="text-[11px] text-slate-900 font-medium uppercase tracking-wider">Ongoing</div>
+                      <div className="text-[22px] font-semibold text-blue-800 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id && t.status !== 'completed').length}
                       </div>
                     </div>
                     {/* Delayed Completed Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
-                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Delayed</div>
-                      <div className="text-[22px] font-bold text-yellow-700 mt-1">
+                    <div className="bg-white border border-slate-300 rounded-xl p-3 flex flex-col justify-between shadow-xs">
+                      <div className="text-[11px] text-slate-900 font-medium uppercase tracking-wider">Delayed</div>
+                      <div className="text-[22px] font-semibold text-amber-800 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id && t.status === 'completed' && new Date(t.end_date) > new Date(selectedProject.end_date)).length}
                       </div>
                     </div>
                     {/* Overdue Card */}
-                    <div className="bg-white border border-slate-400 rounded-xl p-3 flex flex-col justify-between shadow-sm">
-                      <div className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Overdue</div>
-                      <div className="text-[22px] font-bold text-red-700 mt-1">
+                    <div className="bg-white border border-slate-300 rounded-xl p-3 flex flex-col justify-between shadow-xs">
+                      <div className="text-[11px] text-slate-900 font-medium uppercase tracking-wider">Overdue</div>
+                      <div className="text-[22px] font-semibold text-red-800 mt-1">
                         {tasks.filter(t => t.project_id === selectedProject.id && t.status !== 'completed' && new Date() > new Date(t.end_date)).length}
                       </div>
                     </div>
                   </div>
 
                   {/* PROJECT META CARD */}
-                  <div className="bg-white border border-slate-400 rounded-2xl p-3.5 shadow-md space-y-3">
+                  <div className="bg-white border border-slate-300 rounded-2xl p-4 shadow-sm space-y-3">
                     <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3">
                       {/* Name & Priority badge */}
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <h3 className="text-[18px] font-bold text-slate-950">{selectedProject.name}</h3>
-                          <span className="text-[10px] uppercase tracking-wider text-orange-950 font-bold bg-orange-100 border border-orange-400 px-2 py-0.5 rounded">
+                          <span className="text-[10px] uppercase tracking-wider text-orange-950 font-medium bg-orange-100 border border-orange-300 px-2 py-0.5 rounded">
                             {selectedProject.priority || 'Medium'}
                           </span>
                         </div>
-                        <p className="text-[12px] text-slate-800 font-medium">{selectedProject.description || 'No description workspace parameters specified.'}</p>
+                        <p className="text-[12.5px] text-slate-900 font-normal">{selectedProject.description || 'No description workspace parameters specified.'}</p>
                       </div>
 
                       {/* Initiated By & Project Head details */}
-                      <div className="flex flex-wrap gap-2 text-[12px]">
-                        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-xl p-2">
-                          <Users size={14} className="text-orange-600" />
+                      <div className="flex flex-wrap gap-2.5 text-[12px]">
+                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                          <Users size={15} className="text-orange-600" />
                           <div>
-                            <span className="text-[10px] text-slate-800 font-bold block uppercase">Initiated By</span>
-                            <span className="font-bold text-slate-950 text-[12px]">{selectedProject.client?.name || 'Client Lead'}</span>
+                            <span className="text-[10px] text-slate-900 font-medium block uppercase">Initiated By</span>
+                            <span className="font-medium text-slate-950 text-[12px]">{selectedProject.client?.name || 'Client Lead'}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-xl p-2">
-                          <User size={14} className="text-orange-600" />
+                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                          <User size={15} className="text-orange-600" />
                           <div>
-                            <span className="text-[10px] text-slate-800 font-bold block uppercase">Team Head</span>
-                            <span className="font-bold text-slate-950 text-[12px]">{selectedProject.project_head?.full_name || 'Software Admin'}</span>
+                            <span className="text-[10px] text-slate-900 font-medium block uppercase">Team Head</span>
+                            <span className="font-medium text-slate-950 text-[12px]">{selectedProject.project_head?.full_name || 'Software Admin'}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Bottom detailed parameters section */}
-                    <div className="border-t border-slate-200 pt-2.5 grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
-                      <div className="text-[12px] font-semibold text-slate-800">
-                        <span className="font-bold text-slate-700 block text-[10px] uppercase">Starting Date</span>
-                        <span className="text-[13px] font-bold text-slate-900">{formatDate(selectedProject.start_date)}</span>
+                    <div className="border-t border-slate-200 pt-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+                      <div>
+                        <span className="font-medium text-slate-900 block text-[10px] uppercase">Starting Date</span>
+                        <span className="text-[13px] font-medium text-slate-950">{formatDate(selectedProject.start_date)}</span>
                       </div>
-                      <div className="text-[12px] font-semibold text-slate-805">
-                        <span className="font-bold text-slate-700 block text-[10px] uppercase">Duration Deadline</span>
-                        <span className="text-[13px] font-bold text-red-700">{formatDate(selectedProject.end_date)}</span>
+                      <div>
+                        <span className="font-medium text-slate-900 block text-[10px] uppercase">Duration Deadline</span>
+                        <span className="text-[13px] font-medium text-red-800">{formatDate(selectedProject.end_date)}</span>
                       </div>
                       <div className="flex justify-end gap-2">
                         {(userRole === 'admin' || userRole === 'project_head') && (
@@ -1040,7 +1206,7 @@ export default function Projects({ userRole, currentUserId }) {
                               setTaskEnd('');
                               setShowTaskForm(true);
                             }}
-                            className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white px-3 py-1.5 rounded-xl text-[12px] font-bold cursor-pointer transition-colors"
+                            className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-xl text-[12px] font-medium cursor-pointer transition-colors shadow-xs"
                           >
                             <Plus size={13} />
                             <span>Add / Edit Task</span>
@@ -1056,7 +1222,7 @@ export default function Projects({ userRole, currentUserId }) {
                       <button
                         key={tab}
                         onClick={() => setProjectViewTab(tab)}
-                        className={`px-4 py-2 text-[13px] font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${projectViewTab === tab ? 'border-orange-600 text-orange-600' : 'border-transparent text-slate-800 hover:text-slate-950'}`}
+                        className={`px-4 py-2 text-[13px] font-medium border-b-2 transition-colors cursor-pointer ${projectViewTab === tab ? 'border-orange-600 text-orange-600' : 'border-transparent text-slate-900 hover:text-slate-950'}`}
                       >
                         {tab === 'list' ? 'Tasks List' : 'Reports'}
                       </button>
@@ -1076,14 +1242,14 @@ export default function Projects({ userRole, currentUserId }) {
                           <table className="w-full border-collapse">
                             <thead>
                               <tr className="bg-[#3715ca] text-white">
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300 w-16">S.No.</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Task Title</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Assigned Developer</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Start</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Deadline</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Progress</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Status</th>
-                                <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-slate-300">Actions</th>
+                                <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300 w-16">S.No.</th>
+                                <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Task Title</th>
+                                <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Assigned Developer</th>
+                                <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Start</th>
+                                <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Deadline</th>
+                                <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Progress</th>
+                                <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Status</th>
+                                <th className="px-4 py-2.5 text-[12px] font-semibold text-center border border-slate-300">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-300">
@@ -1091,16 +1257,16 @@ export default function Projects({ userRole, currentUserId }) {
                                 .filter(t => t.project_id === selectedProject.id)
                                 .map((task, idx) => (
                                   <tr key={task.id} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-4 py-3 text-[13px] font-bold text-slate-800 border border-slate-300">{idx + 1}</td>
-                                    <td className="px-4 py-3 text-[14px] font-bold text-slate-950 border border-slate-300">
+                                    <td className="px-4 py-3 text-[13px] font-normal text-slate-900 border border-slate-300">{idx + 1}</td>
+                                    <td className="px-4 py-3 text-[14px] font-normal text-slate-950 border border-slate-300">
                                       <div>{task.title}</div>
-                                      <div className="text-[11px] text-slate-800 font-medium mt-0.5">{task.description}</div>
+                                      <div className="text-[11px] text-slate-900 font-medium mt-0.5">{task.description}</div>
                                     </td>
-                                    <td className="px-4 py-3 text-[13px] font-semibold text-slate-800 border border-slate-300">
+                                    <td className="px-4 py-3 text-[13px] font-normal text-slate-900 border border-slate-300">
                                       {task.assigned_user?.full_name || 'Unassigned'}
                                     </td>
-                                    <td className="px-4 py-3 text-[12px] font-semibold text-slate-800 border border-slate-300">{formatDate(task.start_date)}</td>
-                                    <td className="px-4 py-3 text-[12px] font-semibold text-slate-800 border border-slate-300">{formatDate(task.end_date)}</td>
+                                    <td className="px-4 py-3 text-[12px] font-normal text-slate-900 border border-slate-300">{formatDate(task.start_date)}</td>
+                                    <td className="px-4 py-3 text-[12px] font-normal text-slate-900 border border-slate-300">{formatDate(task.end_date)}</td>
                                     <td className="px-4 py-3 border border-slate-300">
                                       <div className="flex items-center gap-2">
                                         <div className="w-16 bg-slate-200 rounded-full h-2 overflow-hidden border border-slate-300">
@@ -1109,15 +1275,15 @@ export default function Projects({ userRole, currentUserId }) {
                                             style={{ width: `${task.progress || 0}%` }}
                                           ></div>
                                         </div>
-                                        <span className="text-[11px] font-bold text-slate-900">{task.progress || 0}%</span>
+                                        <span className="text-[11px] font-medium text-slate-900">{task.progress || 0}%</span>
                                       </div>
                                     </td>
                                     <td className="px-4 py-3 border border-slate-300">
-                                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                                      <span className={`text-[10px] font-medium uppercase px-2 py-0.5 rounded ${
                                         task.status === 'completed' 
                                           ? 'bg-emerald-100 text-emerald-950 border border-emerald-400'
                                           : task.status === 'in_progress'
-                                          ? 'bg-blue-100 text-blue-955 border border-blue-400'
+                                          ? 'bg-blue-100 text-blue-950 border border-blue-400'
                                           : 'bg-slate-200 text-slate-950 border border-slate-400'
                                       }`}>
                                         {task.status === 'in_progress' ? 'In Progress' : task.status === 'todo' ? 'To Do' : task.status}
@@ -1138,7 +1304,7 @@ export default function Projects({ userRole, currentUserId }) {
                                               setReportModalTab('form');
                                               setIsReportModalOpen(true);
                                             }}
-                                            className="px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[10.5px] font-bold shadow-sm cursor-pointer transition-colors whitespace-nowrap"
+                                            className="px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-full text-[10.5px] font-medium shadow-sm cursor-pointer transition-colors whitespace-nowrap"
                                             title="Put Progress Report"
                                           >
                                             Put Report
@@ -1176,7 +1342,7 @@ export default function Projects({ userRole, currentUserId }) {
                                 ))}
                               {tasks.filter(t => t.project_id === selectedProject.id).length === 0 && (
                                   <tr>
-                                    <td colSpan={8} className="text-center p-6 text-slate-800 font-semibold text-[13px]">
+                                    <td colSpan={8} className="text-center p-6 text-slate-900 font-normal text-[13px]">
                                       No tasks assigned inside this project workspace.
                                     </td>
                                   </tr>
@@ -1219,31 +1385,31 @@ export default function Projects({ userRole, currentUserId }) {
                                 })
                                 .map((rep, index) => (
                                   <tr key={rep.id} className="hover:bg-slate-50">
-                                    <td className="px-3 py-2 font-bold text-slate-800 border-r border-slate-200">{index + 1}</td>
-                                    <td className="px-3 py-2 font-semibold text-slate-900 border-r border-slate-200">
+                                    <td className="px-3 py-2 font-normal text-slate-900 border-r border-slate-200">{index + 1}</td>
+                                    <td className="px-3 py-2 font-normal text-slate-900 border-r border-slate-200">
                                       {rep.user?.full_name || teamMembers.find(m => m.id === rep.submitted_by)?.full_name || 'Developer'}
                                     </td>
-                                    <td className="px-3 py-2 text-slate-800 border-r border-slate-200">
+                                    <td className="px-3 py-2 text-slate-900 border-r border-slate-200">
                                       {rep.task?.title || tasks.find(t => t.id === rep.task_id)?.title || 'Task'}
                                     </td>
-                                    <td className="px-3 py-2 font-bold text-slate-900 border-r border-slate-200">
+                                    <td className="px-3 py-2 font-normal text-slate-900 border-r border-slate-200">
                                       <span className="bg-orange-50 border border-orange-200 text-orange-800 px-2 py-0.5 rounded-md text-[11px]">
                                         {rep.progress ?? (tasks.find(t => t.id === rep.task_id)?.progress || 0)}%
                                       </span>
                                     </td>
-                                    <td className="px-3 py-2 text-slate-800 border-r border-slate-200 font-semibold">
+                                    <td className="px-3 py-2 text-slate-900 border-r border-slate-200 font-normal">
                                       {formatDate(rep.created_at)}
                                     </td>
                                     <td className="px-3 py-2 border-r border-slate-200">
-                                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${
+                                      <span className={`px-2 py-0.5 rounded text-[10px] font-medium border uppercase ${
                                         rep.status === 'approved' 
                                           ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
-                                          : 'bg-amber-100 border-amber-400 text-amber-955'
+                                          : 'bg-amber-100 border-amber-400 text-amber-950'
                                       }`}>
                                         {rep.status === 'approved' ? 'Approved' : 'Pending Review'}
                                       </span>
                                     </td>
-                                    <td className="px-3 py-2 text-slate-700" title={rep.content}>
+                                    <td className="px-3 py-2 text-slate-900" title={rep.content}>
                                       {rep.content}
                                     </td>
                                   </tr>
@@ -1253,7 +1419,7 @@ export default function Projects({ userRole, currentUserId }) {
                                 return task && task.project_id === selectedProject.id;
                               }).length === 0 && (
                                 <tr>
-                                  <td colSpan={7} className="text-center p-6 text-slate-705 font-semibold text-[13px]">
+                                  <td colSpan={7} className="text-center p-6 text-slate-705 font-normal text-[13px]">
                                     No progress reports submitted yet.
                                   </td>
                                 </tr>
@@ -1270,12 +1436,12 @@ export default function Projects({ userRole, currentUserId }) {
               {/* ADD / EDIT TASK POPUP MODAL */}
               {showTaskForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in-fast">
-                  <div className="w-full max-w-lg bg-white border border-slate-450 rounded-2xl shadow-2xl p-6 relative animate-scale-up text-slate-955">
+                  <div className="w-full max-w-lg bg-white border border-slate-400 rounded-2xl shadow-2xl p-6 relative animate-scale-up text-slate-950">
                     
                     {/* CLOSE BUTTON TOP RIGHT */}
                     <button 
                       onClick={() => { setShowTaskForm(false); setEditingTask(null); }}
-                      className="absolute top-4 right-4 z-10 text-slate-700 hover:text-black bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
+                      className="absolute top-4 right-4 z-10 text-slate-900 hover:text-black bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
                     >
                       <X size={18} />
                     </button>
@@ -1284,28 +1450,28 @@ export default function Projects({ userRole, currentUserId }) {
                       <h3 className="text-[18px] font-bold text-slate-950">
                         {editingTask ? 'Modify Task Details' : 'Add / Edit Task'}
                       </h3>
-                      <p className="text-[12px] text-slate-800">Fill in task parameters and developer assignments</p>
+                      <p className="text-[12px] text-slate-900">Fill in task parameters and developer assignments</p>
                     </div>
 
                     <form onSubmit={handleCreateTask} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                         <div>
-                          <label className="block text-[11px] font-bold text-slate-800 mb-1">Task Title *</label>
+                          <label className="block text-[11px] font-medium text-slate-900 mb-1">Task Title *</label>
                           <input
                             type="text"
                             required
                             value={taskTitle}
                             onChange={(e) => setTaskTitle(e.target.value)}
-                            className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[13px] font-medium focus:outline-none"
+                            className="w-full bg-white border border-slate-300 rounded-full px-4 py-1.5 text-slate-950 text-[13px] font-medium focus:outline-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] font-bold text-slate-800 mb-1">Assign Developer *</label>
+                          <label className="block text-[11px] font-medium text-slate-900 mb-1">Assign Developer *</label>
                           <select
                             required
                             value={assignedTo}
                             onChange={(e) => setAssignedTo(e.target.value)}
-                            className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[13px] font-bold focus:outline-none"
+                            className="w-full bg-white border border-slate-300 rounded-full px-4 py-1.5 text-slate-950 text-[13px] font-bold focus:outline-none"
                           >
                             <option value="">Select Team Member</option>
                             {teamMembers.map(tm => <option key={tm.id} value={tm.id}>{tm.full_name}</option>)}
@@ -1313,34 +1479,34 @@ export default function Projects({ userRole, currentUserId }) {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-800 mb-1">Details / Description</label>
+                        <label className="block text-[11px] font-medium text-slate-900 mb-1">Details / Description</label>
                         <textarea
                           rows="3"
                           value={taskDescription}
                           onChange={(e) => setTaskDescription(e.target.value)}
                           placeholder="Describe deliverables..."
-                          className="w-full bg-white border border-slate-355 rounded-2xl px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none"
+                          className="w-full bg-white border border-slate-300 rounded-2xl px-4 py-2 text-slate-950 text-[13px] font-medium focus:outline-none"
                         ></textarea>
                       </div>
                       <div className="grid grid-cols-2 gap-3.5">
                         <div>
-                          <label className="block text-[11px] font-bold text-slate-800 mb-1">Start Date</label>
+                          <label className="block text-[11px] font-medium text-slate-900 mb-1">Start Date</label>
                           <input
                             type="date"
                             required
                             value={taskStart}
                             onChange={(e) => setTaskStart(e.target.value)}
-                            className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
+                            className="w-full bg-white border border-slate-300 rounded-full px-4 py-1.5 text-slate-950 text-[12px] font-medium focus:outline-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] font-bold text-slate-800 mb-1">End Date</label>
+                          <label className="block text-[11px] font-medium text-slate-900 mb-1">End Date</label>
                           <input
                             type="date"
                             required
                             value={taskEnd}
                             onChange={(e) => setTaskEnd(e.target.value)}
-                            className="w-full bg-white border border-slate-355 rounded-full px-4 py-1.5 text-slate-955 text-[12px] font-medium focus:outline-none"
+                            className="w-full bg-white border border-slate-300 rounded-full px-4 py-1.5 text-slate-950 text-[12px] font-medium focus:outline-none"
                           />
                         </div>
                       </div>
@@ -1374,21 +1540,21 @@ export default function Projects({ userRole, currentUserId }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-md bg-white border border-slate-400 rounded-2xl p-6 space-y-6 shadow-xl">
             <div>
-              <h3 className="text-[18px] font-bold text-slate-955">Request Deadline Change</h3>
-              <p className="text-[13px] text-slate-700 font-medium">Provide rationale for extension requests</p>
+              <h3 className="text-[18px] font-bold text-slate-950">Request Deadline Change</h3>
+              <p className="text-[13px] text-slate-900 font-medium">Provide rationale for extension requests</p>
             </div>
             <form onSubmit={handleRequestDeadline} className="space-y-4">
               <div>
-                <label className="block text-[13px] font-bold text-slate-805 mb-1.5">Current Deadline</label>
+                <label className="block text-[13px] font-medium text-slate-900 mb-1.5">Current Deadline</label>
                 <input
                   type="text"
                   disabled
                   value={selectedTask?.end_date}
-                  className="w-full bg-slate-50 border border-slate-400 rounded-xl px-3.5 py-2.5 text-slate-700 text-[16px] font-semibold cursor-not-allowed"
+                  className="w-full bg-slate-50 border border-slate-400 rounded-xl px-3.5 py-2.5 text-slate-900 text-[16px] font-normal cursor-not-allowed"
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-bold text-slate-855 mb-1.5">Proposed Extension Date</label>
+                <label className="block text-[13px] font-medium text-slate-855 mb-1.5">Proposed Extension Date</label>
                 <input
                   type="date"
                   required
@@ -1398,7 +1564,7 @@ export default function Projects({ userRole, currentUserId }) {
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-bold text-slate-855 mb-1.5">Reason for Request</label>
+                <label className="block text-[13px] font-medium text-slate-855 mb-1.5">Reason for Request</label>
                 <textarea
                   required
                   rows="3"
@@ -1431,13 +1597,13 @@ export default function Projects({ userRole, currentUserId }) {
       {/* SUBMIT PROGRESS REPORT & HISTORY MODAL */}
       {isReportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm">
-          <div className="w-full max-w-xl bg-white border border-slate-450 rounded-2xl p-6 space-y-5 shadow-2xl animate-scale-up text-slate-955">
+          <div className="w-full max-w-xl bg-white border border-slate-400 rounded-2xl p-6 space-y-5 shadow-2xl animate-scale-up text-slate-950">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3.5">
               <div>
-                <h3 className="text-[17px] font-bold text-slate-955">
+                <h3 className="text-[17px] font-bold text-slate-950">
                   {selectedTask ? `Progress Report: ${selectedTask.title}` : 'Submit Task Progress Report'}
                 </h3>
-                <p className="text-[12px] text-slate-600 font-medium">Log new progression updates or inspect previous report logs</p>
+                <p className="text-[12px] text-slate-900 font-medium">Log new progression updates or inspect previous report logs</p>
               </div>
 
               {/* Sub-tabs toggle */}
@@ -1448,7 +1614,7 @@ export default function Projects({ userRole, currentUserId }) {
                   className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
                     reportModalTab === 'form' 
                       ? 'bg-orange-600 text-white shadow-sm' 
-                      : 'text-slate-700 hover:text-slate-950'
+                      : 'text-slate-900 hover:text-slate-950'
                   }`}
                 >
                   Update Report
@@ -1459,7 +1625,7 @@ export default function Projects({ userRole, currentUserId }) {
                   className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
                     reportModalTab === 'history' 
                       ? 'bg-orange-600 text-white shadow-sm' 
-                      : 'text-slate-700 hover:text-slate-950'
+                      : 'text-slate-900 hover:text-slate-950'
                   }`}
                 >
                   Report History ({reports.filter(r => r.task_id === selectedTask?.id).length})
@@ -1472,7 +1638,7 @@ export default function Projects({ userRole, currentUserId }) {
                 {/* Progress Slider and Status Dropdown Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 items-center bg-slate-50 border border-slate-300 rounded-2xl p-3.5">
                   <div className="md:col-span-2 space-y-1.5">
-                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-800">
+                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-900">
                       <span>Completion Progress</span>
                       <span className="bg-orange-100 text-orange-800 border border-orange-300 px-2 py-0.5 rounded-full text-[11px] font-bold">
                         {reportProgress}%
@@ -1498,14 +1664,14 @@ export default function Projects({ userRole, currentUserId }) {
                       className="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-orange-600"
                     />
                     {minProgress > 0 && (
-                      <span className="text-[10px] text-slate-600 font-medium block">
+                      <span className="text-[10px] text-slate-900 font-medium block">
                         * Minimum allowed: {minProgress}% (cannot decrease)
                       </span>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-800 mb-1">Task Status</label>
+                    <label className="block text-[11px] font-medium text-slate-900 mb-1">Task Status</label>
                     <select
                       value={reportStatus}
                       onChange={(e) => {
@@ -1523,7 +1689,7 @@ export default function Projects({ userRole, currentUserId }) {
                           }
                         }
                       }}
-                      className="w-full bg-white border border-slate-355 rounded-full px-3 py-1.5 text-slate-955 text-[12px] font-bold focus:outline-none focus:border-orange-500"
+                      className="w-full bg-white border border-slate-300 rounded-full px-3 py-1.5 text-slate-950 text-[12px] font-bold focus:outline-none focus:border-orange-500"
                     >
                       <option value="todo">To Do</option>
                       <option value="in_progress">In Progress</option>
@@ -1533,14 +1699,14 @@ export default function Projects({ userRole, currentUserId }) {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-800 mb-1">New Progress/Report Remarks *</label>
+                  <label className="block text-[11px] font-medium text-slate-900 mb-1">New Progress/Report Remarks *</label>
                   <textarea
                     required
                     rows="3"
                     value={reportContent}
                     onChange={(e) => setReportContent(e.target.value)}
                     placeholder="Describe new progress, completed sub-tasks & remarks..."
-                    className="w-full bg-white border border-slate-355 rounded-2xl px-4 py-2 text-slate-955 text-[13px] font-medium focus:outline-none focus:border-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-2xl px-4 py-2 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500"
                   ></textarea>
                 </div>
 
@@ -1569,7 +1735,7 @@ export default function Projects({ userRole, currentUserId }) {
                     .map((rep, idx) => (
                       <div key={rep.id || idx} className="bg-slate-50 border border-slate-300 rounded-2xl p-4 space-y-2 shadow-sm">
                         <div className="flex justify-between items-center flex-wrap gap-2 text-[12px]">
-                          <span className="font-bold text-slate-955">
+                          <span className="font-bold text-slate-950">
                             {rep.user?.full_name || teamMembers.find(m => m.id === rep.submitted_by)?.full_name || 'Developer'}
                           </span>
                           <div className="flex items-center gap-2">
@@ -1579,16 +1745,16 @@ export default function Projects({ userRole, currentUserId }) {
                             <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
                               rep.status === 'approved' 
                                 ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
-                                : 'bg-amber-100 border-amber-400 text-amber-955'
+                                : 'bg-amber-100 border-amber-400 text-amber-950'
                             }`}>
                               {rep.status === 'approved' ? 'Approved / Acknowledged' : 'Pending Review'}
                             </span>
                           </div>
                         </div>
-                        <p className="text-[12.5px] text-slate-800 font-medium italic whitespace-pre-wrap leading-relaxed">
+                        <p className="text-[12.5px] text-slate-900 font-medium italic whitespace-pre-wrap leading-relaxed">
                           " {rep.content} "
                         </p>
-                        <div className="text-[10px] text-slate-700 font-semibold pt-1 border-t border-slate-200">
+                        <div className="text-[10px] text-slate-900 font-semibold pt-1 border-t border-slate-200">
                           Submitted: {formatDate(rep.created_at)}
                         </div>
                       </div>
@@ -1622,16 +1788,16 @@ export default function Projects({ userRole, currentUserId }) {
           <div className="w-full max-w-2xl bg-white border border-slate-400 rounded-2xl p-6 space-y-6 shadow-xl">
             <div>
               <h3 className="text-[18px] font-bold text-slate-950">Evaluate Extension Requests</h3>
-              <p className="text-[13px] text-slate-700 font-medium">Approve or decline timeline change requests</p>
+              <p className="text-[13px] text-slate-900 font-medium">Approve or decline timeline change requests</p>
             </div>
             <div className="max-h-96 overflow-y-auto space-y-3">
               {deadlineRequests.filter(r => r.status === 'pending').map((req) => (
                 <div key={req.id} className="p-4 bg-slate-50 rounded-xl border border-slate-400 flex flex-col sm:flex-row justify-between items-start gap-4">
                   <div className="space-y-1 max-w-md">
-                    <span className="text-[12px] font-bold text-slate-800">Task ID: {req.task_id}</span>
+                    <span className="text-[12px] font-bold text-slate-900">Task ID: {req.task_id}</span>
                     <h5 className="text-[14px] font-bold text-slate-950">Task: {req.task?.title}</h5>
                     <p className="text-[13px] text-slate-900 font-medium italic">"Reason: {req.reason}"</p>
-                    <div className="flex gap-4 text-[12px] text-slate-700 font-semibold pt-1">
+                    <div className="flex gap-4 text-[12px] text-slate-900 font-semibold pt-1">
                       <span>Current: {req.current_end_date}</span>
                       <span>Requested: {req.requested_end_date}</span>
                     </div>
@@ -1653,7 +1819,7 @@ export default function Projects({ userRole, currentUserId }) {
                 </div>
               ))}
               {deadlineRequests.filter(r => r.status === 'pending').length === 0 && (
-                <div className="text-center p-8 text-slate-800 text-[14px] font-semibold">No pending extension requests.</div>
+                <div className="text-center p-8 text-slate-900 text-[14px] font-semibold">No pending extension requests.</div>
               )}
             </div>
             <div className="flex justify-end pt-4">
@@ -1675,15 +1841,15 @@ export default function Projects({ userRole, currentUserId }) {
             <div className="flex items-start gap-3">
               <AlertCircle className="text-red-650 shrink-0 mt-0.5" size={24} />
               <div>
-                <h3 className="text-[18px] font-bold text-slate-955">Confirm Project Deletion</h3>
-                <p className="text-[13px] text-slate-800 font-semibold mt-1">
+                <h3 className="text-[18px] font-bold text-slate-950">Confirm Project Deletion</h3>
+                <p className="text-[13px] text-slate-900 font-normal mt-1">
                   You are about to delete <strong>{projectToDelete.name}</strong>. This will delete all tasks and reports associated with this workspace permanently.
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <label className="block text-[12px] font-bold text-slate-900">
+              <label className="block text-[12px] font-medium text-slate-900">
                 To confirm, type <span className="font-bold text-red-700">I confirm to delete this project</span> in the input below:
               </label>
               <input

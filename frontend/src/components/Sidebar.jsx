@@ -52,11 +52,11 @@ export default function Sidebar({ user, onLogout, isOpen, setIsOpen }) {
           </div>
           <div>
             <h1 className="font-bold text-lg text-slate-950 tracking-tight leading-none">NexTask</h1>
-            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-widest">Enterprise</span>
+            <span className="text-[11px] font-medium text-slate-900 uppercase tracking-widest">Enterprise</span>
           </div>
         </div>
         <button 
-          className="lg:hidden p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-black cursor-pointer" 
+          className="lg:hidden p-1.5 rounded-lg text-slate-900 hover:bg-slate-100 hover:text-black cursor-pointer" 
           onClick={() => setIsOpen(false)}
         >
           <X size={18} />
@@ -71,14 +71,14 @@ export default function Sidebar({ user, onLogout, isOpen, setIsOpen }) {
             end
             onClick={() => setIsOpen(false)}
             className={({ isActive }) => 
-              `flex items-center gap-3 px-3.5 py-3 rounded-lg text-[14px] font-semibold transition-all duration-200 cursor-pointer ${
+              `flex items-center gap-3 px-3.5 py-3 rounded-lg text-[14px] font-medium transition-all duration-200 cursor-pointer ${
                 isActive 
-                  ? 'bg-orange-100 text-orange-700 border-l-2 border-orange-600 pl-2.5' 
-                  : 'text-slate-800 hover:bg-slate-100 hover:text-black'
+                  ? 'bg-orange-100 text-orange-900 border-l-2 border-orange-600 pl-2.5 font-bold' 
+                  : 'text-slate-900 hover:bg-slate-100 hover:text-black'
               }`
             }
           >
-            <link.icon size={18} className="shrink-0 text-slate-700 stroke-[2]" />
+            <link.icon size={18} className="shrink-0 text-slate-900 stroke-[2]" />
             <span>{link.name}</span>
           </NavLink>
         ))}
@@ -86,17 +86,17 @@ export default function Sidebar({ user, onLogout, isOpen, setIsOpen }) {
 
       <div className="p-4 border-t border-slate-400 bg-slate-50">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center text-slate-800 font-bold uppercase text-[14px] border border-slate-400">
+          <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center text-slate-950 font-bold uppercase text-[14px] border border-slate-400">
             {user?.full_name?.charAt(0) || 'U'}
           </div>
           <div className="overflow-hidden">
             <h4 className="text-[14px] font-bold text-slate-950 truncate">{user?.full_name}</h4>
-            <p className="text-[12px] text-slate-700 font-medium capitalize truncate">{user?.role?.replace('_', ' ')}</p>
+            <p className="text-[12px] text-slate-900 font-normal capitalize truncate">{user?.role?.replace('_', ' ')}</p>
           </div>
         </div>
         <button
           onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 bg-white border border-slate-400 hover:bg-red-50 hover:text-red-700 text-slate-800 rounded-lg text-[14px] font-semibold transition-all duration-200 shadow-sm cursor-pointer"
+          className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 bg-white border border-slate-400 hover:bg-red-50 hover:text-red-700 text-slate-950 rounded-lg text-[14px] font-medium transition-all duration-200 shadow-sm cursor-pointer"
         >
           <LogOut size={16} />
           <span>Sign Out</span>

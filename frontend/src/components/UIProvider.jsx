@@ -69,7 +69,7 @@ export default function UIProvider({ children }) {
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="shrink-0 text-slate-700 hover:text-black hover:bg-slate-100 p-0.5 rounded transition-colors cursor-pointer"
+              className="shrink-0 text-slate-900 hover:text-black hover:bg-slate-100 p-0.5 rounded transition-colors cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -95,7 +95,7 @@ export default function UIProvider({ children }) {
               <button
                 type="button"
                 onClick={() => setConfirmConfig(null)}
-                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-xl text-[13px] font-bold border border-slate-300 cursor-pointer"
+                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-xl text-[13px] font-medium border border-slate-300 cursor-pointer"
               >
                 Cancel
               </button>

@@ -13,7 +13,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
   const [tasks, setTasks] = useState([]);
   const [stats, setStats] = useState({
     myTasksCount: 0,
-    todoTasksCount: 0,
+    inProgressTasksCount: 0,
     reviewTasksCount: 0,
     completedTasksCount: 0
   });
@@ -35,7 +35,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
         setTasks(myTasks);
         setStats({
           myTasksCount: myTasks.length,
-          todoTasksCount: myTasks.filter(t => t.status === 'todo').length,
+          inProgressTasksCount: myTasks.filter(t => t.status === 'in_progress' || t.status === 'todo').length,
           reviewTasksCount: myTasks.filter(t => t.status === 'review').length,
           completedTasksCount: myTasks.filter(t => t.status === 'completed').length
         });
@@ -84,11 +84,11 @@ export default function TeamMemberDashboard({ currentUserId }) {
   ].filter(item => item.value > 0);
 
   return (
-    <div className="space-y-8 animate-fade-in text-slate-955 font-sans">
+    <div className="space-y-8 animate-fade-in text-slate-950 font-sans">
       {/* Page Header */}
       <div>
-        <h2 className="text-[22px] font-bold text-slate-955 tracking-tight">Developer Workspace</h2>
-        <p className="text-[13px] text-slate-700 font-semibold">Track your active allocations, submit progress reports, and review completed deliverables</p>
+        <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Developer Workspace</h2>
+        <p className="text-[13px] text-slate-900 font-normal">Track your active allocations, submit progress reports, and review completed deliverables</p>
       </div>
 
       {/* Team member KPI overview */}
@@ -96,8 +96,8 @@ export default function TeamMemberDashboard({ currentUserId }) {
         {/* My Assigned Tasks */}
         <div className="bg-gradient-to-br from-slate-100/70 to-slate-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-widest block">Total Assigned</span>
-            <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.myTasksCount}</h3>
+            <span className="text-[11px] font-bold text-slate-900 uppercase tracking-widest block">Total Assigned</span>
+            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">{stats.myTasksCount}</h3>
           </div>
           <div className="p-3 bg-slate-700 rounded-xl text-white shadow-md shadow-slate-700/10">
             <ClipboardList size={20} className="stroke-[2.5]" />
@@ -107,8 +107,8 @@ export default function TeamMemberDashboard({ currentUserId }) {
         {/* To Do / In Progress */}
         <div className="bg-gradient-to-br from-orange-100/70 to-orange-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-orange-955 uppercase tracking-widest block">In Progress</span>
-            <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.todoTasksCount}</h3>
+            <span className="text-[11px] font-bold text-orange-950 uppercase tracking-widest block">In Progress / Todo</span>
+            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">{stats.inProgressTasksCount}</h3>
           </div>
           <div className="p-3 bg-orange-600 rounded-xl text-white shadow-md shadow-orange-600/10">
             <Clock size={20} className="stroke-[2.5]" />
@@ -142,8 +142,8 @@ export default function TeamMemberDashboard({ currentUserId }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           <div>
-            <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">My Deliverables</h3>
-            <p className="text-[12px] text-slate-600 font-medium">Review specifications and report progressions of assigned workflows</p>
+            <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">My Deliverables</h3>
+            <p className="text-[12px] text-slate-900 font-medium">Review specifications and report progressions of assigned workflows</p>
           </div>
 
         <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
@@ -151,25 +151,25 @@ export default function TeamMemberDashboard({ currentUserId }) {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#3715ca] text-white">
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-slate-300 w-16">S.No.</th>
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Deliverable / Project</th>
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Duration limits</th>
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Progress</th>
-                  <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Status</th>
+                  <th className="px-4 py-2.5 text-[12px] font-semibold text-center border border-slate-300 w-16">S.No.</th>
+                  <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Deliverable / Project</th>
+                  <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Duration limits</th>
+                  <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Progress</th>
+                  <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-300">
                 {currentTasks.map((task, index) => (
-                  <tr key={task.id} className="hover:bg-slate-50 transition-colors text-slate-955 font-medium">
-                    <td className="px-4 py-3 text-[13px] font-bold text-slate-900 border border-slate-300 text-center">
+                  <tr key={task.id} className="hover:bg-slate-50 transition-colors text-slate-950 font-medium">
+                    <td className="px-4 py-3 text-[13px] font-normal text-slate-900 border border-slate-300 text-center">
                       {indexOfFirstItem + index + 1}
                     </td>
                     <td className="px-4 py-3 border border-slate-300">
-                      <span className="block text-[14px] font-bold text-slate-955">{task.title}</span>
-                      <span className="block text-[11px] text-slate-600 font-bold mt-0.5">{task.project?.name}</span>
+                      <span className="block text-[14px] font-medium text-slate-950">{task.title}</span>
+                      <span className="block text-[11px] text-slate-900 font-medium mt-0.5">{task.project?.name}</span>
                     </td>
-                    <td className="px-4 py-3 border border-slate-300 text-[13px] text-slate-900 font-bold whitespace-nowrap">
-                      <div>{formatDate(task.start_date)} <span className="text-slate-500 font-bold text-[10px] uppercase">to</span> {formatDate(task.end_date)}</div>
+                    <td className="px-4 py-3 border border-slate-300 text-[13px] text-slate-900 font-normal whitespace-nowrap">
+                      <div>{formatDate(task.start_date)} <span className="text-slate-900 font-medium text-[10px] uppercase">to</span> {formatDate(task.end_date)}</div>
                     </td>
                     <td className="px-4 py-3 border border-slate-300">
                       <div className="flex items-center gap-2">
@@ -179,17 +179,17 @@ export default function TeamMemberDashboard({ currentUserId }) {
                             style={{ width: `${task.progress || 0}%` }}
                           ></div>
                         </div>
-                        <span className="text-[11px] font-bold text-slate-800">{task.progress || 0}%</span>
+                        <span className="text-[11px] font-medium text-slate-900">{task.progress || 0}%</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 border border-slate-300">
-                      <span className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                      <span className={`inline-block text-[10px] font-medium uppercase px-2 py-0.5 rounded ${
                         task.status === 'completed' 
-                          ? 'bg-emerald-100 text-emerald-955 border border-emerald-400' 
+                          ? 'bg-emerald-100 text-emerald-950 border border-emerald-400' 
                           : task.status === 'review'
-                          ? 'bg-purple-100 text-purple-955 border border-purple-400'
+                          ? 'bg-purple-100 text-purple-950 border border-purple-400'
                           : task.status === 'in_progress'
-                          ? 'bg-blue-100 text-blue-955 border border-blue-400'
+                          ? 'bg-blue-100 text-blue-950 border border-blue-400'
                           : 'bg-slate-200 text-slate-950 border border-slate-400'
                       }`}>
                         {task.status === 'in_progress' ? 'In Progress' : task.status === 'todo' ? 'To Do' : task.status}
@@ -199,7 +199,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                 ))}
                 {tasks.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="px-4 py-8 text-center text-slate-700 text-[13px] font-semibold border border-slate-300">No deliverables currently assigned. Enjoy the light day!</td>
+                    <td colSpan="5" className="px-4 py-8 text-center text-slate-900 text-[13px] font-normal border border-slate-300">No deliverables currently assigned. Enjoy the light day!</td>
                   </tr>
                 )}
               </tbody>
@@ -225,7 +225,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-[12px] text-slate-800 font-bold">
+                  <p className="text-[12px] text-slate-900 font-normal">
                     Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{Math.min(indexOfLastItem, tasks.length)}</span> of <span className="font-bold">{tasks.length}</span> results
                   </p>
                 </div>
@@ -234,7 +234,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                     <button
                       disabled={currentPage === 1}
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      className="relative inline-flex items-center px-3 py-1.5 rounded-l-full border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="relative inline-flex items-center px-3 py-1.5 rounded-l-full border border-slate-300 bg-white text-xs font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Previous
                     </button>
@@ -245,7 +245,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                         className={`relative inline-flex items-center px-3.5 py-1.5 border-t border-b border-slate-300 text-xs font-bold transition-colors cursor-pointer ${
                           currentPage === i + 1
                             ? 'z-10 bg-orange-600 text-white'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
+                            : 'bg-white text-slate-900 hover:bg-slate-50'
                         }`}
                       >
                         {i + 1}
@@ -254,7 +254,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                     <button
                       disabled={currentPage === totalPages}
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      className="relative inline-flex items-center px-3 py-1.5 rounded-r-full border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="relative inline-flex items-center px-3 py-1.5 rounded-r-full border border-slate-300 bg-white text-xs font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Next
                     </button>
@@ -269,8 +269,8 @@ export default function TeamMemberDashboard({ currentUserId }) {
          {/* Right Column: Workload Distribution Chart */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">Workload Distribution</h3>
-            <p className="text-[12px] text-slate-600 font-medium">Status breakdown of your assigned tasks</p>
+            <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Workload Distribution</h3>
+            <p className="text-[12px] text-slate-900 font-medium">Status breakdown of your assigned tasks</p>
           </div>
           
           <div className="bg-white p-5 rounded-2xl border border-slate-400 shadow-md h-[260px] flex flex-col items-center justify-center">
@@ -301,13 +301,13 @@ export default function TeamMemberDashboard({ currentUserId }) {
                     iconSize={6}
                     formatter={(value) => {
                       const payload = taskStatusData.find(d => d.name === value);
-                      return <span className="text-[10.5px] font-bold text-slate-800 mr-1.5">{value} ({payload?.value || 0})</span>;
+                      return <span className="text-[10.5px] font-bold text-slate-900 mr-1.5">{value} ({payload?.value || 0})</span>;
                     }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-700 italic text-[12px] font-semibold">
+              <div className="h-full flex items-center justify-center text-slate-900 italic text-[12px] font-semibold">
                 No allocations assigned to analyze workload.
               </div>
             )}

@@ -142,11 +142,11 @@ export default function ProjectHeadDashboard({ currentUserId }) {
   ].filter(item => item.value > 0);
 
   return (
-    <div className="space-y-8 animate-fade-in text-slate-955">
+    <div className="space-y-8 animate-fade-in text-slate-950">
       {/* Page Header */}
       <div>
         <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Project Management Board</h2>
-        <p className="text-[13px] text-slate-700 font-semibold">Track task completion workflows, approve progress entries, and review project extensions</p>
+        <p className="text-[13px] text-slate-900 font-normal">Track task completion workflows, approve progress entries, and review project extensions</p>
       </div>
 
       {/* Project head overview stats */}
@@ -155,7 +155,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         <div className="bg-gradient-to-br from-indigo-100/70 to-indigo-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Workspaces Managed</span>
-            <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.managedProjectsCount}</h3>
+            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">{stats.managedProjectsCount}</h3>
           </div>
           <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/10">
             <FolderKanban size={20} className="stroke-[2.5]" />
@@ -166,7 +166,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         <div className="bg-gradient-to-br from-violet-100/70 to-violet-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-violet-900 uppercase tracking-widest block">Allocations</span>
-            <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.allocatedTasksCount}</h3>
+            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">{stats.allocatedTasksCount}</h3>
           </div>
           <div className="p-3 bg-violet-600 rounded-xl text-white shadow-md shadow-violet-600/10">
             <Users size={20} className="stroke-[2.5]" />
@@ -176,9 +176,9 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         {/* Pending Extensions */}
         <div className="bg-gradient-to-br from-amber-100/70 to-amber-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-amber-955 uppercase tracking-widest block">Pending Extensions</span>
+            <span className="text-[11px] font-bold text-amber-950 uppercase tracking-widest block">Pending Extensions</span>
             <div className="flex items-baseline gap-2">
-              <h3 className={`text-[30px] font-bold tracking-tight ${stats.pendingDeadlineRequestsCount > 0 ? 'text-amber-700' : 'text-slate-955'}`}>
+              <h3 className={`text-[30px] font-bold tracking-tight ${stats.pendingDeadlineRequestsCount > 0 ? 'text-amber-700' : 'text-slate-950'}`}>
                 {stats.pendingDeadlineRequestsCount}
               </h3>
               {stats.pendingDeadlineRequestsCount > 0 && (
@@ -209,8 +209,8 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         {/* Active project head task allocation board */}
         <div className="lg:col-span-2 space-y-4">
           <div>
-            <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">Active Team Allocations</h3>
-            <p className="text-[12px] text-slate-600 font-medium">Live operational review of team progress metrics</p>
+            <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Active Team Allocations</h3>
+            <p className="text-[12px] text-slate-900 font-medium">Live operational review of team progress metrics</p>
           </div>
 
           <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
@@ -218,31 +218,31 @@ export default function ProjectHeadDashboard({ currentUserId }) {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#3715ca] text-white">
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-center border border-slate-300 w-16">S.No.</th>
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Task Title</th>
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Assignee</th>
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Progress</th>
-                    <th className="px-4 py-2.5 text-[12px] font-bold text-left border border-slate-300">Status</th>
+                    <th className="px-4 py-2.5 text-[12px] font-semibold text-center border border-slate-300 w-16">S.No.</th>
+                    <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Task Title</th>
+                    <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Assignee</th>
+                    <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Progress</th>
+                    <th className="px-4 py-2.5 text-[12px] font-semibold text-left border border-slate-300">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-300">
                   {currentTasks.map((task, index) => {
                     const assigneeInitials = task.assigned_user?.full_name ? task.assigned_user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U';
                     return (
-                      <tr key={task.id} className="hover:bg-slate-50 transition-colors text-slate-955 font-medium">
-                        <td className="px-4 py-3 text-[13px] font-bold text-slate-900 border border-slate-300 text-center">
+                      <tr key={task.id} className="hover:bg-slate-50 transition-colors text-slate-950 font-medium">
+                        <td className="px-4 py-3 text-[13px] font-normal text-slate-900 border border-slate-300 text-center">
                           {indexOfFirstItem + index + 1}
                         </td>
                         <td className="px-4 py-3 border border-slate-300">
-                          <span className="block text-[14px] font-bold text-slate-950">{task.title}</span>
-                          <span className="block text-[11px] text-slate-600 font-bold mt-0.5">{task.project?.name}</span>
+                          <span className="block text-[14px] font-medium text-slate-950">{task.title}</span>
+                          <span className="block text-[11px] text-slate-900 font-medium mt-0.5">{task.project?.name}</span>
                         </td>
                         <td className="px-4 py-3 border border-slate-300">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-300 text-[10px] font-bold flex items-center justify-center text-slate-700">
+                            <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-300 text-[10px] font-medium flex items-center justify-center text-slate-900">
                               {assigneeInitials}
                             </div>
-                            <span className="text-[13px] text-slate-900 font-bold">{task.assigned_user?.full_name || 'Unassigned'}</span>
+                            <span className="text-[13px] text-slate-900 font-medium">{task.assigned_user?.full_name || 'Unassigned'}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3 border border-slate-300">
@@ -253,17 +253,17 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                                 style={{ width: `${task.progress || 0}%` }}
                               ></div>
                             </div>
-                            <span className="text-[11px] font-bold text-slate-800">{task.progress || 0}%</span>
+                            <span className="text-[11px] font-medium text-slate-900">{task.progress || 0}%</span>
                           </div>
                         </td>
                         <td className="px-4 py-3 border border-slate-300">
-                          <span className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                          <span className={`inline-block text-[10px] font-medium uppercase px-2 py-0.5 rounded ${
                             task.status === 'completed' 
-                              ? 'bg-emerald-100 text-emerald-955 border border-emerald-400' 
+                              ? 'bg-emerald-100 text-emerald-950 border border-emerald-400' 
                               : task.status === 'review'
-                              ? 'bg-purple-100 text-purple-955 border border-purple-400'
+                              ? 'bg-purple-100 text-purple-950 border border-purple-400'
                               : task.status === 'in_progress'
-                              ? 'bg-blue-100 text-blue-955 border border-blue-400'
+                              ? 'bg-blue-100 text-blue-950 border border-blue-400'
                               : 'bg-slate-200 text-slate-950 border border-slate-400'
                           }`}>
                             {task.status === 'in_progress' ? 'In Progress' : task.status === 'todo' ? 'To Do' : task.status}
@@ -274,7 +274,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                   })}
                   {tasks.length === 0 && (
                     <tr>
-                      <td colSpan="5" className="px-4 py-8 text-center text-slate-700 text-[13px] font-semibold border border-slate-300">No operational allocations found.</td>
+                      <td colSpan="5" className="px-4 py-8 text-center text-slate-900 text-[13px] font-normal border border-slate-300">No operational allocations found.</td>
                     </tr>
                   )}
                 </tbody>
@@ -300,7 +300,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                 </div>
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[12px] text-slate-800 font-bold">
+                    <p className="text-[12px] text-slate-900 font-normal">
                       Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{Math.min(indexOfLastItem, tasks.length)}</span> of <span className="font-bold">{tasks.length}</span> results
                     </p>
                   </div>
@@ -309,7 +309,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                       <button
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
-                        className="relative inline-flex items-center px-3 py-1.5 rounded-l-full border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="relative inline-flex items-center px-3 py-1.5 rounded-l-full border border-slate-300 bg-white text-xs font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         Previous
                       </button>
@@ -320,7 +320,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                           className={`relative inline-flex items-center px-3.5 py-1.5 border-t border-b border-slate-300 text-xs font-bold transition-colors cursor-pointer ${
                             currentPage === i + 1
                               ? 'bg-orange-600 text-white border-orange-600'
-                              : 'bg-white text-slate-700 hover:bg-slate-50'
+                              : 'bg-white text-slate-900 hover:bg-slate-50'
                           }`}
                         >
                           {i + 1}
@@ -329,7 +329,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                       <button
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
-                        className="relative inline-flex items-center px-3 py-1.5 rounded-r-full border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="relative inline-flex items-center px-3 py-1.5 rounded-r-full border border-slate-300 bg-white text-xs font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         Next
                       </button>
@@ -346,8 +346,8 @@ export default function ProjectHeadDashboard({ currentUserId }) {
           {/* TASK DISTRIBUTION CHART */}
           <div className="space-y-4">
             <div>
-              <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">Task Workload Distribution</h3>
-              <p className="text-[12px] text-slate-600 font-medium">Workload division across assigned team tasks</p>
+              <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Task Workload Distribution</h3>
+              <p className="text-[12px] text-slate-900 font-medium">Workload division across assigned team tasks</p>
             </div>
             <div className="bg-white p-5 rounded-2xl border border-slate-400 shadow-md h-[260px] flex flex-col items-center justify-center">
               {tasks.length > 0 ? (
@@ -377,13 +377,13 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                       iconSize={6}
                       formatter={(value) => {
                         const payload = taskStatusData.find(d => d.name === value);
-                        return <span className="text-[10.5px] font-bold text-slate-800 mr-1.5">{value} ({payload?.value || 0})</span>;
+                        return <span className="text-[10.5px] font-bold text-slate-900 mr-1.5">{value} ({payload?.value || 0})</span>;
                       }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-700 italic text-[12px] font-semibold">
+                <div className="h-full flex items-center justify-center text-slate-900 italic text-[12px] font-semibold">
                   No allocations registered to display analytics.
                 </div>
               )}
@@ -392,8 +392,8 @@ export default function ProjectHeadDashboard({ currentUserId }) {
 
           <div className="space-y-4">
             <div>
-              <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">Pending Evaluations</h3>
-              <p className="text-[12px] text-slate-600 font-medium">Sign-off reports submitted by team members</p>
+              <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Pending Evaluations</h3>
+              <p className="text-[12px] text-slate-900 font-medium">Sign-off reports submitted by team members</p>
             </div>
 
           <div className="space-y-3">
@@ -408,7 +408,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                       </div>
                       <div>
                         <h5 className="text-[13.5px] font-bold text-slate-950 leading-tight">{report.task?.title || 'Progress Update'}</h5>
-                        <span className="text-[11px] text-slate-700 font-semibold mt-0.5 block">
+                        <span className="text-[11px] text-slate-900 font-semibold mt-0.5 block">
                           By: {report.user?.full_name || 'Team Member'} • Submitted: {formatDate(report.created_at)}
                         </span>
                       </div>
@@ -417,14 +417,14 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                       {report.progress || 0}% Progress
                     </span>
                   </div>
-                  <p className="text-[12.5px] text-slate-800 font-medium italic whitespace-pre-wrap leading-relaxed">
+                  <p className="text-[12.5px] text-slate-900 font-medium italic whitespace-pre-wrap leading-relaxed">
                     " {report.content} "
                   </p>
 
                   <div className="pt-2.5 border-t border-slate-200 flex justify-between items-center">
                     <button
                       onClick={() => setSelectedHistoryTask({ id: report.task_id, title: report.task?.title || 'Progress Update' })}
-                      className="flex items-center gap-1.5 text-[12px] font-bold text-slate-800 hover:text-slate-950 hover:underline cursor-pointer"
+                      className="flex items-center gap-1.5 text-[12px] font-bold text-slate-900 hover:text-slate-950 hover:underline cursor-pointer"
                     >
                       <History size={15} className="stroke-[2.5]" />
                       View History
@@ -450,7 +450,7 @@ export default function ProjectHeadDashboard({ currentUserId }) {
               );
             })}
             {reports.filter(r => r.status === 'submitted').length === 0 && (
-              <div className="p-8 text-center bg-white border border-slate-400 rounded-2xl text-slate-700 text-[13px] font-semibold shadow-md">
+              <div className="p-8 text-center bg-white border border-slate-400 rounded-2xl text-slate-900 text-[13px] font-semibold shadow-md">
                 All clear! No pending task completions to review.
               </div>
             )}
@@ -467,13 +467,13 @@ export default function ProjectHeadDashboard({ currentUserId }) {
             <div className="px-6 py-4 border-b border-slate-400 flex items-center justify-between bg-slate-100 rounded-t-xl">
               <div>
                 <h3 className="text-[17px] font-bold text-slate-950">Task Update History</h3>
-                <p className="text-[12px] text-slate-700 font-semibold mt-0.5">
+                <p className="text-[12px] text-slate-900 font-normal mt-0.5">
                   Showing historical updates for: <span className="text-slate-950 font-bold">{selectedHistoryTask.title}</span>
                 </p>
               </div>
               <button 
                 onClick={() => setSelectedHistoryTask(null)}
-                className="text-slate-800 hover:text-slate-950 font-bold text-lg p-1.5 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+                className="text-slate-900 hover:text-slate-950 font-bold text-lg p-1.5 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
               >
                 ✕
               </button>
@@ -497,12 +497,12 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                         <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
                           historyReport.status === 'approved' 
                             ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
-                            : 'bg-amber-100 border-amber-400 text-amber-955'
+                            : 'bg-amber-100 border-amber-400 text-amber-950'
                         }`}>
                           {historyReport.status === 'approved' ? 'Approved / Acknowledged' : 'Submitted (Pending Review)'}
                         </span>
                       </div>
-                      <span className="text-[11.5px] text-slate-800 font-bold">
+                      <span className="text-[11.5px] text-slate-900 font-bold">
                         Submitted: {formatDate(historyReport.created_at)}
                       </span>
                     </div>
@@ -510,14 +510,14 @@ export default function ProjectHeadDashboard({ currentUserId }) {
                       " {historyReport.content} "
                     </p>
                     {historyReport.user?.full_name && (
-                      <div className="text-[11px] text-slate-700 font-semibold">
+                      <div className="text-[11px] text-slate-900 font-semibold">
                         By: <span className="font-bold text-slate-900">{historyReport.user.full_name}</span>
                       </div>
                     )}
                   </div>
                 ))}
               {reports.filter(r => r.task_id === selectedHistoryTask.id).length === 0 && (
-                <p className="text-center text-slate-700 font-semibold py-8 text-[13px]">
+                <p className="text-center text-slate-900 font-normal py-8 text-[13px]">
                   No history logged for this task yet.
                 </p>
               )}

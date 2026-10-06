@@ -92,9 +92,21 @@ const initializeDatabase = async () => {
           end_date DATE,
           budget NUMERIC(15, 2) DEFAULT 0.00,
           project_head_id UUID REFERENCES users(id) ON DELETE SET NULL,
+          category TEXT,
+          department TEXT,
+          priority TEXT DEFAULT 'Medium',
           created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
       );
     `);
+
+    try {
+      await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS category TEXT;`);
+      await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS department TEXT;`);
+      await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS priority TEXT DEFAULT 'Medium';`);
+    } catch (e) {
+      console.warn("Could not add category/department/priority columns to projects:", e);
+    }
+
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS tasks (
@@ -150,6 +162,36 @@ const initializeDatabase = async () => {
           action TEXT NOT NULL,
           description TEXT NOT NULL,
           performed_by TEXT NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS attendance (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+          date DATE NOT NULL,
+          status TEXT CHECK (status IN ('present', 'absent', 'half_day', 'on_leave', 'holiday')) DEFAULT 'present',
+          check_in TEXT,
+          check_out TEXT,
+          work_mode TEXT CHECK (work_mode IN ('office', 'remote', 'hybrid')) DEFAULT 'office',
+          notes TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+          UNIQUE (user_id, date)
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS leaves (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+          leave_type TEXT CHECK (leave_type IN ('casual', 'sick', 'earned', 'unpaid')) DEFAULT 'casual',
+          start_date DATE NOT NULL,
+          end_date DATE NOT NULL,
+          days INT DEFAULT 1,
+          reason TEXT NOT NULL,
+          status TEXT CHECK (status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+          reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
       );
     `);

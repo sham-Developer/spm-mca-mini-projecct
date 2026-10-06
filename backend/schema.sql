@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS projects (
     end_date DATE,
     budget NUMERIC(15, 2) DEFAULT 0.00, -- Indian Rupees format handled in front-end
     project_head_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    category TEXT,
+    department TEXT,
+    priority TEXT DEFAULT 'Medium',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 

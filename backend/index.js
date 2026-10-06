@@ -29,10 +29,29 @@ let tasksStore = [
 ];
 
 let deadlineRequestsStore = [];
-let reportsStore = [];
+let reportsStore = [
+  { id: 'rep1', task_id: 't1', submitted_by: '3', content: 'Completed design tokens and typography calibration', hours_spent: 6.5, progress: 40, status: 'submitted', created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
+  { id: 'rep2', task_id: 't1', submitted_by: '3', content: 'Integrated modal popups and responsive grid', hours_spent: 7.0, progress: 75, status: 'approved', created_at: new Date(Date.now() - 86400000).toISOString() },
+  { id: 'rep3', task_id: 't1', submitted_by: '3', content: 'Fixing contrast and high-priority QA bugs', hours_spent: 5.5, progress: 90, status: 'submitted', created_at: new Date().toISOString() }
+];
 let projectHistoryStore = [
   { id: 'h1', project_id: 'p1', action: 'created', description: 'Project created with initial budget of ₹15,00,000.', performed_by: 'Admin', created_at: new Date().toISOString() }
 ];
+
+let attendanceStore = [
+  { id: 'att1', user_id: '3', date: new Date().toISOString().split('T')[0], status: 'present', check_in: '09:15 AM', check_out: '06:30 PM', work_mode: 'office', notes: 'Sprint development' },
+  { id: 'att2', user_id: '3', date: new Date(Date.now() - 86400000).toISOString().split('T')[0], status: 'present', check_in: '09:05 AM', check_out: '06:45 PM', work_mode: 'office', notes: 'Completed deliverables' },
+  { id: 'att3', user_id: '3', date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], status: 'present', check_in: '09:30 AM', check_out: '06:15 PM', work_mode: 'remote', notes: 'Work from home' },
+  { id: 'att4', user_id: '2', date: new Date().toISOString().split('T')[0], status: 'present', check_in: '09:00 AM', check_out: '06:00 PM', work_mode: 'office', notes: 'Sprint review' },
+  { id: 'att5', user_id: '2', date: new Date(Date.now() - 86400000).toISOString().split('T')[0], status: 'present', check_in: '09:10 AM', check_out: '06:10 PM', work_mode: 'office', notes: 'Architectural planning' },
+  { id: 'att6', user_id: '1', date: new Date().toISOString().split('T')[0], status: 'present', check_in: '08:50 AM', check_out: '07:00 PM', work_mode: 'office', notes: 'Executive board meetings' }
+];
+
+let leavesStore = [
+  { id: 'lev1', user_id: '3', leave_type: 'casual', start_date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], end_date: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0], days: 2, reason: 'Family engagement', status: 'pending', reviewed_by: null, created_at: new Date().toISOString() },
+  { id: 'lev2', user_id: '2', leave_type: 'sick', start_date: new Date(Date.now() - 86400000 * 7).toISOString().split('T')[0], end_date: new Date(Date.now() - 86400000 * 6).toISOString().split('T')[0], days: 1, reason: 'Viral fever recovery', status: 'approved', reviewed_by: '1', created_at: new Date(Date.now() - 86400000 * 8).toISOString() }
+];
+
 let notificationsStore = [];
 
 const createNotification = async (userId, title, message) => {
@@ -110,18 +129,32 @@ app.get('/api/users', async (req, res) => {
   res.json(data);
 });
 
+app.get('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const data = await executeQuery(
+    'SELECT * FROM users WHERE id = $1',
+    [id],
+    () => usersStore.filter(u => u.id === id)
+  );
+  if (data && data.length > 0) {
+    res.json(data[0]);
+  } else {
+    res.status(404).json({ error: 'User not found' });
+  }
+});
+
 app.post('/api/users', async (req, res) => {
-  const { email, password_hash, full_name, role, department, designation, phone, joins_date, status, employment_type, dob, gender, address } = req.body;
+  const { email, password_hash, full_name, role, department, designation, phone, joins_date, status, employment_type, dob, gender, address, documents } = req.body;
   const activeJoinsDate = joins_date || new Date().toISOString().split('T')[0];
   const activeStatus = status || 'active';
   const activeEmpType = employment_type || 'on role';
-  const newUser = { id: Math.random().toString(36).substr(2, 9), joins_date: activeJoinsDate, status: activeStatus, employment_type: activeEmpType, dob: dob || null, gender: gender || null, address: address || null, documents: [], ...req.body };
+  const newUser = { id: Math.random().toString(36).substr(2, 9), joins_date: activeJoinsDate, status: activeStatus, employment_type: activeEmpType, dob: dob || null, gender: gender || null, address: address || null, documents: documents || [], ...req.body };
   
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query(
-        'INSERT INTO users (email, password_hash, full_name, role, department, designation, phone, joins_date, status, employment_type, dob, gender, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
-        [email, password_hash || 'member123', full_name, role, department, designation, phone, activeJoinsDate, activeStatus, activeEmpType, dob || null, gender || null, address || null]
+        'INSERT INTO users (email, password_hash, full_name, role, department, designation, phone, joins_date, status, employment_type, dob, gender, address, documents) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *',
+        [email, password_hash || 'member123', full_name, role, department, designation, phone, activeJoinsDate, activeStatus, activeEmpType, dob || null, gender || null, address || null, JSON.stringify(documents || [])]
       );
       return res.json(result.rows[0]);
     } catch (err) {
@@ -169,6 +202,20 @@ app.put('/api/users/:id', async (req, res) => {
   }
   usersStore = usersStore.map(u => u.id === id ? { ...u, ...req.body } : u);
   res.json(usersStore.find(u => u.id === id));
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConfigured && pool) {
+    try {
+      await pool.query('DELETE FROM users WHERE id = $1', [id]);
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+  usersStore = usersStore.filter(u => u.id !== id);
+  res.json({ success: true });
 });
 
 // Clients API
@@ -258,6 +305,7 @@ app.get('/api/projects', async (req, res) => {
         FROM projects p 
         LEFT JOIN clients c ON p.client_id = c.id 
         LEFT JOIN users u ON p.project_head_id = u.id
+        ORDER BY p.created_at DESC
       `);
       return res.json(result.rows);
     } catch (err) {
@@ -273,15 +321,67 @@ app.get('/api/projects', async (req, res) => {
   res.json(mapped);
 });
 
+app.get('/api/projects/:id', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConfigured && pool) {
+    try {
+      const result = await pool.query(`
+        SELECT p.*, 
+        row_to_json(c) as client, 
+        row_to_json(u) as project_head 
+        FROM projects p 
+        LEFT JOIN clients c ON p.client_id = c.id 
+        LEFT JOIN users u ON p.project_head_id = u.id
+        WHERE p.id = $1
+      `, [id]);
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Project not found' });
+      return res.json(result.rows[0]);
+    } catch (err) {
+      console.warn("Project database query failed, falling back to memory:", err);
+    }
+  }
+
+  const p = projectsStore.find(proj => String(proj.id) === String(id));
+  if (!p) return res.status(404).json({ error: 'Project not found' });
+  const mapped = {
+    ...p,
+    client: clientsStore.find(c => c.id === p.client_id),
+    project_head: usersStore.find(u => u.id === p.project_head_id)
+  };
+  res.json(mapped);
+});
+
 app.post('/api/projects', async (req, res) => {
-  const { name, client_id, description, start_date, end_date, budget, project_head_id, performed_by } = req.body;
-  const newProject = { id: 'p' + (projectsStore.length + 1), status: 'planning', ...req.body };
+  const { name, client_id, description, start_date, end_date, budget, project_head_id, category, department, priority, status, performed_by } = req.body;
+  const cleanClientId = client_id ? client_id : null;
+  const cleanProjectHeadId = project_head_id ? project_head_id : null;
+  const cleanStartDate = start_date ? start_date : null;
+  const cleanEndDate = end_date ? end_date : null;
+  const cleanBudget = budget ? Number(budget) : 0;
+  const cleanStatus = status || 'planning';
+  const cleanPriority = priority || 'Medium';
+
+  const newProject = { 
+    id: 'p' + (projectsStore.length + 1), 
+    name,
+    client_id: cleanClientId,
+    description: description || null,
+    start_date: cleanStartDate,
+    end_date: cleanEndDate,
+    budget: cleanBudget,
+    project_head_id: cleanProjectHeadId,
+    category: category || null,
+    department: department || null,
+    priority: cleanPriority,
+    status: cleanStatus,
+    created_at: new Date().toISOString()
+  };
 
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query(
-        'INSERT INTO projects (name, client_id, description, start_date, end_date, budget, project_head_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [name, client_id, description, start_date, end_date, budget, project_head_id]
+        'INSERT INTO projects (name, client_id, description, start_date, end_date, budget, project_head_id, category, department, priority, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+        [name, cleanClientId, description || null, cleanStartDate, cleanEndDate, cleanBudget, cleanProjectHeadId, category || null, department || null, cleanPriority, cleanStatus]
       );
       const createdProj = result.rows[0];
       const performedByVal = performed_by || 'System';
@@ -290,9 +390,9 @@ app.post('/api/projects', async (req, res) => {
         [createdProj.id, 'created', `Project created with initial budget of ₹${budget || 0}.`, performedByVal]
       );
       // Notify the assigned project head
-      if (project_head_id) {
+      if (cleanProjectHeadId) {
         await createNotification(
-          project_head_id,
+          cleanProjectHeadId,
           'New Project Assigned to You',
           `You have been assigned as Project Head for the new project: "${name}"`
         );
@@ -315,9 +415,9 @@ app.post('/api/projects', async (req, res) => {
     created_at: new Date().toISOString()
   });
   // Notify the assigned project head (in-memory)
-  if (project_head_id) {
+  if (cleanProjectHeadId) {
     createNotification(
-      project_head_id,
+      cleanProjectHeadId,
       'New Project Assigned to You',
       `You have been assigned as Project Head for the new project: "${name}"`
     );
@@ -336,58 +436,69 @@ app.put('/api/projects/:id', async (req, res) => {
       const prev = prevResult.rows[0];
 
       // 2. Build dynamic update query
+      const allowedFields = ['name', 'client_id', 'description', 'start_date', 'end_date', 'budget', 'project_head_id', 'status', 'category', 'department', 'priority'];
       const fields = [];
       const values = [];
       let paramIndex = 1;
       for (const [key, value] of Object.entries(req.body)) {
-        if (['name', 'client_id', 'description', 'start_date', 'end_date', 'budget', 'project_head_id', 'status'].includes(key)) {
-          fields.push(`${key} = $${paramIndex}`);
-          values.push(value);
+        if (allowedFields.includes(key)) {
+          let sanitizedVal = value;
+          if (['client_id', 'project_head_id', 'start_date', 'end_date'].includes(key) && (value === '' || value === undefined)) {
+            sanitizedVal = null;
+          }
+          if (key === 'budget' && value !== undefined && value !== null) {
+            sanitizedVal = Number(value);
+          }
+          fields.push(`"${key}" = $${paramIndex}`);
+          values.push(sanitizedVal);
           paramIndex++;
         }
       }
-      values.push(id);
-      const queryText = `UPDATE projects SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
-      const result = await pool.query(queryText, values);
-      const updated = result.rows[0];
+      if (fields.length > 0) {
+        values.push(id);
+        const queryText = `UPDATE projects SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+        const result = await pool.query(queryText, values);
+        const updated = result.rows[0];
 
-      // 3. Log history & send notifications
-      if (prev) {
-        if (req.body.status && prev.status !== req.body.status) {
-          await pool.query(
-            'INSERT INTO project_history (project_id, action, description, performed_by) VALUES ($1, $2, $3, $4)',
-            [id, 'status_changed', `Status updated from ${prev.status} to ${req.body.status}.`, performedBy]
-          );
+        // 3. Log history & send notifications
+        if (prev) {
+          if (req.body.status && prev.status !== req.body.status) {
+            await pool.query(
+              'INSERT INTO project_history (project_id, action, description, performed_by) VALUES ($1, $2, $3, $4)',
+              [id, 'status_changed', `Status updated from ${prev.status} to ${req.body.status}.`, performedBy]
+            );
+          }
+          if (req.body.budget && Number(prev.budget) !== Number(req.body.budget)) {
+            await pool.query(
+              'INSERT INTO project_history (project_id, action, description, performed_by) VALUES ($1, $2, $3, $4)',
+              [id, 'budget_updated', `Budget updated from ₹${prev.budget} to ₹${req.body.budget}.`, performedBy]
+            );
+          }
+          // Notify new project head if assigned/changed
+          if (
+            req.body.project_head_id &&
+            String(req.body.project_head_id) !== String(prev.project_head_id)
+          ) {
+            await createNotification(
+              req.body.project_head_id,
+              'Project Assigned to You',
+              `You have been assigned as Project Head for project: "${updated?.name || prev.name}"`
+            );
+          }
         }
-        if (req.body.budget && Number(prev.budget) !== Number(req.body.budget)) {
-          await pool.query(
-            'INSERT INTO project_history (project_id, action, description, performed_by) VALUES ($1, $2, $3, $4)',
-            [id, 'budget_updated', `Budget updated from ₹${prev.budget} to ₹${req.body.budget}.`, performedBy]
-          );
-        }
-        // Notify new project head if assigned/changed
-        if (
-          req.body.project_head_id &&
-          String(req.body.project_head_id) !== String(prev.project_head_id)
-        ) {
-          await createNotification(
-            req.body.project_head_id,
-            'Project Assigned to You',
-            `You have been assigned as Project Head for project: "${updated.name}"`
-          );
-        }
+
+        return res.json(updated);
       }
-
-      return res.json(updated);
+      return res.json(prev);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
 
   // In-memory fallback
-  const prev = projectsStore.find(p => p.id === id);
-  projectsStore = projectsStore.map(p => p.id === id ? { ...p, ...req.body } : p);
-  const updated = projectsStore.find(p => p.id === id);
+  const prev = projectsStore.find(p => String(p.id) === String(id));
+  projectsStore = projectsStore.map(p => String(p.id) === String(id) ? { ...p, ...req.body } : p);
+  const updated = projectsStore.find(p => String(p.id) === String(id));
 
   if (prev) {
     if (req.body.status && prev.status !== req.body.status) {
@@ -484,17 +595,30 @@ app.get('/api/tasks', async (req, res) => {
 
 app.post('/api/tasks', async (req, res) => {
   const { project_id, title, description, assigned_to, start_date, end_date } = req.body;
-  const newTask = { id: 't' + (tasksStore.length + 1), status: 'todo', ...req.body };
+  const cleanProjectId = project_id ? project_id : null;
+  const cleanAssignedTo = assigned_to ? assigned_to : null;
+  const cleanStartDate = start_date ? start_date : null;
+  const cleanEndDate = end_date ? end_date : null;
+
+  const newTask = { 
+    id: 't' + (tasksStore.length + 1), 
+    status: 'todo', 
+    ...req.body,
+    project_id: cleanProjectId,
+    assigned_to: cleanAssignedTo,
+    start_date: cleanStartDate,
+    end_date: cleanEndDate
+  };
   
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query(
         'INSERT INTO tasks (project_id, title, description, assigned_to, start_date, end_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [project_id, title, description, assigned_to, start_date, end_date]
+        [cleanProjectId, title, description, cleanAssignedTo, cleanStartDate, cleanEndDate]
       );
       const insertedTask = result.rows[0];
-      if (assigned_to) {
-        await createNotification(assigned_to, 'New Task Assigned', `You have been assigned a new task: "${title}"`);
+      if (cleanAssignedTo) {
+        await createNotification(cleanAssignedTo, 'New Task Assigned', `You have been assigned a new task: "${title}"`);
       }
       return res.json(insertedTask);
     } catch (err) {
@@ -502,8 +626,8 @@ app.post('/api/tasks', async (req, res) => {
     }
   }
   tasksStore.push(newTask);
-  if (assigned_to) {
-    createNotification(assigned_to, 'New Task Assigned', `You have been assigned a new task: "${title}"`);
+  if (cleanAssignedTo) {
+    createNotification(cleanAssignedTo, 'New Task Assigned', `You have been assigned a new task: "${title}"`);
   }
   res.json(newTask);
 });
@@ -518,10 +642,24 @@ app.put('/api/tasks/:id', async (req, res) => {
       const prevResult = await pool.query('SELECT * FROM tasks WHERE id = $1', [id]);
       const prevTask = prevResult.rows[0];
 
-      const keys = Object.keys(fields).filter(k => fields[k] !== undefined);
+      const sanitizedFields = { ...fields };
+      if ('assigned_to' in sanitizedFields && (sanitizedFields.assigned_to === '' || sanitizedFields.assigned_to === undefined)) {
+        sanitizedFields.assigned_to = null;
+      }
+      if ('start_date' in sanitizedFields && (sanitizedFields.start_date === '' || sanitizedFields.start_date === undefined)) {
+        sanitizedFields.start_date = null;
+      }
+      if ('end_date' in sanitizedFields && (sanitizedFields.end_date === '' || sanitizedFields.end_date === undefined)) {
+        sanitizedFields.end_date = null;
+      }
+      if ('progress' in sanitizedFields && sanitizedFields.progress !== undefined && sanitizedFields.progress !== null) {
+        sanitizedFields.progress = Number(sanitizedFields.progress);
+      }
+
+      const keys = Object.keys(sanitizedFields).filter(k => sanitizedFields[k] !== undefined);
       if (keys.length > 0) {
         const setClause = keys.map((key, i) => `"${key}" = $${i + 1}`).join(', ');
-        const values = keys.map(key => fields[key]);
+        const values = keys.map(key => sanitizedFields[key]);
         values.push(id);
 
         const query = `UPDATE tasks SET ${setClause} WHERE id = $${values.length} RETURNING *`;
@@ -531,19 +669,19 @@ app.put('/api/tasks/:id', async (req, res) => {
 
           // Notify newly assigned member if assignee changed
           if (
-            fields.assigned_to &&
+            sanitizedFields.assigned_to &&
             prevTask &&
-            String(fields.assigned_to) !== String(prevTask.assigned_to)
+            String(sanitizedFields.assigned_to) !== String(prevTask.assigned_to)
           ) {
             await createNotification(
-              fields.assigned_to,
+              sanitizedFields.assigned_to,
               'New Task Assigned',
               `You have been assigned a new task: "${updatedTask.title}"`
             );
           }
 
           // Notify assignee when task is marked completed
-          if (fields.status === 'completed' && updatedTask.assigned_to) {
+          if (sanitizedFields.status === 'completed' && updatedTask.assigned_to) {
             await createNotification(
               updatedTask.assigned_to,
               'Task Completed & Signed Off',
@@ -552,7 +690,7 @@ app.put('/api/tasks/:id', async (req, res) => {
           }
 
           // Always sync memory store too
-          tasksStore = tasksStore.map(t => String(t.id) === String(id) ? { ...t, ...fields } : t);
+          tasksStore = tasksStore.map(t => String(t.id) === String(id) ? { ...t, ...sanitizedFields } : t);
           return res.json(updatedTask);
         }
       }
@@ -633,13 +771,15 @@ app.get('/api/deadline-requests', async (req, res) => {
 
 app.post('/api/deadline-requests', async (req, res) => {
   const { task_id, requested_by, current_end_date, requested_end_date, reason } = req.body;
-  const newReq = { id: 'dr' + (deadlineRequestsStore.length + 1), status: 'pending', ...req.body };
+  const cleanCurrentEndDate = current_end_date ? current_end_date : null;
+  const cleanRequestedEndDate = requested_end_date ? requested_end_date : null;
+  const newReq = { id: 'dr' + (deadlineRequestsStore.length + 1), status: 'pending', ...req.body, current_end_date: cleanCurrentEndDate, requested_end_date: cleanRequestedEndDate };
   
   if (isDbConfigured && pool) {
     try {
       const result = await pool.query(
         'INSERT INTO deadline_requests (task_id, requested_by, current_end_date, requested_end_date, reason) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [task_id, requested_by, current_end_date, requested_end_date, reason]
+        [task_id, requested_by, cleanCurrentEndDate, cleanRequestedEndDate, reason]
       );
       const inserted = result.rows[0];
       
@@ -760,6 +900,9 @@ app.post('/api/reports', async (req, res) => {
         'INSERT INTO reports (task_id, submitted_by, content, hours_spent, progress) VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [task_id, submitted_by || null, content, hours_spent || 0, progress || 0]
       );
+      if (progress !== undefined && progress !== null) {
+        await pool.query('UPDATE tasks SET progress = $1 WHERE id = $2', [Number(progress || 0), task_id]);
+      }
       if (result.rows.length > 0) {
         const inserted = result.rows[0];
         // Get project head to notify
@@ -854,24 +997,282 @@ app.put('/api/notifications/:id/read', async (req, res) => {
   }
 });
 
-app.put('/api/notifications/user/:userId/read-all', async (req, res) => {
-  const { userId } = req.params;
+// ==========================================
+// ATTENDANCE & LEAVES & TIMESHEET APIS
+// ==========================================
+
+// 1. Get Attendance Records
+app.get('/api/attendance', async (req, res) => {
+  const { date, user_id, month } = req.query;
   const memoryAction = () => {
-    notificationsStore.forEach(n => {
-      if (String(n.user_id) === String(userId)) n.is_read = true;
-    });
-    return { success: true };
+    let list = attendanceStore.map(a => ({
+      ...a,
+      user: usersStore.find(u => String(u.id) === String(a.user_id))
+    }));
+    if (date) list = list.filter(a => a.date === date);
+    if (user_id) list = list.filter(a => String(a.user_id) === String(user_id));
+    if (month) list = list.filter(a => a.date && a.date.startsWith(month));
+    return list;
   };
-  try {
-    if (isDbConfigured && pool) {
-      await pool.query('UPDATE notifications SET is_read = TRUE WHERE user_id = $1', [userId]);
-      res.json({ success: true });
-    } else {
-      res.json(memoryAction());
+
+  if (isDbConfigured && pool) {
+    try {
+      let query = `
+        SELECT a.*, row_to_json(u) as user 
+        FROM attendance a 
+        LEFT JOIN users u ON a.user_id = u.id 
+        WHERE 1=1
+      `;
+      const params = [];
+      if (date) {
+        params.push(date);
+        query += ` AND a.date = $${params.length}`;
+      }
+      if (user_id) {
+        params.push(user_id);
+        query += ` AND a.user_id = $${params.length}`;
+      }
+      if (month) {
+        params.push(`${month}%`);
+        query += ` AND a.date::text LIKE $${params.length}`;
+      }
+      query += ` ORDER BY a.date DESC`;
+      const result = await pool.query(query, params);
+      return res.json(result.rows);
+    } catch (err) {
+      console.warn("Database query for attendance failed, falling back to memory:", err);
     }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
+  res.json(memoryAction());
+});
+
+// 2. Mark / Update Attendance
+app.post('/api/attendance', async (req, res) => {
+  const { user_id, date, status, check_in, check_out, work_mode, notes } = req.body;
+  const targetDate = date || new Date().toISOString().split('T')[0];
+  const targetStatus = status || 'present';
+  const targetMode = work_mode || 'office';
+
+  if (isDbConfigured && pool) {
+    try {
+      const result = await pool.query(`
+        INSERT INTO attendance (user_id, date, status, check_in, check_out, work_mode, notes)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (user_id, date) DO UPDATE 
+        SET status = EXCLUDED.status, 
+            check_in = COALESCE(EXCLUDED.check_in, attendance.check_in), 
+            check_out = COALESCE(EXCLUDED.check_out, attendance.check_out),
+            work_mode = EXCLUDED.work_mode,
+            notes = EXCLUDED.notes
+        RETURNING *
+      `, [user_id, targetDate, targetStatus, check_in || null, check_out || null, targetMode, notes || '']);
+      return res.json(result.rows[0]);
+    } catch (err) {
+      console.warn("DB insert attendance failed, falling back to memory:", err);
+    }
+  }
+
+  const existingIdx = attendanceStore.findIndex(a => String(a.user_id) === String(user_id) && a.date === targetDate);
+  if (existingIdx !== -1) {
+    attendanceStore[existingIdx] = {
+      ...attendanceStore[existingIdx],
+      status: targetStatus,
+      check_in: check_in || attendanceStore[existingIdx].check_in,
+      check_out: check_out || attendanceStore[existingIdx].check_out,
+      work_mode: targetMode,
+      notes: notes !== undefined ? notes : attendanceStore[existingIdx].notes
+    };
+    return res.json(attendanceStore[existingIdx]);
+  } else {
+    const newRecord = {
+      id: 'att' + (attendanceStore.length + 1),
+      user_id,
+      date: targetDate,
+      status: targetStatus,
+      check_in: check_in || '09:00 AM',
+      check_out: check_out || '06:00 PM',
+      work_mode: targetMode,
+      notes: notes || ''
+    };
+    attendanceStore.push(newRecord);
+    return res.json(newRecord);
+  }
+});
+
+// 3. Get Leave Requests
+app.get('/api/leaves', async (req, res) => {
+  const { user_id, status } = req.query;
+  const memoryAction = () => {
+    let list = leavesStore.map(l => ({
+      ...l,
+      user: usersStore.find(u => String(u.id) === String(l.user_id))
+    }));
+    if (user_id) list = list.filter(l => String(l.user_id) === String(user_id));
+    if (status) list = list.filter(l => l.status === status);
+    return list;
+  };
+
+  if (isDbConfigured && pool) {
+    try {
+      let query = `
+        SELECT l.*, row_to_json(u) as user 
+        FROM leaves l 
+        LEFT JOIN users u ON l.user_id = u.id 
+        WHERE 1=1
+      `;
+      const params = [];
+      if (user_id) {
+        params.push(user_id);
+        query += ` AND l.user_id = $${params.length}`;
+      }
+      if (status) {
+        params.push(status);
+        query += ` AND l.status = $${params.length}`;
+      }
+      query += ` ORDER BY l.created_at DESC`;
+      const result = await pool.query(query, params);
+      return res.json(result.rows);
+    } catch (err) {
+      console.warn("Database query for leaves failed, falling back to memory:", err);
+    }
+  }
+  res.json(memoryAction());
+});
+
+// 4. Submit Leave Request
+app.post('/api/leaves', async (req, res) => {
+  const { user_id, leave_type, start_date, end_date, days, reason } = req.body;
+  const numDays = Number(days || 1);
+
+  if (isDbConfigured && pool) {
+    try {
+      const result = await pool.query(`
+        INSERT INTO leaves (user_id, leave_type, start_date, end_date, days, reason, status)
+        VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+        RETURNING *
+      `, [user_id, leave_type || 'casual', start_date, end_date, numDays, reason]);
+      
+      const adminUsers = await pool.query("SELECT id FROM users WHERE role = 'admin'");
+      for (const admin of adminUsers.rows) {
+        await createNotification(admin.id, 'New Leave Application', `An employee requested ${numDays} day(s) of ${leave_type || 'casual'} leave.`);
+      }
+
+      return res.json(result.rows[0]);
+    } catch (err) {
+      console.warn("DB insert leave failed, falling back to memory:", err);
+    }
+  }
+
+  const newLeave = {
+    id: 'lev' + (leavesStore.length + 1),
+    user_id,
+    leave_type: leave_type || 'casual',
+    start_date,
+    end_date,
+    days: numDays,
+    reason,
+    status: 'pending',
+    reviewed_by: null,
+    created_at: new Date().toISOString()
+  };
+  leavesStore.unshift(newLeave);
+
+  // Notify admins
+  const admins = usersStore.filter(u => u.role === 'admin');
+  admins.forEach(admin => {
+    createNotification(admin.id, 'New Leave Application', `An employee requested ${numDays} day(s) of ${leave_type || 'casual'} leave.`);
+  });
+
+  res.json(newLeave);
+});
+
+// 5. Approve / Reject Leave Request
+app.put('/api/leaves/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status, reviewed_by } = req.body;
+
+  if (isDbConfigured && pool) {
+    try {
+      const result = await pool.query(`
+        UPDATE leaves SET status = $1, reviewed_by = $2 WHERE id = $3 RETURNING *
+      `, [status, reviewed_by || null, id]);
+      if (result.rows.length > 0) {
+        const leave = result.rows[0];
+        await createNotification(leave.user_id, `Leave ${status === 'approved' ? 'Approved' : 'Rejected'}`, `Your leave request for ${leave.start_date} was ${status}.`);
+        return res.json(leave);
+      }
+    } catch (err) {
+      console.warn("DB update leave failed, falling back to memory:", err);
+    }
+  }
+
+  const idx = leavesStore.findIndex(l => String(l.id) === String(id));
+  if (idx !== -1) {
+    leavesStore[idx] = { ...leavesStore[idx], status, reviewed_by: reviewed_by || null };
+    createNotification(leavesStore[idx].user_id, `Leave ${status === 'approved' ? 'Approved' : 'Rejected'}`, `Your leave request was ${status}.`);
+    return res.json(leavesStore[idx]);
+  }
+  res.status(404).json({ error: 'Leave request not found' });
+});
+
+// 6. Aggregated Weekly / Monthly Timesheet View
+app.get('/api/timesheets/summary', async (req, res) => {
+  // Aggregate hours_spent logged from reports + attendance statuses for all employees
+  let reports = [];
+  let users = [];
+
+  if (isDbConfigured && pool) {
+    try {
+      const rResult = await pool.query(`
+        SELECT r.*, row_to_json(t) as task 
+        FROM reports r 
+        LEFT JOIN tasks t ON r.task_id = t.id
+      `);
+      reports = rResult.rows;
+      const uResult = await pool.query(`SELECT id, full_name, email, department, designation, role, profile_image FROM users WHERE status = 'active'`);
+      users = uResult.rows;
+    } catch (err) {
+      console.warn("DB timesheet aggregation query failed, falling back to memory:", err);
+      reports = reportsStore;
+      users = usersStore;
+    }
+  } else {
+    reports = reportsStore.map(r => ({
+      ...r,
+      task: tasksStore.find(t => t.id === r.task_id)
+    }));
+    users = usersStore;
+  }
+
+  // Calculate per-employee stats
+  const summary = users.map(user => {
+    const userReports = reports.filter(r => String(r.submitted_by) === String(user.id));
+    const totalHours = userReports.reduce((sum, r) => sum + Number(r.hours_spent || 0), 0);
+    const completedTasksCount = userReports.filter(r => Number(r.progress || 0) === 100).length;
+    const userAttendance = attendanceStore.filter(a => String(a.user_id) === String(user.id));
+    const daysPresent = userAttendance.filter(a => a.status === 'present').length;
+    const userLeaves = leavesStore.filter(l => String(l.user_id) === String(user.id) && l.status === 'approved');
+    const daysOnLeave = userLeaves.reduce((sum, l) => sum + Number(l.days || 1), 0);
+
+    return {
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        department: user.department,
+        designation: user.designation,
+        role: user.role
+      },
+      total_hours_logged: totalHours,
+      reports_count: userReports.length,
+      completed_tasks_count: completedTasksCount,
+      days_present: daysPresent,
+      days_on_leave: daysOnLeave,
+      recent_reports: userReports.slice(-5)
+    };
+  });
+
+  res.json(summary);
 });
 
 // Status check API

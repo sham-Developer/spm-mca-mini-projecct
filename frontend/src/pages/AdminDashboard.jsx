@@ -80,11 +80,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in text-slate-955">
+    <div className="space-y-8 animate-fade-in text-slate-950">
       {/* Page Header */}
       <div>
         <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Executive Dashboard</h2>
-        <p className="text-[13px] text-slate-700 font-semibold">Real-time overview of client onboarding, workspace portfolio, and capital resources</p>
+        <p className="text-[13px] text-slate-900 font-normal">Real-time overview of client onboarding, workspace portfolio, and capital resources</p>
       </div>
 
       {/* Overview Analytics Cards */}
@@ -92,10 +92,10 @@ export default function AdminDashboard() {
         {/* Total Clients */}
         <div className="bg-gradient-to-br from-indigo-100/70 to-indigo-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Total Clients</span>
+            <span className="text-[11px] font-medium text-indigo-950 uppercase tracking-widest block">Total Clients</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.totalClients}</h3>
-              <span className="text-[11px] font-bold text-emerald-800 flex items-center gap-0.5 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded-full">
+              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">{stats.totalClients}</h3>
+              <span className="text-[11px] font-medium text-emerald-950 flex items-center gap-0.5 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded-full">
                 <TrendingUp size={10} className="stroke-[3]" />
                 +12%
               </span>
@@ -109,10 +109,10 @@ export default function AdminDashboard() {
         {/* Active Projects */}
         <div className="bg-gradient-to-br from-orange-100/70 to-orange-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-orange-955 uppercase tracking-widest block">Active Projects</span>
+            <span className="text-[11px] font-medium text-orange-950 uppercase tracking-widest block">Active Projects</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.activeProjects}</h3>
-              <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">{stats.activeProjects}</h3>
+              <span className="text-[11px] font-medium text-emerald-950 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
                 On Track
               </span>
             </div>
@@ -125,10 +125,10 @@ export default function AdminDashboard() {
         {/* Headcount */}
         <div className="bg-gradient-to-br from-emerald-100/70 to-emerald-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Headcount (HR)</span>
+            <span className="text-[11px] font-medium text-emerald-950 uppercase tracking-widest block">Headcount (HR)</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[30px] font-bold text-slate-955 tracking-tight">{stats.totalEmployees}</h3>
-              <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">{stats.totalEmployees}</h3>
+              <span className="text-[11px] font-medium text-emerald-950 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
                 Resourceful
               </span>
             </div>
@@ -141,9 +141,9 @@ export default function AdminDashboard() {
         {/* Portfolio Budget */}
         <div className="bg-gradient-to-br from-amber-100/70 to-amber-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-amber-955 uppercase tracking-widest block">Portfolio Budget</span>
+            <span className="text-[11px] font-medium text-amber-950 uppercase tracking-widest block">Portfolio Budget</span>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-[22px] font-bold text-slate-955 tracking-tight">
+              <h3 className="text-[22px] font-bold text-slate-950 tracking-tight">
                 {formatRupee(stats.totalBudget)}
               </h3>
             </div>
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 space-y-4">
           <div>
             <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Portfolio Budget Evolution</h3>
-            <p className="text-[12px] text-slate-600 font-medium">Visual trend of budget allocations across onboarded projects</p>
+            <p className="text-[12px] text-slate-900 font-normal">Visual trend of budget allocations across onboarded projects</p>
           </div>
           <div className="h-80 bg-white p-5 rounded-2xl border border-slate-400 shadow-md">
             <ResponsiveContainer width="100%" height="100%">
@@ -171,19 +171,19 @@ export default function AdminDashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} style={{ fontWeight: '700' }} />
+                <XAxis dataKey="name" stroke="#0f172a" fontSize={11} tickLine={false} axisLine={false} style={{ fontWeight: '500' }} />
                 <YAxis 
-                  stroke="#64748b" 
+                  stroke="#0f172a" 
                   fontSize={11} 
                   tickLine={false} 
                   axisLine={false} 
-                  style={{ fontWeight: '700' }}
+                  style={{ fontWeight: '500' }}
                   tickFormatter={(val) => `₹${val/100000}L`} 
                 />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', borderWidth: '1px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}
-                  labelStyle={{ color: '#0f172a', fontWeight: '800', fontSize: '12px' }}
-                  itemStyle={{ color: '#ea580c', fontWeight: '700', fontSize: '12px' }}
+                  labelStyle={{ color: '#0f172a', fontWeight: '700', fontSize: '12px' }}
+                  itemStyle={{ color: '#ea580c', fontWeight: '500', fontSize: '12px' }}
                   formatter={(val) => [formatRupee(val), 'Budget']}
                 />
                 <Area type="monotone" dataKey="budget" stroke="#ea580c" strokeWidth={3} fillOpacity={1} fill="url(#colorBudget)" />
@@ -195,8 +195,8 @@ export default function AdminDashboard() {
         {/* Client onboard summaries */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-[17px] font-bold text-slate-955 tracking-tight">Recent Enquiries</h3>
-            <p className="text-[12px] text-slate-600 font-medium">Quick view of sales funnel statuses</p>
+            <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Recent Enquiries</h3>
+            <p className="text-[12px] text-slate-900 font-normal">Quick view of sales funnel statuses</p>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-400 divide-y divide-slate-300 shadow-md overflow-hidden">
@@ -210,10 +210,10 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <h4 className="text-[13.5px] font-bold text-slate-900 leading-tight">{client.name}</h4>
-                      <span className="text-[11px] text-slate-600 font-bold block mt-0.5">{client.company || 'Private Partner'}</span>
+                      <span className="text-[11px] text-slate-900 font-normal block mt-0.5">{client.company || 'Private Partner'}</span>
                     </div>
                   </div>
-                  <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border ${
+                  <span className={`text-[10px] font-medium uppercase px-2.5 py-1 rounded-full border ${
                     client.status === 'onboarded' 
                       ? 'bg-emerald-100 text-emerald-950 border-emerald-400' 
                       : client.status === 'follow_up'
@@ -226,7 +226,7 @@ export default function AdminDashboard() {
               );
             })}
             {clients.length === 0 && (
-              <div className="p-8 text-center text-slate-700 font-semibold text-[13px]">No clients registered.</div>
+              <div className="p-8 text-center text-slate-950 font-normal text-[13px]">No clients registered.</div>
             )}
           </div>
         </div>

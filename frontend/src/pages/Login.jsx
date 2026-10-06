@@ -75,8 +75,8 @@ export default function Login({ onLoginSuccess }) {
             </div>
           </div>
 
-          <h2 className="text-[24px] font-bold text-center text-slate-900 mb-1 tracking-tight">Welcome back</h2>
-          <p className="text-slate-800 text-center text-[14px] font-semibold mb-8">Sign in to access your NexTask workspace</p>
+          <h2 className="text-[24px] font-bold text-center text-slate-950 mb-1 tracking-tight">Welcome back</h2>
+          <p className="text-slate-900 text-center text-[14px] font-normal mb-8">Sign in to access your NexTask workspace</p>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
@@ -87,9 +87,9 @@ export default function Login({ onLoginSuccess }) {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-[14px] font-semibold text-slate-800 mb-2">Email Address</label>
+              <label className="block text-[14px] font-medium text-slate-900 mb-2">Email Address</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-700 pointer-events-none">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-900 pointer-events-none">
                   <Mail size={18} />
                 </span>
                 <input
@@ -97,16 +97,16 @@ export default function Login({ onLoginSuccess }) {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border border-slate-400 rounded-xl py-3 pl-11 pr-4 text-slate-900 placeholder-slate-400 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  className="w-full bg-white border border-slate-400 rounded-xl py-3 pl-11 pr-4 text-slate-950 placeholder-slate-400 text-[16px] font-normal focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   placeholder="name@company.com"
                 />
               </div>
             </div>
 
              <div>
-              <label className="block text-[14px] font-semibold text-slate-800 mb-2">Password</label>
+              <label className="block text-[14px] font-medium text-slate-900 mb-2">Password</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-700 pointer-events-none">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-900 pointer-events-none">
                   <Lock size={18} />
                 </span>
                 <input
@@ -114,13 +114,13 @@ export default function Login({ onLoginSuccess }) {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white border border-slate-400 rounded-xl py-3 pl-11 pr-11 text-slate-900 placeholder-slate-400 text-[16px] focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  className="w-full bg-white border border-slate-400 rounded-xl py-3 pl-11 pr-11 text-slate-950 placeholder-slate-400 text-[16px] font-normal focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-700 hover:text-slate-950 cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-900 hover:text-black cursor-pointer"
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -131,7 +131,7 @@ export default function Login({ onLoginSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-3 text-[16px] font-bold transition-all duration-200 shadow-lg shadow-orange-600/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-3 text-[16px] font-medium transition-all duration-200 shadow-lg shadow-orange-600/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? 'Authenticating...' : 'Sign In'}
             </button>
@@ -139,23 +139,23 @@ export default function Login({ onLoginSuccess }) {
 
           {/* Quick Demo Logins Helper */}
           <div className="mt-8 pt-6 border-t border-slate-300">
-            <h4 className="text-[12px] font-bold text-orange-600 uppercase tracking-wider text-center mb-3">Quick Demo Logins</h4>
+            <h4 className="text-[12px] font-medium text-orange-950 uppercase tracking-wider text-center mb-3">Quick Demo Logins</h4>
             <div className="grid grid-cols-3 gap-2">
               <button 
                 onClick={() => setDemoRole('admin')}
-                className="py-2 bg-slate-50 hover:bg-slate-100 border border-slate-400 text-[13px] text-slate-800 rounded-lg font-bold transition-all"
+                className="py-2 bg-slate-50 hover:bg-slate-100 border border-slate-400 text-[13px] text-slate-950 rounded-lg font-medium transition-all"
               >
                 Admin
               </button>
               <button 
                 onClick={() => setDemoRole('project_head')}
-                className="py-2 bg-slate-50 hover:bg-slate-100 border border-slate-400 text-[13px] text-slate-800 rounded-lg font-bold transition-all"
+                className="py-2 bg-slate-50 hover:bg-slate-100 border border-slate-400 text-[13px] text-slate-950 rounded-lg font-medium transition-all"
               >
                 Project Head
               </button>
               <button 
                 onClick={() => setDemoRole('team_member')}
-                className="py-2 bg-slate-50 hover:bg-slate-100 border border-slate-400 text-[13px] text-slate-800 rounded-lg font-bold transition-all"
+                className="py-2 bg-slate-50 hover:bg-slate-100 border border-slate-400 text-[13px] text-slate-950 rounded-lg font-medium transition-all"
               >
                 Member
               </button>
