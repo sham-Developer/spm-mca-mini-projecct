@@ -9,6 +9,7 @@ import TeamMemberDashboard from './pages/TeamMemberDashboard';
 import ClientManagement from './pages/ClientManagement';
 import HRManagement from './pages/HRManagement';
 import Projects from './pages/Projects';
+import LeavesPermissions from './pages/LeavesPermissions';
 import UIProvider from './components/UIProvider';
 
 export default function App() {
@@ -106,7 +107,7 @@ export default function App() {
             path="/admin/hr" 
             element={
               <ProtectedLayout allowedRoles={['admin']} title="Personnel & HR Management">
-                <HRManagement />
+                <HRManagement user={user} />
               </ProtectedLayout>
             } 
           />
@@ -136,6 +137,14 @@ export default function App() {
               </ProtectedLayout>
             } 
           />
+          <Route 
+            path="/head/leaves" 
+            element={
+              <ProtectedLayout allowedRoles={['project_head']} title="Leaves & Permissions Portal">
+                <LeavesPermissions user={user} />
+              </ProtectedLayout>
+            } 
+          />
 
           {/* TEAM MEMBER WORKSPACE */}
           <Route 
@@ -151,6 +160,14 @@ export default function App() {
             element={
               <ProtectedLayout allowedRoles={['team_member']} title="My Tasks & Activity Board">
                 <Projects userRole="team_member" currentUserId={user?.id} />
+              </ProtectedLayout>
+            } 
+          />
+          <Route 
+            path="/member/leaves" 
+            element={
+              <ProtectedLayout allowedRoles={['team_member']} title="Leaves & Permissions Portal">
+                <LeavesPermissions user={user} />
               </ProtectedLayout>
             } 
           />

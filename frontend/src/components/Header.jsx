@@ -16,7 +16,13 @@ import {
   Check, 
   Copy, 
   FileText, 
-  Lock
+  Lock,
+  Clock,
+  LogIn,
+  Sun,
+  Sunset,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import API_URL from '../config';
 import { useUI } from './UIProvider';
@@ -42,6 +48,96 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
   const [editAddress, setEditAddress] = useState(user?.address || '');
   const [editPassword, setEditPassword] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Attendance In/Out State
+  const [todayAttendance, setTodayAttendance] = useState(null);
+  const [attLoading, setAttLoading] = useState(false);
+  const [isAttModalOpen, setIsAttModalOpen] = useState(false);
+  const [attWorkMode, setAttWorkMode] = useState('office');
+  const [attNotes, setAttNotes] = useState('');
+
+  const todayDateStr = new Date().toISOString().split('T')[0];
+
+  const fetchTodayAttendance = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${API_URL}/attendance?user_id=${user.id}&date=${todayDateStr}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setTodayAttendance(data[0]);
+          setAttWorkMode(data[0].work_mode || 'office');
+          setAttNotes(data[0].notes || '');
+        } else {
+          setTodayAttendance(null);
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching today attendance:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchTodayAttendance();
+  }, [user?.id]);
+
+  const formatCurrentTime = () => {
+    return new Date().toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const handlePunchSlot = async (slotKey, customMode, customNotes) => {
+    if (!user?.id) return;
+    setAttLoading(true);
+    const nowTime = formatCurrentTime();
+    const mode = customMode || attWorkMode || todayAttendance?.work_mode || 'office';
+    const notes = customNotes !== undefined ? customNotes : (attNotes || todayAttendance?.notes || '');
+
+    // Construct merged payload
+    const payload = {
+      user_id: user.id,
+      date: todayDateStr,
+      status: 'present',
+      work_mode: mode,
+      notes: notes,
+      check_in: todayAttendance?.check_in || (slotKey === 'morning_in' || slotKey === 'afternoon_in' ? nowTime : null),
+      check_out: slotKey === 'afternoon_out' || slotKey === 'morning_out' ? nowTime : todayAttendance?.check_out || null,
+      morning_in: todayAttendance?.morning_in || (slotKey === 'morning_in' ? nowTime : null),
+      morning_out: todayAttendance?.morning_out || (slotKey === 'morning_out' ? nowTime : null),
+      afternoon_in: todayAttendance?.afternoon_in || (slotKey === 'afternoon_in' ? nowTime : null),
+      afternoon_out: todayAttendance?.afternoon_out || (slotKey === 'afternoon_out' ? nowTime : null),
+      [slotKey]: nowTime
+    };
+
+    try {
+      const res = await fetch(`${API_URL}/attendance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const record = await res.json();
+        setTodayAttendance(record);
+        const slotNames = {
+          morning_in: 'Morning Check-In',
+          morning_out: 'Morning Check-Out',
+          afternoon_in: 'Afternoon Check-In',
+          afternoon_out: 'Afternoon Check-Out'
+        };
+        showToast(`${slotNames[slotKey] || 'Attendance'} marked at ${nowTime}`, 'success');
+      } else {
+        showToast('Failed to record attendance', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error recording attendance', 'error');
+    } finally {
+      setAttLoading(false);
+    }
+  };
 
   // Sync profile data when prop changes
   useEffect(() => {
@@ -234,7 +330,36 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
           </h2>
         </div>
 
-        <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* ATTENDANCE MODAL TRIGGER BUTTON */}
+          <button
+            onClick={() => setIsAttModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-400 hover:bg-slate-50 text-slate-950 rounded-lg text-[12.5px] font-semibold transition-all shadow-sm cursor-pointer"
+            title="Open Attendance Tracker & In/Out Marker"
+          >
+            <Clock size={15} className="text-orange-600 stroke-[2.5]" />
+            <span className="hidden sm:inline">Attendance</span>
+            {todayAttendance ? (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
+                todayAttendance.afternoon_out || todayAttendance.check_out
+                  ? 'bg-slate-200 text-slate-800'
+                  : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+              }`}>
+                {todayAttendance.afternoon_out || todayAttendance.check_out
+                  ? 'Logged'
+                  : todayAttendance.afternoon_in
+                  ? 'PM In'
+                  : todayAttendance.morning_out
+                  ? 'Break'
+                  : 'Active'}
+              </span>
+            ) : (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-300 uppercase">
+                Not Marked
+              </span>
+            )}
+          </button>
+
           <div className="hidden md:flex items-center gap-2 text-slate-900 text-[13px] bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-400 font-medium">
             <Calendar size={14} className="stroke-[2]" />
             <span>{today}</span>
@@ -637,6 +762,277 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* COMPREHENSIVE ATTENDANCE & IN/OUT MARKER MODAL */}
+      {isAttModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-6 bg-slate-950/70 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="w-full max-w-2xl bg-white border border-slate-300 rounded-3xl shadow-2xl overflow-hidden text-slate-950 flex flex-col max-h-[90vh] animate-scale-up">
+            
+            {/* MODAL BANNER / HEADER (PINNED TOP) */}
+            <div className="bg-gradient-to-r from-orange-100/90 via-white to-amber-100/80 border-b border-orange-200 px-5 sm:px-6 py-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-orange-600/30">
+                  <Clock size={20} className="stroke-[2.5]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-[17px] sm:text-[18px] font-bold text-slate-950 leading-tight">
+                      Daily Attendance & Marker
+                    </h3>
+                    <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-orange-100 text-orange-950 border border-orange-300">
+                      Live
+                    </span>
+                  </div>
+                  <p className="text-[12.5px] text-slate-900 font-normal mt-0.5">
+                    Logged as <span className="font-semibold text-slate-950">{user?.full_name}</span> &bull; <span className="text-orange-900 font-medium">{today}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* CLOSE BUTTON */}
+              <button
+                type="button"
+                onClick={() => setIsAttModalOpen(false)}
+                className="text-slate-900 hover:text-black bg-white hover:bg-orange-100 p-2 rounded-xl border border-slate-300 hover:border-orange-400 transition-all cursor-pointer shadow-2xs"
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* SCROLLABLE MODAL BODY */}
+            <div className="p-5 sm:p-6 space-y-5 flex-1 min-h-0 overflow-y-auto bg-slate-50/50">
+              {/* TODAY'S ATTENDANCE STATUS OVERVIEW */}
+              <div className="bg-white border border-slate-300 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
+                <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-200">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-600"></span>
+                    <span className="text-[12px] font-bold text-slate-950 uppercase tracking-wider">
+                      Today's Attendance Status
+                    </span>
+                  </div>
+                  <span className={`text-[11.5px] px-3.5 py-0.5 rounded-full font-semibold uppercase border tracking-wide shadow-2xs ${
+                    todayAttendance?.status === 'present'
+                      ? 'bg-emerald-100 text-emerald-950 border-emerald-400'
+                      : 'bg-orange-100 text-orange-950 border-orange-300'
+                  }`}>
+                    {todayAttendance?.status === 'present' ? 'Present / Active' : 'Not Marked Yet'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl shadow-2xs">
+                    <span className="text-[11px] text-slate-900 font-medium uppercase tracking-wider block mb-1">
+                      Work Mode
+                    </span>
+                    <span className="text-[13.5px] font-semibold text-slate-950 capitalize flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-orange-600"></span>
+                      {todayAttendance?.work_mode || attWorkMode}
+                    </span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl shadow-2xs">
+                    <span className="text-[11px] text-slate-900 font-medium uppercase tracking-wider block mb-1">
+                      First In / Last Out
+                    </span>
+                    <span className="text-[13.5px] font-semibold text-slate-950">
+                      {todayAttendance?.check_in || '--'} <span className="text-slate-700 font-normal mx-1.5">to</span> {todayAttendance?.check_out || '--'}
+                    </span>
+                  </div>
+                </div>
+
+                {todayAttendance?.notes && (
+                  <div className="text-[12.5px] text-slate-950 bg-orange-50/70 border border-orange-200 px-3.5 py-2.5 rounded-xl">
+                    <span className="font-semibold text-orange-950 mr-1.5">Note:</span>
+                    <span className="font-normal">"{todayAttendance.notes}"</span>
+                  </div>
+                )}
+              </div>
+
+              {/* SHIFT & SESSION PUNCHES */}
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h4 className="text-[14.5px] font-bold text-slate-950 tracking-tight">
+                      Shift & Session Punches
+                    </h4>
+                    <p className="text-[12px] text-slate-900 font-normal mt-0.5">
+                      Mark arrival and exit timestamps for morning and afternoon shifts
+                    </p>
+                  </div>
+                  <span className="text-[11.5px] font-medium text-orange-950 bg-orange-100 border border-orange-300 px-2.5 py-0.5 rounded-lg">
+                    Click to stamp current time
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* 1. MORNING SESSION */}
+                  <div className="bg-white border border-slate-300 hover:border-orange-400 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs transition-colors">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
+                      <div className="flex items-center gap-2 text-slate-950 font-bold text-[14px]">
+                        <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center">
+                          <Sun size={16} className="stroke-[2.5]" />
+                        </div>
+                        <span>Morning Session</span>
+                      </div>
+                      <span className="text-[11px] font-medium text-orange-950 bg-orange-100 border border-orange-300 px-2.5 py-0.5 rounded-md">
+                        9 AM - 1 PM
+                      </span>
+                    </div>
+
+                    {/* Morning In */}
+                    <div className="flex items-center justify-between py-1">
+                      <div>
+                        <span className="text-[11.5px] font-medium text-slate-900 block">Morning In</span>
+                        <span className="text-[14px] font-semibold text-slate-950">
+                          {todayAttendance?.morning_in || todayAttendance?.check_in || '--'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={attLoading || !!(todayAttendance?.morning_in || todayAttendance?.check_in)}
+                        onClick={() => handlePunchSlot('morning_in')}
+                        className={`px-3.5 py-1.5 rounded-xl text-[12px] font-medium transition-all cursor-pointer border ${
+                          todayAttendance?.morning_in || todayAttendance?.check_in
+                            ? 'bg-slate-100 text-slate-700 border-slate-300 cursor-not-allowed'
+                            : 'bg-orange-600 hover:bg-orange-500 text-white border-orange-600 shadow-sm hover:scale-[1.02] active:scale-[0.98]'
+                        }`}
+                      >
+                        {todayAttendance?.morning_in || todayAttendance?.check_in ? 'In Marked' : 'Stamp In'}
+                      </button>
+                    </div>
+
+                    {/* Morning Out (Break) */}
+                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-200">
+                      <div>
+                        <span className="text-[11.5px] font-medium text-slate-900 block">Morning Out (Break)</span>
+                        <span className="text-[14px] font-semibold text-slate-950">
+                          {todayAttendance?.morning_out || '--'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={attLoading || !!todayAttendance?.morning_out}
+                        onClick={() => handlePunchSlot('morning_out')}
+                        className={`px-3.5 py-1.5 rounded-xl text-[12px] font-medium transition-all cursor-pointer border ${
+                          todayAttendance?.morning_out
+                            ? 'bg-slate-100 text-slate-700 border-slate-300 cursor-not-allowed'
+                            : 'bg-white hover:bg-orange-100 text-orange-950 border-slate-300 hover:border-orange-400 shadow-2xs'
+                        }`}
+                      >
+                        {todayAttendance?.morning_out ? 'Out Marked' : 'Stamp Out'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 2. AFTERNOON SESSION */}
+                  <div className="bg-white border border-slate-300 hover:border-orange-400 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs transition-colors">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
+                      <div className="flex items-center gap-2 text-slate-950 font-bold text-[14px]">
+                        <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center">
+                          <Sunset size={16} className="stroke-[2.5]" />
+                        </div>
+                        <span>Afternoon Session</span>
+                      </div>
+                      <span className="text-[11px] font-medium text-orange-950 bg-orange-100 border border-orange-300 px-2.5 py-0.5 rounded-md">
+                        2 PM - 6 PM
+                      </span>
+                    </div>
+
+                    {/* Afternoon In */}
+                    <div className="flex items-center justify-between py-1">
+                      <div>
+                        <span className="text-[11.5px] font-medium text-slate-900 block">Afternoon In</span>
+                        <span className="text-[14px] font-semibold text-slate-950">
+                          {todayAttendance?.afternoon_in || '--'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={attLoading || !!todayAttendance?.afternoon_in}
+                        onClick={() => handlePunchSlot('afternoon_in')}
+                        className={`px-3.5 py-1.5 rounded-xl text-[12px] font-medium transition-all cursor-pointer border ${
+                          todayAttendance?.afternoon_in
+                            ? 'bg-slate-100 text-slate-700 border-slate-300 cursor-not-allowed'
+                            : 'bg-orange-600 hover:bg-orange-500 text-white border-orange-600 shadow-sm hover:scale-[1.02] active:scale-[0.98]'
+                        }`}
+                      >
+                        {todayAttendance?.afternoon_in ? 'In Marked' : 'Stamp In'}
+                      </button>
+                    </div>
+
+                    {/* Afternoon Out (Day End) */}
+                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-200">
+                      <div>
+                        <span className="text-[11.5px] font-medium text-slate-900 block">Afternoon Out (Day End)</span>
+                        <span className="text-[14px] font-semibold text-slate-950">
+                          {todayAttendance?.afternoon_out || todayAttendance?.check_out || '--'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={attLoading || !!(todayAttendance?.afternoon_out || todayAttendance?.check_out)}
+                        onClick={() => handlePunchSlot('afternoon_out')}
+                        className={`px-3.5 py-1.5 rounded-xl text-[12px] font-medium transition-all cursor-pointer border ${
+                          todayAttendance?.afternoon_out || todayAttendance?.check_out
+                            ? 'bg-slate-100 text-slate-700 border-slate-300 cursor-not-allowed'
+                            : 'bg-white hover:bg-orange-100 text-orange-950 border-slate-300 hover:border-orange-400 shadow-2xs'
+                        }`}
+                      >
+                        {todayAttendance?.afternoon_out || todayAttendance?.check_out ? 'Day Closed' : 'Stamp Out'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* WORK MODE AND NOTES PREFERENCES */}
+              <div className="pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-medium text-slate-950 mb-1">
+                    Work Mode
+                  </label>
+                  <select
+                    value={attWorkMode}
+                    onChange={(e) => setAttWorkMode(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-[13px] font-normal text-slate-950 focus:outline-none focus:border-orange-600 transition-colors"
+                  >
+                    <option value="office">In Office (On-site)</option>
+                    <option value="remote">Remote / Work from Home</option>
+                    <option value="hybrid">Client Site / Hybrid</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-medium text-slate-950 mb-1">
+                    Session Notes (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Client meeting, sprint demo..."
+                    value={attNotes}
+                    onChange={(e) => setAttNotes(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-[13px] font-normal text-slate-950 placeholder:text-slate-500 focus:outline-none focus:border-orange-600 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* MODAL FOOTER (PINNED BOTTOM) */}
+            <div className="bg-white border-t border-slate-200 px-5 sm:px-6 py-3.5 flex items-center justify-between shrink-0">
+              <span className="text-[12px] text-slate-900 font-normal">
+                All timestamps logged in Indian Standard Time (IST)
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsAttModalOpen(false)}
+                className="px-6 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[13px] font-semibold transition-all cursor-pointer shadow-md shadow-orange-600/30 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>

@@ -35,7 +35,7 @@ import {
 import API_URL from '../config';
 import { useUI } from '../components/UIProvider';
 
-export default function HRManagement() {
+export default function HRManagement({ user }) {
   const { showToast, confirmAction } = useUI();
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -281,7 +281,10 @@ export default function HRManagement() {
           const res = await fetch(`${API_URL}/leaves/${leaveId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status })
+            body: JSON.stringify({ 
+              status,
+              reviewed_by: user?.id || null
+            })
           });
           if (res.ok) {
             showToast(`Leave application marked as ${status}`, 'success');
@@ -1191,11 +1194,13 @@ export default function HRManagement() {
                 <thead>
                   <tr className="bg-[#3715ca] text-white">
                     <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-16">S.No.</th>
-                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[200px]">Employee</th>
-                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 w-40">Status</th>
-                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 w-36">Work Mode</th>
-                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[200px]">Notes</th>
-                    <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-28">Action</th>
+                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[180px]">Employee</th>
+                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 w-36">Status</th>
+                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 w-32">Work Mode</th>
+                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[170px]">Morning (In / Out)</th>
+                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[170px]">Afternoon (In / Out)</th>
+                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[160px]">Notes</th>
+                    <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-24">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1205,6 +1210,11 @@ export default function HRManagement() {
                     const currentMode = attWorkModeForm[emp.id] || record?.work_mode || 'office';
                     const currentNotes = attNotesForm[emp.id] !== undefined ? attNotesForm[emp.id] : (record?.notes || '');
                     const isSaving = attSavingUserId === emp.id;
+
+                    const mIn = record?.morning_in || record?.check_in || '--';
+                    const mOut = record?.morning_out || '--';
+                    const aIn = record?.afternoon_in || '--';
+                    const aOut = record?.afternoon_out || record?.check_out || '--';
 
                     return (
                       <tr key={emp.id} className="hover:bg-slate-50/80 transition-colors">
@@ -1238,6 +1248,22 @@ export default function HRManagement() {
                             <option value="remote">Remote (WFH)</option>
                             <option value="hybrid">Hybrid</option>
                           </select>
+                        </td>
+                        <td className="px-4 py-3 border border-slate-300 text-[12px]">
+                          <div className="flex items-center gap-1 font-semibold text-slate-950">
+                            <span className="text-emerald-700 font-bold">In:</span> {mIn}
+                          </div>
+                          <div className="flex items-center gap-1 text-slate-700 font-medium mt-0.5">
+                            <span className="text-amber-700 font-bold">Out:</span> {mOut}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 border border-slate-300 text-[12px]">
+                          <div className="flex items-center gap-1 font-semibold text-slate-950">
+                            <span className="text-indigo-700 font-bold">In:</span> {aIn}
+                          </div>
+                          <div className="flex items-center gap-1 text-slate-700 font-medium mt-0.5">
+                            <span className="text-rose-700 font-bold">Out:</span> {aOut}
+                          </div>
                         </td>
                         <td className="px-4 py-3 border border-slate-300">
                           <input
@@ -1296,6 +1322,7 @@ export default function HRManagement() {
                     <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 w-44">Duration</th>
                     <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[200px]">Reason</th>
                     <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-28">Status</th>
+                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[150px]">Reviewed By</th>
                     <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-32">Actions</th>
                   </tr>
                 </thead>
@@ -1307,11 +1334,11 @@ export default function HRManagement() {
                       </td>
                       <td className="px-4 py-3 border border-slate-300">
                         <span className="block text-[14px] font-medium text-slate-950">{leave.user?.full_name || 'Employee'}</span>
-                        <span className="block text-[11px] font-normal text-slate-900">{leave.user?.department || 'Staff'}</span>
+                        <span className="block text-[11px] font-normal text-slate-900">{leave.user?.department || 'Staff'} &bull; <span className="capitalize">{leave.user?.role?.replace('_', ' ') || 'Member'}</span></span>
                       </td>
                       <td className="px-4 py-3 border border-slate-300">
                         <span className="px-2.5 py-1 bg-slate-100 border border-slate-300 text-slate-950 rounded-md text-[11.5px] font-medium uppercase">
-                          {leave.leave_type}
+                          {leave.leave_type?.replace('_', ' ')}
                         </span>
                       </td>
                       <td className="px-4 py-3 border border-slate-300 text-[12px] text-slate-950 font-normal">
@@ -1331,6 +1358,18 @@ export default function HRManagement() {
                         }`}>
                           {leave.status}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 border border-slate-300 text-[12px] text-slate-950 font-normal">
+                        {leave.reviewer?.full_name ? (
+                          <div>
+                            <span className="font-semibold text-slate-950 block">{leave.reviewer.full_name}</span>
+                            <span className="text-[10.5px] text-slate-700 capitalize">({leave.reviewer.role?.replace('_', ' ') || 'Admin'})</span>
+                          </div>
+                        ) : leave.status !== 'pending' ? (
+                          <span className="text-slate-700 italic text-[11.5px]">Admin Action</span>
+                        ) : (
+                          <span className="text-amber-800 text-[11px] font-semibold italic">Awaiting Review</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 border border-slate-300 text-center">
                         {leave.status === 'pending' ? (
@@ -1360,7 +1399,7 @@ export default function HRManagement() {
                   ))}
                   {leaveRecords.length === 0 && (
                     <tr>
-                      <td colSpan="7" className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
+                      <td colSpan="8" className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
                         No leave applications on record.
                       </td>
                     </tr>
@@ -1494,7 +1533,7 @@ export default function HRManagement() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-900 mb-1">Leave Category</label>
+                <label className="block text-[11px] font-medium text-slate-900 mb-1">Request Category</label>
                 <select
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value)}
@@ -1502,8 +1541,11 @@ export default function HRManagement() {
                 >
                   <option value="casual">Casual Leave</option>
                   <option value="sick">Sick Leave</option>
+                  <option value="permission">Official Permission / Short Leave</option>
+                  <option value="half_day">Half Day Leave</option>
                   <option value="earned">Earned Leave</option>
                   <option value="unpaid">Unpaid Leave</option>
+                  <option value="emergency">Emergency Leave</option>
                 </select>
               </div>
 

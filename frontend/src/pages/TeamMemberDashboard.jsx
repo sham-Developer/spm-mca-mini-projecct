@@ -4,12 +4,15 @@ import {
   Calendar, 
   Clock, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  CalendarCheck 
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, PieChart, Pie, Tooltip, Cell, Legend } from 'recharts';
 import API_URL from '../config';
 
 export default function TeamMemberDashboard({ currentUserId }) {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [stats, setStats] = useState({
     myTasksCount: 0,
@@ -86,9 +89,18 @@ export default function TeamMemberDashboard({ currentUserId }) {
   return (
     <div className="space-y-8 animate-fade-in text-slate-950 font-sans">
       {/* Page Header */}
-      <div>
-        <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Developer Workspace</h2>
-        <p className="text-[13px] text-slate-900 font-normal">Track your active allocations, submit progress reports, and review completed deliverables</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Developer Workspace</h2>
+          <p className="text-[13px] text-slate-900 font-normal">Track your active allocations, submit progress reports, and review completed deliverables</p>
+        </div>
+        <button
+          onClick={() => navigate('/member/leaves')}
+          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-400 hover:bg-slate-100 text-slate-950 rounded-xl text-[13px] font-semibold transition-all shadow-sm cursor-pointer self-start sm:self-auto"
+        >
+          <CalendarCheck size={16} className="text-orange-600 stroke-[2.5]" />
+          <span>Leaves & Permissions</span>
+        </button>
       </div>
 
       {/* Team member KPI overview */}

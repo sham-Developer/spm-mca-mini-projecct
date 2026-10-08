@@ -28,11 +28,13 @@ export default function Sidebar({ user, onLogout, isOpen, setIsOpen }) {
         return [
           { name: 'Dashboard', path: '/head', icon: LayoutDashboard },
           { name: 'Project Module', path: '/head/projects', icon: FolderKanban },
+          { name: 'Leaves & Permissions', path: '/head/leaves', icon: Clock },
         ];
       case 'team_member':
         return [
           { name: 'My Dashboard', path: '/member', icon: LayoutDashboard },
           { name: 'Project Space', path: '/member/projects', icon: ClipboardList },
+          { name: 'Leaves & Permissions', path: '/member/leaves', icon: Clock },
         ];
       default:
         return [];

@@ -1048,24 +1048,61 @@ app.get('/api/attendance', async (req, res) => {
 
 // 2. Mark / Update Attendance
 app.post('/api/attendance', async (req, res) => {
-  const { user_id, date, status, check_in, check_out, work_mode, notes } = req.body;
+  const { 
+    user_id, 
+    date, 
+    status, 
+    check_in, 
+    check_out, 
+    morning_in, 
+    morning_out, 
+    afternoon_in, 
+    afternoon_out, 
+    work_mode, 
+    notes 
+  } = req.body;
   const targetDate = date || new Date().toISOString().split('T')[0];
   const targetStatus = status || 'present';
   const targetMode = work_mode || 'office';
 
   if (isDbConfigured && pool) {
     try {
+      // Ensure columns exist if table was already created without them
+      await pool.query(`
+        ALTER TABLE attendance 
+        ADD COLUMN IF NOT EXISTS morning_in TEXT,
+        ADD COLUMN IF NOT EXISTS morning_out TEXT,
+        ADD COLUMN IF NOT EXISTS afternoon_in TEXT,
+        ADD COLUMN IF NOT EXISTS afternoon_out TEXT;
+      `).catch(() => {});
+
       const result = await pool.query(`
-        INSERT INTO attendance (user_id, date, status, check_in, check_out, work_mode, notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO attendance (user_id, date, status, check_in, check_out, morning_in, morning_out, afternoon_in, afternoon_out, work_mode, notes)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         ON CONFLICT (user_id, date) DO UPDATE 
         SET status = EXCLUDED.status, 
             check_in = COALESCE(EXCLUDED.check_in, attendance.check_in), 
             check_out = COALESCE(EXCLUDED.check_out, attendance.check_out),
+            morning_in = COALESCE(EXCLUDED.morning_in, attendance.morning_in),
+            morning_out = COALESCE(EXCLUDED.morning_out, attendance.morning_out),
+            afternoon_in = COALESCE(EXCLUDED.afternoon_in, attendance.afternoon_in),
+            afternoon_out = COALESCE(EXCLUDED.afternoon_out, attendance.afternoon_out),
             work_mode = EXCLUDED.work_mode,
             notes = EXCLUDED.notes
         RETURNING *
-      `, [user_id, targetDate, targetStatus, check_in || null, check_out || null, targetMode, notes || '']);
+      `, [
+        user_id, 
+        targetDate, 
+        targetStatus, 
+        check_in || null, 
+        check_out || null, 
+        morning_in || null, 
+        morning_out || null, 
+        afternoon_in || null, 
+        afternoon_out || null, 
+        targetMode, 
+        notes || ''
+      ]);
       return res.json(result.rows[0]);
     } catch (err) {
       console.warn("DB insert attendance failed, falling back to memory:", err);
@@ -1079,6 +1116,10 @@ app.post('/api/attendance', async (req, res) => {
       status: targetStatus,
       check_in: check_in || attendanceStore[existingIdx].check_in,
       check_out: check_out || attendanceStore[existingIdx].check_out,
+      morning_in: morning_in !== undefined ? morning_in : attendanceStore[existingIdx].morning_in,
+      morning_out: morning_out !== undefined ? morning_out : attendanceStore[existingIdx].morning_out,
+      afternoon_in: afternoon_in !== undefined ? afternoon_in : attendanceStore[existingIdx].afternoon_in,
+      afternoon_out: afternoon_out !== undefined ? afternoon_out : attendanceStore[existingIdx].afternoon_out,
       work_mode: targetMode,
       notes: notes !== undefined ? notes : attendanceStore[existingIdx].notes
     };
@@ -1089,8 +1130,12 @@ app.post('/api/attendance', async (req, res) => {
       user_id,
       date: targetDate,
       status: targetStatus,
-      check_in: check_in || '09:00 AM',
-      check_out: check_out || '06:00 PM',
+      check_in: check_in || morning_in || '09:00 AM',
+      check_out: check_out || afternoon_out || null,
+      morning_in: morning_in || check_in || '09:00 AM',
+      morning_out: morning_out || null,
+      afternoon_in: afternoon_in || null,
+      afternoon_out: afternoon_out || null,
       work_mode: targetMode,
       notes: notes || ''
     };
@@ -1105,7 +1150,8 @@ app.get('/api/leaves', async (req, res) => {
   const memoryAction = () => {
     let list = leavesStore.map(l => ({
       ...l,
-      user: usersStore.find(u => String(u.id) === String(l.user_id))
+      user: usersStore.find(u => String(u.id) === String(l.user_id)),
+      reviewer: usersStore.find(u => String(u.id) === String(l.reviewed_by))
     }));
     if (user_id) list = list.filter(l => String(l.user_id) === String(user_id));
     if (status) list = list.filter(l => l.status === status);
@@ -1115,9 +1161,12 @@ app.get('/api/leaves', async (req, res) => {
   if (isDbConfigured && pool) {
     try {
       let query = `
-        SELECT l.*, row_to_json(u) as user 
+        SELECT l.*, 
+          row_to_json(u) as user,
+          row_to_json(rev) as reviewer 
         FROM leaves l 
         LEFT JOIN users u ON l.user_id = u.id 
+        LEFT JOIN users rev ON l.reviewed_by = rev.id
         WHERE 1=1
       `;
       const params = [];
@@ -1154,7 +1203,7 @@ app.post('/api/leaves', async (req, res) => {
       
       const adminUsers = await pool.query("SELECT id FROM users WHERE role = 'admin'");
       for (const admin of adminUsers.rows) {
-        await createNotification(admin.id, 'New Leave Application', `An employee requested ${numDays} day(s) of ${leave_type || 'casual'} leave.`);
+        await createNotification(admin.id, 'New Leave / Permission Application', `An employee requested ${numDays} day(s) of ${leave_type || 'casual'} leave / permission.`);
       }
 
       return res.json(result.rows[0]);
@@ -1180,7 +1229,7 @@ app.post('/api/leaves', async (req, res) => {
   // Notify admins
   const admins = usersStore.filter(u => u.role === 'admin');
   admins.forEach(admin => {
-    createNotification(admin.id, 'New Leave Application', `An employee requested ${numDays} day(s) of ${leave_type || 'casual'} leave.`);
+    createNotification(admin.id, 'New Leave / Permission Application', `An employee requested ${numDays} day(s) of ${leave_type || 'casual'} leave / permission.`);
   });
 
   res.json(newLeave);
@@ -1198,7 +1247,7 @@ app.put('/api/leaves/:id', async (req, res) => {
       `, [status, reviewed_by || null, id]);
       if (result.rows.length > 0) {
         const leave = result.rows[0];
-        await createNotification(leave.user_id, `Leave ${status === 'approved' ? 'Approved' : 'Rejected'}`, `Your leave request for ${leave.start_date} was ${status}.`);
+        await createNotification(leave.user_id, `Leave Request ${status === 'approved' ? 'Approved' : 'Rejected'}`, `Your leave/permission request for ${leave.start_date} was ${status}.`);
         return res.json(leave);
       }
     } catch (err) {
@@ -1209,7 +1258,7 @@ app.put('/api/leaves/:id', async (req, res) => {
   const idx = leavesStore.findIndex(l => String(l.id) === String(id));
   if (idx !== -1) {
     leavesStore[idx] = { ...leavesStore[idx], status, reviewed_by: reviewed_by || null };
-    createNotification(leavesStore[idx].user_id, `Leave ${status === 'approved' ? 'Approved' : 'Rejected'}`, `Your leave request was ${status}.`);
+    createNotification(leavesStore[idx].user_id, `Leave Request ${status === 'approved' ? 'Approved' : 'Rejected'}`, `Your leave/permission request was ${status}.`);
     return res.json(leavesStore[idx]);
   }
   res.status(404).json({ error: 'Leave request not found' });

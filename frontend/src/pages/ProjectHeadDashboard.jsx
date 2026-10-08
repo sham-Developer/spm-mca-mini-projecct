@@ -6,12 +6,15 @@ import {
   CheckCircle, 
   AlertCircle, 
   Users,
-  History
+  History,
+  CalendarCheck
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, PieChart, Pie, Tooltip, Cell, Legend } from 'recharts';
 import API_URL from '../config';
 
 export default function ProjectHeadDashboard({ currentUserId }) {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     managedProjectsCount: 0,
     allocatedTasksCount: 0,
@@ -144,9 +147,18 @@ export default function ProjectHeadDashboard({ currentUserId }) {
   return (
     <div className="space-y-8 animate-fade-in text-slate-950">
       {/* Page Header */}
-      <div>
-        <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Project Management Board</h2>
-        <p className="text-[13px] text-slate-900 font-normal">Track task completion workflows, approve progress entries, and review project extensions</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Project Management Board</h2>
+          <p className="text-[13px] text-slate-900 font-normal">Track task completion workflows, approve progress entries, and review project extensions</p>
+        </div>
+        <button
+          onClick={() => navigate('/head/leaves')}
+          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-400 hover:bg-slate-100 text-slate-950 rounded-xl text-[13px] font-semibold transition-all shadow-sm cursor-pointer self-start sm:self-auto"
+        >
+          <CalendarCheck size={16} className="text-orange-600 stroke-[2.5]" />
+          <span>Leaves & Permissions</span>
+        </button>
       </div>
 
       {/* Project head overview stats */}
