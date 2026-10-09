@@ -1400,7 +1400,7 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
   console.log(`Backend server running on port ${PORT}`);
   console.log(`Supabase connection status: ${isDbConfigured ? 'CONNECTED' : 'DISCONNECTED (In-memory fallback enabled)'}`);

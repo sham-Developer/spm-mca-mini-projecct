@@ -13,6 +13,11 @@ if (isDbConfigured) {
       rejectUnauthorized: false
     }
   });
+
+  // Prevent uncaught ECONNRESET / idle disconnect exceptions from crashing the node process
+  pool.on('error', (err) => {
+    console.warn('Unexpected error on idle Supabase client:', err.message || err);
+  });
 }
 
 const initializeDatabase = async () => {

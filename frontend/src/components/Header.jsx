@@ -423,25 +423,6 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
           >
             <Clock size={15} className="text-orange-600 stroke-[2.5]" />
             <span className="hidden sm:inline">Attendance</span>
-            {todayAttendance ? (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
-                todayAttendance.afternoon_out || todayAttendance.check_out
-                  ? 'bg-slate-200 text-slate-800'
-                  : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-              }`}>
-                {todayAttendance.afternoon_out || todayAttendance.check_out
-                  ? 'Logged'
-                  : todayAttendance.afternoon_in
-                  ? 'PM In'
-                  : todayAttendance.morning_out
-                  ? 'Break'
-                  : 'Active'}
-              </span>
-            ) : (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-300 uppercase">
-                Not Marked
-              </span>
-            )}
           </button>
 
           <div className="hidden md:flex items-center gap-2 text-slate-900 text-[13px] bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-400 font-medium">
