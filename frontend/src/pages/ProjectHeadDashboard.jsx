@@ -7,11 +7,15 @@ import {
   AlertCircle, 
   Users,
   History,
-  CalendarCheck
+  CalendarCheck,
+  Download,
+  FileSpreadsheet,
+  FileText
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, PieChart, Pie, Tooltip, Cell, Legend } from 'recharts';
 import API_URL from '../config';
+import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 
 export default function ProjectHeadDashboard({ currentUserId }) {
   const navigate = useNavigate();
@@ -146,21 +150,6 @@ export default function ProjectHeadDashboard({ currentUserId }) {
 
   return (
     <div className="space-y-8 animate-fade-in text-slate-950">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Project Management Board</h2>
-          <p className="text-[13px] text-slate-900 font-normal">Track task completion workflows, approve progress entries, and review project extensions</p>
-        </div>
-        <button
-          onClick={() => navigate('/head/leaves')}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-400 hover:bg-slate-100 text-slate-950 rounded-xl text-[13px] font-semibold transition-all shadow-sm cursor-pointer self-start sm:self-auto"
-        >
-          <CalendarCheck size={16} className="text-orange-600 stroke-[2.5]" />
-          <span>Leaves & Permissions</span>
-        </button>
-      </div>
-
       {/* Project head overview stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {/* Managed Workspaces */}
@@ -220,9 +209,18 @@ export default function ProjectHeadDashboard({ currentUserId }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Active project head task allocation board */}
         <div className="lg:col-span-2 space-y-4">
-          <div>
-            <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Active Team Allocations</h3>
-            <p className="text-[12px] text-slate-900 font-medium">Live operational review of team progress metrics</p>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Active Team Allocations</h3>
+              <p className="text-[12px] text-slate-900 font-medium">Live operational review of team progress metrics</p>
+            </div>
+            <button
+              onClick={() => navigate('/head/leaves')}
+              className="flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-400 hover:bg-slate-100 text-slate-950 rounded-xl text-[12.5px] font-semibold transition-all shadow-sm cursor-pointer"
+            >
+              <CalendarCheck size={15} className="text-orange-600 stroke-[2.5]" />
+              <span>Leaves & Permissions</span>
+            </button>
           </div>
 
           <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
@@ -403,9 +401,86 @@ export default function ProjectHeadDashboard({ currentUserId }) {
           </div>
 
           <div className="space-y-4">
-            <div>
-              <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Pending Evaluations</h3>
-              <p className="text-[12px] text-slate-900 font-medium">Sign-off reports submitted by team members</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Pending Evaluations</h3>
+                <p className="text-[12px] text-slate-900 font-medium">Sign-off reports submitted by team members</p>
+              </div>
+
+              {reports.filter(r => r.status === 'submitted').length > 0 && (
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const submitted = reports.filter(r => r.status === 'submitted');
+                      const headers = [
+                        { label: 'S.No', key: 'sno' },
+                        { label: 'Developer', key: 'developer' },
+                        { label: 'Task Title', key: 'task_title' },
+                        { label: 'Progress (%)', key: 'progress' },
+                        { label: 'Date Submitted (dd-mm-yyyy)', key: 'date' },
+                        { label: 'Report Content', key: 'content' }
+                      ];
+                      const rows = submitted.map((r, i) => ({
+                        sno: i + 1,
+                        developer: r.user?.full_name || 'Team Member',
+                        task_title: r.task?.title || 'Progress Update',
+                        progress: `${r.progress || 0}%`,
+                        date: formatDate(r.created_at),
+                        content: r.content || ''
+                      }));
+                      exportToCSV({
+                        filename: 'pending_evaluations_report.csv',
+                        headers,
+                        rows
+                      });
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-900 hover:text-slate-950 border border-slate-300 rounded-xl text-[12px] font-semibold transition-all shadow-xs cursor-pointer active:scale-95"
+                    title="Export pending sign-off reports as CSV"
+                  >
+                    <FileSpreadsheet size={13} className="text-emerald-600" />
+                    <span>Export CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const submitted = reports.filter(r => r.status === 'submitted');
+                      const headers = [
+                        { label: '#', align: 'center' },
+                        { label: 'Team Member', align: 'left' },
+                        { label: 'Task Title', align: 'left' },
+                        { label: 'Progress', align: 'center' },
+                        { label: 'Date Submitted', align: 'center' },
+                        { label: 'Evaluation / Notes', align: 'left' }
+                      ];
+                      const rows = submitted.map((r, i) => [
+                        i + 1,
+                        r.user?.full_name || 'Team Member',
+                        r.task?.title || 'Progress Update',
+                        `${r.progress || 0}%`,
+                        formatDate(r.created_at),
+                        r.content || '--'
+                      ]);
+                      exportToPDF({
+                        title: 'Pending Progress Sign-Off Evaluations',
+                        subtitle: 'Team progression milestones waiting for Project Head sign-off',
+                        summaryStats: [
+                          { label: 'Pending Sign-Offs', value: submitted.length },
+                          { label: '100% Complete Tasks', value: submitted.filter(r => r.progress === 100).length }
+                        ],
+                        headers,
+                        rows
+                      });
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-semibold transition-all shadow-sm shadow-orange-600/20 cursor-pointer active:scale-95"
+                    title="Export formatted PDF"
+                  >
+                    <FileText size={13} />
+                    <span>Export PDF</span>
+                  </button>
+                </div>
+              )}
             </div>
 
           <div className="space-y-3">
@@ -476,19 +551,99 @@ export default function ProjectHeadDashboard({ currentUserId }) {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white border border-slate-400 rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-400 flex items-center justify-between bg-slate-100 rounded-t-xl">
+            <div className="px-6 py-4 border-b border-slate-400 flex items-center justify-between bg-slate-100 rounded-t-xl gap-3 flex-wrap">
               <div>
                 <h3 className="text-[17px] font-bold text-slate-950">Task Update History</h3>
                 <p className="text-[12px] text-slate-900 font-normal mt-0.5">
                   Showing historical updates for: <span className="text-slate-950 font-bold">{selectedHistoryTask.title}</span>
                 </p>
               </div>
-              <button 
-                onClick={() => setSelectedHistoryTask(null)}
-                className="text-slate-900 hover:text-slate-950 font-bold text-lg p-1.5 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2">
+                {reports.filter(r => r.task_id === selectedHistoryTask.id).length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const historyList = reports
+                          .filter(r => r.task_id === selectedHistoryTask.id)
+                          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                        const headers = [
+                          { label: 'S.No', key: 'sno' },
+                          { label: 'Developer', key: 'dev' },
+                          { label: 'Progress (%)', key: 'progress' },
+                          { label: 'Date (dd-mm-yyyy)', key: 'date' },
+                          { label: 'Status', key: 'status' },
+                          { label: 'Content', key: 'content' }
+                        ];
+                        const rows = historyList.map((hr, idx) => ({
+                          sno: idx + 1,
+                          dev: hr.user?.full_name || 'Team Member',
+                          progress: `${hr.progress || 0}%`,
+                          date: formatDate(hr.created_at),
+                          status: hr.status === 'approved' ? 'Approved' : 'Submitted',
+                          content: hr.content || ''
+                        }));
+                        exportToCSV({
+                          filename: `${selectedHistoryTask.title.toLowerCase().replace(/\s+/g, '_')}_history.csv`,
+                          headers,
+                          rows
+                        });
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-900 border border-slate-300 rounded-lg text-[11px] font-semibold flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                      title="Export CSV"
+                    >
+                      <FileSpreadsheet size={12} className="text-emerald-600" /> CSV
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const historyList = reports
+                          .filter(r => r.task_id === selectedHistoryTask.id)
+                          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                        const headers = [
+                          { label: '#', align: 'center' },
+                          { label: 'Developer', align: 'left' },
+                          { label: 'Progress', align: 'center' },
+                          { label: 'Submitted Date', align: 'center' },
+                          { label: 'Status', align: 'center' },
+                          { label: 'Notes', align: 'left' }
+                        ];
+                        const rows = historyList.map((hr, idx) => [
+                          idx + 1,
+                          hr.user?.full_name || 'Team Member',
+                          `${hr.progress || 0}%`,
+                          formatDate(hr.created_at),
+                          hr.status === 'approved' ? 'Approved' : 'Submitted (Pending Review)',
+                          hr.content || '--'
+                        ]);
+                        exportToPDF({
+                          title: `Task Progress Log: ${selectedHistoryTask.title}`,
+                          subtitle: 'Chronological progression updates submitted by workforce',
+                          metadata: [
+                            { label: 'Task Title', value: selectedHistoryTask.title }
+                          ],
+                          summaryStats: [
+                            { label: 'Total Logs', value: historyList.length },
+                            { label: 'Latest Progress', value: `${historyList[0]?.progress || 0}%` }
+                          ],
+                          headers,
+                          rows
+                        });
+                      }}
+                      className="px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[11px] font-semibold flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                      title="Export PDF"
+                    >
+                      <FileText size={12} /> PDF
+                    </button>
+                  </>
+                )}
+                <button 
+                  onClick={() => setSelectedHistoryTask(null)}
+                  className="text-slate-900 hover:text-slate-950 font-bold text-lg p-1.5 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Modal Content */}

@@ -569,60 +569,24 @@ export default function ClientManagement() {
         }
       `}</style>
 
-      {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h2 className="text-[20px] font-bold text-orange-600 tracking-tight">Clients & Leads Pipeline</h2>
-          <p className="text-[13px] text-slate-900 font-medium">Manage corporate accounts, drag stages, log budgets and track projects</p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="bg-white border border-slate-400 rounded-xl p-1 flex items-center shadow-sm">
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`p-2 rounded-lg flex items-center gap-1.5 text-[13px] font-medium cursor-pointer transition-colors ${viewMode === 'kanban' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-900 hover:bg-slate-50'}`}
-            >
-              <Columns size={16} />
-              <span>Kanban Board</span>
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`p-2 rounded-lg flex items-center gap-1.5 text-[13px] font-medium cursor-pointer transition-colors ${viewMode === 'table' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-900 hover:bg-slate-50'}`}
-            >
-              <LayoutGrid size={16} />
-              <span>Table View</span>
-            </button>
+      {/* UNIFIED SINGLE-ROW TOP CONTROLS & FILTERS BAR */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-3 border-b border-slate-300">
+        
+        {/* Left Side: Search Keyword & Date Range Filters */}
+        <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
+          <div className="flex items-center bg-white border border-slate-400 rounded-xl px-3 py-1.5 shadow-2xs w-full sm:w-64 md:w-72">
+            <Search size={15} className="text-slate-700 mr-2 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search name, company, email..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              className="w-full bg-transparent text-[12.5px] text-slate-950 focus:outline-none placeholder:text-slate-500 font-medium py-0.5 border-none"
+            />
           </div>
 
-          <button
-            onClick={() => { resetClientForm(); setIsClientModalOpen(true); }}
-            className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-[14px] font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer"
-          >
-            <Plus size={16} className="stroke-[2.5]" />
-            <span>New Lead</span>
-          </button>
-        </div>
-      </div>
-
-      {/* SEARCH AND FILTERS BAR */}
-      <div className="space-y-3 md:space-y-0 md:flex md:items-center md:justify-between gap-4 pb-4">
-
-        {/* Left Side: Search Keyword */}
-        <div className="flex items-center bg-white border border-slate-400 rounded-xl px-3.5 py-1.5 shadow-inner flex-1 max-w-md">
-          <Search size={16} className="text-slate-900 mr-2" />
-          <input
-            type="text"
-            placeholder="Search by name, company or email..."
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-transparent text-[13px] text-slate-950 focus:outline-none placeholder:text-slate-900 font-medium py-1 border-none"
-          />
-        </div>
-
-        {/* Right Side: Date Range Filters & Clear Button */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-bold text-slate-950">
-            <span className="text-slate-900 font-medium">Activity From:</span>
+          <div className="flex items-center gap-1.5 bg-white border border-slate-400 rounded-xl px-2.5 py-1 text-[11.5px] font-bold text-slate-950 shadow-2xs">
+            <span className="text-slate-700 font-medium">Activity From:</span>
             <input
               type="date"
               value={filterStartDate}
@@ -631,8 +595,8 @@ export default function ClientManagement() {
             />
           </div>
 
-          <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-bold text-slate-950">
-            <span className="text-slate-900 font-medium">To:</span>
+          <div className="flex items-center gap-1.5 bg-white border border-slate-400 rounded-xl px-2.5 py-1 text-[11.5px] font-bold text-slate-950 shadow-2xs">
+            <span className="text-slate-700 font-medium">To:</span>
             <input
               type="date"
               value={filterEndDate}
@@ -644,12 +608,41 @@ export default function ClientManagement() {
           {(searchTerm || filterStartDate || filterEndDate) && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-950 border border-slate-400 rounded-xl text-[12px] font-bold transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center gap-1 px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-950 border border-slate-400 rounded-xl text-[11.5px] font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
+              title="Reset Filters"
             >
-              <FilterX size={14} />
-              <span>Reset Filters</span>
+              <FilterX size={13} />
+              <span>Reset</span>
             </button>
           )}
+        </div>
+
+        {/* Right Side: Kanban / Table View Mode Switcher and New Lead Action Button */}
+        <div className="flex items-center gap-2.5 shrink-0 self-start xl:self-auto">
+          <div className="bg-white border border-slate-400 rounded-xl p-1 flex items-center shadow-2xs">
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer transition-colors ${viewMode === 'kanban' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-900 hover:bg-slate-50'}`}
+            >
+              <Columns size={15} />
+              <span>Kanban</span>
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer transition-colors ${viewMode === 'table' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-900 hover:bg-slate-50'}`}
+            >
+              <LayoutGrid size={15} />
+              <span>Table</span>
+            </button>
+          </div>
+
+          <button
+            onClick={() => { resetClientForm(); setIsClientModalOpen(true); }}
+            className="flex items-center justify-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-orange-600/20 cursor-pointer whitespace-nowrap"
+          >
+            <Plus size={16} className="stroke-[2.5]" />
+            <span>New Lead</span>
+          </button>
         </div>
       </div>
 

@@ -80,12 +80,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in text-slate-950">
-      {/* Page Header */}
-      <div>
-        <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Executive Dashboard</h2>
-        <p className="text-[13px] text-slate-900 font-normal">Real-time overview of client onboarding, workspace portfolio, and capital resources</p>
-      </div>
+    <div className="space-y-6 animate-fade-in text-slate-950">
+      {/* Overview Analytics Cards */}
 
       {/* Overview Analytics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">

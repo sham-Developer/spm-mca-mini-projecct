@@ -38,6 +38,11 @@ export default function LeavesPermissions({ user }) {
   // Status Filter for history
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Review modal state for team leaves (Admin / Authorized Reviewer)
+  const [reviewTarget, setReviewTarget] = useState(null); // { leave, status: 'approved' | 'rejected' }
+  const [reviewRemarks, setReviewRemarks] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
   const isProjectHead = user?.role === 'project_head';
   const isAdmin = user?.role === 'admin';
 
@@ -53,6 +58,36 @@ export default function LeavesPermissions({ user }) {
       return cleanDate;
     } catch {
       return dateStr;
+    }
+  };
+
+  const handleReviewTeamLeave = async () => {
+    if (!reviewTarget) return;
+    const { leave, status } = reviewTarget;
+    setReviewSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/leaves/${leave.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status,
+          reviewed_by: user?.id,
+          remarks: reviewRemarks.trim() || null
+        })
+      });
+      if (res.ok) {
+        showToast(`Leave application marked as ${status}`, 'success');
+        setReviewTarget(null);
+        setReviewRemarks('');
+        loadData();
+      } else {
+        showToast('Failed to update leave status', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Error updating leave', 'error');
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
@@ -172,24 +207,6 @@ export default function LeavesPermissions({ user }) {
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-900 font-medium">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Leaves & Permissions Portal</h2>
-          <p className="text-[13px] text-slate-900 font-normal">
-            Request formal work leaves or short permissions, track decision history, and view team records
-          </p>
-        </div>
-
-        <button
-          onClick={() => setIsApplyModalOpen(true)}
-          className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer self-start sm:self-auto"
-        >
-          <Plus size={16} className="stroke-[2.5]" />
-          <span>Apply Leave / Permission</span>
-        </button>
-      </div>
-
       {/* METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-sm flex items-center justify-between">
@@ -233,9 +250,9 @@ export default function LeavesPermissions({ user }) {
         </div>
       </div>
 
-      {/* TABS & FILTER BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-300 pb-3">
-        <div className="flex items-center gap-2 overflow-x-auto">
+      {/* TABS & FILTER BAR WITH APPLY ACTION INLINE */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-300 pb-3">
+        <div className="flex items-center gap-2 overflow-x-auto min-w-0 flex-1">
           <button
             onClick={() => setActiveTab('my_requests')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
@@ -269,19 +286,29 @@ export default function LeavesPermissions({ user }) {
           )}
         </div>
 
-        {/* STATUS FILTER */}
-        <div className="flex items-center gap-2">
-          <span className="text-[12px] font-medium text-slate-900 whitespace-nowrap">Filter Status:</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-slate-950 focus:outline-none shadow-xs"
+        {/* STATUS FILTER & APPLY BUTTON ROW */}
+        <div className="flex items-center gap-3 shrink-0 self-start lg:self-auto flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-slate-900 whitespace-nowrap">Filter Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-slate-950 focus:outline-none shadow-xs"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <button
+            onClick={() => setIsApplyModalOpen(true)}
+            className="flex items-center justify-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer whitespace-nowrap"
           >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
+            <Plus size={15} className="stroke-[2.5]" />
+            <span>Apply Leave / Permission</span>
+          </button>
         </div>
       </div>
 
@@ -313,6 +340,7 @@ export default function LeavesPermissions({ user }) {
                   <th className="px-4 py-3 text-[12.5px] font-semibold border border-slate-300 min-w-[200px]">Reason & Purpose</th>
                   <th className="px-4 py-3 text-[12.5px] font-semibold text-center border border-slate-300 w-28">Status</th>
                   <th className="px-4 py-3 text-[12.5px] font-semibold border border-slate-300 min-w-[170px]">Reviewed By</th>
+                  <th className="px-4 py-3 text-[12.5px] font-semibold border border-slate-300 min-w-[190px]">Review Remarks</th>
                   <th className="px-4 py-3 text-[12.5px] font-semibold border border-slate-300 w-36">Applied Date</th>
                 </tr>
               </thead>
@@ -357,6 +385,24 @@ export default function LeavesPermissions({ user }) {
                         <span className="text-amber-800 text-[11px] font-semibold italic">Pending review</span>
                       )}
                     </td>
+                    <td className="px-4 py-3 border border-slate-300 text-[12.5px] font-normal text-slate-950">
+                      {item.remarks ? (
+                        <div className={`p-2 rounded-lg border text-[12px] leading-tight ${
+                          item.status === 'approved'
+                            ? 'bg-emerald-50/70 border-emerald-300 text-emerald-950'
+                            : item.status === 'rejected'
+                            ? 'bg-red-50/70 border-red-300 text-red-950'
+                            : 'bg-slate-50 border-slate-300 text-slate-950'
+                        }`}>
+                          <span className="font-semibold text-[10.5px] block uppercase tracking-wider mb-0.5 opacity-90">
+                            {item.status === 'approved' ? 'Approval Note:' : item.status === 'rejected' ? 'Rejection Reason:' : 'Remark:'}
+                          </span>
+                          "{item.remarks}"
+                        </div>
+                      ) : (
+                        <span className="text-slate-700 italic text-[11.5px]">No remarks provided</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 border border-slate-300 text-[12px] text-slate-900 font-normal">
                       {formatDateToDMY(item.created_at)}
                     </td>
@@ -364,7 +410,7 @@ export default function LeavesPermissions({ user }) {
                 ))}
                 {displayedMyLeaves.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
+                    <td colSpan="8" className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
                       No applications recorded under current filter.
                     </td>
                   </tr>
@@ -403,7 +449,11 @@ export default function LeavesPermissions({ user }) {
                   <th className="px-4 py-3 text-[12.5px] font-semibold border border-slate-300 min-w-[200px]">Reason</th>
                   <th className="px-4 py-3 text-[12.5px] font-semibold text-center border border-slate-300 w-28">Status</th>
                   <th className="px-4 py-3 text-[12.5px] font-semibold border border-slate-300 min-w-[170px]">Reviewed By</th>
+                  <th className="px-4 py-3 text-[12.5px] font-semibold border border-slate-300 min-w-[190px]">Review Remarks</th>
                   <th className="px-4 py-3 text-[12.5px] font-semibold border border-slate-300 w-36">Applied Date</th>
+                  {(isAdmin || isProjectHead) && (
+                    <th className="px-4 py-3 text-[12.5px] font-semibold text-center border border-slate-300 w-32">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -451,14 +501,60 @@ export default function LeavesPermissions({ user }) {
                         <span className="text-amber-800 text-[11px] font-semibold italic">Pending review</span>
                       )}
                     </td>
+                    <td className="px-4 py-3 border border-slate-300 text-[12.5px] font-normal text-slate-950">
+                      {item.remarks ? (
+                        <div className={`p-2 rounded-lg border text-[12px] leading-tight ${
+                          item.status === 'approved'
+                            ? 'bg-emerald-50/70 border-emerald-300 text-emerald-950'
+                            : item.status === 'rejected'
+                            ? 'bg-red-50/70 border-red-300 text-red-950'
+                            : 'bg-slate-50 border-slate-300 text-slate-950'
+                        }`}>
+                          <span className="font-semibold text-[10.5px] block uppercase tracking-wider mb-0.5 opacity-90">
+                            {item.status === 'approved' ? 'Approval Note:' : item.status === 'rejected' ? 'Rejection Reason:' : 'Remark:'}
+                          </span>
+                          "{item.remarks}"
+                        </div>
+                      ) : (
+                        <span className="text-slate-700 italic text-[11.5px]">No remarks added</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 border border-slate-300 text-[12px] text-slate-900 font-normal">
                       {formatDateToDMY(item.created_at)}
                     </td>
+                    {(isAdmin || isProjectHead) && (
+                      <td className="px-4 py-3 border border-slate-300 text-center">
+                        {item.status === 'pending' ? (
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => { setReviewTarget({ leave: item, status: 'approved' }); setReviewRemarks(item.remarks || ''); }}
+                              className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg cursor-pointer flex items-center gap-1 text-[11.5px] font-medium transition-colors"
+                              title="Approve Leave"
+                            >
+                              <CheckCircle2 size={14} />
+                              <span>Approve</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setReviewTarget({ leave: item, status: 'rejected' }); setReviewRemarks(item.remarks || ''); }}
+                              className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-800 border border-red-300 rounded-lg cursor-pointer flex items-center gap-1 text-[11.5px] font-medium transition-colors"
+                              title="Reject Leave"
+                            >
+                              <XCircle size={14} />
+                              <span>Reject</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-slate-900 font-medium">Completed</span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
                 {displayedTeamLeaves.length === 0 && (
                   <tr>
-                    <td colSpan="8" className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
+                    <td colSpan={isAdmin || isProjectHead ? "10" : "9"} className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
                       {isProjectHead 
                         ? 'No subordinate leave applications found.'
                         : 'No employee leave records found.'}
@@ -580,6 +676,111 @@ export default function LeavesPermissions({ user }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* TEAM LEAVE REVIEW WITH REMARKS MODAL */}
+      {reviewTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in-fast">
+          <div className="w-full max-w-lg bg-white border border-slate-400 rounded-2xl shadow-2xl p-6 text-slate-950 animate-scale-up space-y-5">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <div className={`p-2 rounded-xl ${
+                  reviewTarget.status === 'approved' 
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                    : 'bg-red-100 text-red-800 border border-red-300'
+                }`}>
+                  {reviewTarget.status === 'approved' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+                </div>
+                <div>
+                  <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">
+                    {reviewTarget.status === 'approved' ? 'Approve Leave Application' : 'Reject Leave Application'}
+                  </h3>
+                  <p className="text-[12px] text-slate-700 font-normal">
+                    Confirm review decision and provide optional remarks for the employee
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => { setReviewTarget(null); setReviewRemarks(''); }} 
+                className="p-1 rounded text-slate-700 hover:text-black hover:bg-slate-100 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Application Details Summary */}
+            <div className="bg-slate-50 border border-slate-300 rounded-xl p-3.5 space-y-2 text-[12.5px]">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600 font-medium">Applicant:</span>
+                <span className="text-slate-950 font-bold">{reviewTarget.leave?.user?.full_name || 'Employee'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600 font-medium">Leave Type & Duration:</span>
+                <span className="text-slate-950 font-semibold">
+                  <span className="uppercase text-[11px] px-2 py-0.5 bg-slate-200 rounded mr-1.5">{reviewTarget.leave?.leave_type?.replace('_', ' ')}</span>
+                  {formatDateToDMY(reviewTarget.leave?.start_date)} to {formatDateToDMY(reviewTarget.leave?.end_date)} ({reviewTarget.leave?.days} day{reviewTarget.leave?.days > 1 ? 's' : ''})
+                </span>
+              </div>
+              <div className="border-t border-slate-200 pt-2">
+                <span className="text-slate-600 font-medium block mb-0.5">Application Reason:</span>
+                <p className="text-slate-900 font-normal italic bg-white p-2 rounded border border-slate-200">
+                  "{reviewTarget.leave?.reason || 'No reason provided'}"
+                </p>
+              </div>
+            </div>
+
+            {/* Remarks Input */}
+            <div className="space-y-1.5">
+              <label className="block text-[12px] font-bold text-slate-950 flex items-center justify-between">
+                <span>Review Remarks / Notes (Optional)</span>
+                <span className="text-[11px] font-normal text-slate-600">Visible to applicant</span>
+              </label>
+              <textarea
+                rows={3}
+                value={reviewRemarks}
+                onChange={(e) => setReviewRemarks(e.target.value)}
+                placeholder={
+                  reviewTarget.status === 'approved'
+                    ? "e.g., Approved. Ensure all pending deliverables are handed over."
+                    : "e.g., Declined due to critical client deadline this week."
+                }
+                className="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-950 text-[13px] font-medium placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => { setReviewTarget(null); setReviewRemarks(''); }}
+                disabled={reviewSubmitting}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12.5px] font-bold border border-slate-300 cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleReviewTeamLeave}
+                disabled={reviewSubmitting}
+                className={`px-5 py-2 text-white rounded-xl text-[12.5px] font-bold shadow-md cursor-pointer transition-all flex items-center gap-1.5 ${
+                  reviewTarget.status === 'approved'
+                    ? 'bg-emerald-600 hover:bg-emerald-500'
+                    : 'bg-red-600 hover:bg-red-500'
+                }`}
+              >
+                {reviewSubmitting ? (
+                  <span>Processing...</span>
+                ) : (
+                  <>
+                    {reviewTarget.status === 'approved' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                    <span>Confirm {reviewTarget.status === 'approved' ? 'Approval' : 'Rejection'}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

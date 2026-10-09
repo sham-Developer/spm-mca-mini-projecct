@@ -30,10 +30,12 @@ import {
   AlertCircle,
   CalendarDays,
   Timer,
-  CheckSquare
+  CheckSquare,
+  FileSpreadsheet
 } from 'lucide-react';
 import API_URL from '../config';
 import { useUI } from '../components/UIProvider';
+import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 
 export default function HRManagement({ user }) {
   const { showToast, confirmAction } = useUI();
@@ -148,9 +150,19 @@ export default function HRManagement({ user }) {
   const [leaveReason, setLeaveReason] = useState('');
   const [submittingLeave, setSubmittingLeave] = useState(false);
 
-  // Timesheets Summary State
-  const [timesheetSummaries, setTimesheetSummaries] = useState([]);
-  const [timesheetLoading, setTimesheetLoading] = useState(false);
+  // Leave Review with optional remarks modal state
+  const [reviewLeaveTarget, setReviewLeaveTarget] = useState(null); // { leave, status: 'approved' | 'rejected' }
+  const [reviewRemarks, setReviewRemarks] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  // Employee Reports State (Daily work reports per employee & task)
+  const [employeeReports, setEmployeeReports] = useState([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportSearchTerm, setReportSearchTerm] = useState('');
+  const [reportFilterDate, setReportFilterDate] = useState('');
+  const [reportFilterUser, setReportFilterUser] = useState('all');
+  const [reportsCurrentPage, setReportsCurrentPage] = useState(1);
+  const reportsPerPage = 7;
 
   const fetchAttendance = async (date) => {
     try {
@@ -190,18 +202,19 @@ export default function HRManagement({ user }) {
     }
   };
 
-  const fetchTimesheets = async () => {
-    setTimesheetLoading(true);
+  const fetchEmployeeReports = async () => {
+    setReportsLoading(true);
     try {
-      const res = await fetch(`${API_URL}/timesheets/summary`);
+      const res = await fetch(`${API_URL}/reports`);
       if (res.ok) {
         const data = await res.json();
-        setTimesheetSummaries(data || []);
+        setEmployeeReports(Array.isArray(data) ? data : []);
       }
     } catch (e) {
       console.error(e);
+      showToast('Error loading employee reports', 'error');
     } finally {
-      setTimesheetLoading(false);
+      setReportsLoading(false);
     }
   };
 
@@ -272,39 +285,46 @@ export default function HRManagement({ user }) {
     }
   };
 
-  const handleUpdateLeaveStatus = async (leaveId, status) => {
-    confirmAction(
-      `${status === 'approved' ? 'Approve' : 'Reject'} Leave Request`,
-      `Are you sure you want to mark this leave application as ${status}?`,
-      async () => {
-        try {
-          const res = await fetch(`${API_URL}/leaves/${leaveId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              status,
-              reviewed_by: user?.id || null
-            })
-          });
-          if (res.ok) {
-            showToast(`Leave application marked as ${status}`, 'success');
-            fetchLeaves();
-          } else {
-            showToast('Failed to update leave status', 'error');
-          }
-        } catch (e) {
-          console.error(e);
-          showToast('Error updating leave', 'error');
-        }
+  const openLeaveReviewModal = (leave, status) => {
+    setReviewLeaveTarget({ leave, status });
+    setReviewRemarks(leave.remarks || '');
+  };
+
+  const handleConfirmLeaveReview = async () => {
+    if (!reviewLeaveTarget) return;
+    const { leave, status } = reviewLeaveTarget;
+    setReviewSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/leaves/${leave.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status,
+          reviewed_by: user?.id || null,
+          remarks: reviewRemarks.trim() || null
+        })
+      });
+      if (res.ok) {
+        showToast(`Leave application marked as ${status}`, 'success');
+        setReviewLeaveTarget(null);
+        setReviewRemarks('');
+        fetchLeaves();
+      } else {
+        showToast('Failed to update leave status', 'error');
       }
-    );
+    } catch (e) {
+      console.error(e);
+      showToast('Error updating leave', 'error');
+    } finally {
+      setReviewSubmitting(false);
+    }
   };
 
   useEffect(() => {
     fetchEmployees();
     fetchAttendance();
     fetchLeaves();
-    fetchTimesheets();
+    fetchEmployeeReports();
   }, []);
 
   // Format YYYY-MM-DD -> DD-MM-YYYY
@@ -838,146 +858,144 @@ export default function HRManagement({ user }) {
         }
       `}</style>
 
-      {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Personnel & HR Management</h2>
-          <p className="text-[13px] text-slate-900 font-normal">Manage employee profile details, credentials, and document deposits</p>
+      {/* TOP HR WORKSPACE TABS WITH ACTIONS INLINE (Tabs on left, Actions on right) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-300 pb-2">
+        <div className="flex items-center gap-2 overflow-x-auto min-w-0 flex-1">
+          <button
+            onClick={() => setActiveTab('directory')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'directory'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
+            }`}
+          >
+            <Users size={16} />
+            <span>Employee Directory</span>
+            <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${activeTab === 'directory' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-900'}`}>
+              {employees.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('attendance'); fetchAttendance(selectedAttDate); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'attendance'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
+            }`}
+          >
+            <CalendarDays size={16} />
+            <span>Attendance Tracker</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('leaves'); fetchLeaves(); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'leaves'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
+            }`}
+          >
+            <Clock size={16} />
+            <span>Leave Management</span>
+            {leaveRecords.filter(l => l.status === 'pending').length > 0 && (
+              <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+                {leaveRecords.filter(l => l.status === 'pending').length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('timesheets'); fetchEmployeeReports(); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'timesheets'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
+            }`}
+          >
+            <Timer size={16} />
+            <span>Employee Reports</span>
+          </button>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
           {activeTab === 'leaves' && (
             <button
               onClick={() => setIsLeaveModalOpen(true)}
-              className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer"
+              className="flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl text-[13px] font-medium transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer whitespace-nowrap"
             >
-              <Plus size={16} />
+              <Plus size={15} />
               <span>Apply Leave</span>
             </button>
           )}
-          <button
-            onClick={openAddModal}
-            className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer self-start sm:self-auto"
-          >
-            <UserPlus size={16} className="stroke-[2.5]" />
-            <span>Add Employee</span>
-          </button>
-        </div>
-      </div>
-
-      {/* TOP HR WORKSPACE TABS */}
-      <div className="flex items-center gap-2 border-b border-slate-300 pb-2 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('directory')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'directory'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
-          }`}
-        >
-          <Users size={16} />
-          <span>Employee Directory</span>
-          <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${activeTab === 'directory' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-900'}`}>
-            {employees.length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => { setActiveTab('attendance'); fetchAttendance(selectedAttDate); }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'attendance'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
-          }`}
-        >
-          <CalendarDays size={16} />
-          <span>Attendance Tracker</span>
-        </button>
-
-        <button
-          onClick={() => { setActiveTab('leaves'); fetchLeaves(); }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'leaves'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
-          }`}
-        >
-          <Clock size={16} />
-          <span>Leave Management</span>
-          {leaveRecords.filter(l => l.status === 'pending').length > 0 && (
-            <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
-              {leaveRecords.filter(l => l.status === 'pending').length}
-            </span>
+          {activeTab === 'directory' && (
+            <button
+              onClick={openAddModal}
+              className="flex items-center justify-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer whitespace-nowrap"
+            >
+              <UserPlus size={15} className="stroke-[2.5]" />
+              <span>Add Employee</span>
+            </button>
           )}
-        </button>
-
-        <button
-          onClick={() => { setActiveTab('timesheets'); fetchTimesheets(); }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'timesheets'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
-          }`}
-        >
-          <Timer size={16} />
-          <span>Weekly Timesheets</span>
-        </button>
-      </div>
-
-      {/* HR ANALYTICS STATS ROW (4 detailed counters) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-fast">
-        {/* Total Directory Count */}
-        <div className="bg-gradient-to-br from-blue-200 to-white border border-indigo-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
-          <div className="space-y-2">
-            <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Total Directory</span>
-            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
-              {employees.length}
-            </h3>
-          </div>
-          <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/10">
-            <Users size={20} className="stroke-[2.5]" />
-          </div>
-        </div>
-
-        {/* On-Role Staff */}
-        <div className="bg-gradient-to-br from-orange-200 to-white border border-orange-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
-          <div className="space-y-2">
-            <span className="text-[11px] font-bold text-orange-950 uppercase tracking-widest block">On Role Staff</span>
-            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
-              {employees.filter(e => e.employment_type === 'on role' || e.employment_type === 'on_role' || !e.employment_type).length}
-            </h3>
-          </div>
-          <div className="p-3 bg-orange-600 rounded-xl text-white shadow-md shadow-orange-600/10">
-            <Briefcase size={20} className="stroke-[2.5]" />
-          </div>
-        </div>
-
-        {/* Active Engineers */}
-        <div className="bg-gradient-to-br from-emerald-100 to-white border border-emerald-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
-          <div className="space-y-2">
-            <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Active Engineers</span>
-            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
-              {employees.filter(e => e.role === 'team_member' && e.status === 'active').length}
-            </h3>
-          </div>
-          <div className="p-3 bg-emerald-600 rounded-xl text-white shadow-md shadow-emerald-600/10">
-            <UserPlus size={20} className="stroke-[2.5]" />
-          </div>
-        </div>
-
-        {/* Leadership & Admins */}
-        <div className="bg-gradient-to-br from-violet-200 to-white border border-violet-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
-          <div className="space-y-2">
-            <span className="text-[11px] font-bold text-violet-900 uppercase tracking-widest block">Admins & Heads</span>
-            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
-              {employees.filter(e => e.role === 'admin' || e.role === 'project_head').length}
-            </h3>
-          </div>
-          <div className="p-3 bg-violet-600 rounded-xl text-white shadow-md shadow-violet-600/10">
-            <Shield size={20} className="stroke-[2.5]" />
-          </div>
         </div>
       </div>
+
+      {/* HR ANALYTICS STATS ROW (Only visible in Employee Directory) */}
+      {activeTab === 'directory' && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-fast">
+          {/* Total Directory Count */}
+          <div className="bg-gradient-to-br from-blue-200 to-white border border-indigo-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Total Directory</span>
+              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
+                {employees.length}
+              </h3>
+            </div>
+            <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/10">
+              <Users size={20} className="stroke-[2.5]" />
+            </div>
+          </div>
+
+          {/* On-Role Staff */}
+          <div className="bg-gradient-to-br from-orange-200 to-white border border-orange-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-orange-950 uppercase tracking-widest block">On Role Staff</span>
+              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
+                {employees.filter(e => e.employment_type === 'on role' || e.employment_type === 'on_role' || !e.employment_type).length}
+              </h3>
+            </div>
+            <div className="p-3 bg-orange-600 rounded-xl text-white shadow-md shadow-orange-600/10">
+              <Briefcase size={20} className="stroke-[2.5]" />
+            </div>
+          </div>
+
+          {/* Active Engineers */}
+          <div className="bg-gradient-to-br from-emerald-100 to-white border border-emerald-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Active Engineers</span>
+              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
+                {employees.filter(e => e.role === 'team_member' && e.status === 'active').length}
+              </h3>
+            </div>
+            <div className="p-3 bg-emerald-600 rounded-xl text-white shadow-md shadow-emerald-600/10">
+              <UserPlus size={20} className="stroke-[2.5]" />
+            </div>
+          </div>
+
+          {/* Leadership & Admins */}
+          <div className="bg-gradient-to-br from-violet-200 to-white border border-violet-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-violet-900 uppercase tracking-widest block">Admins & Heads</span>
+              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
+                {employees.filter(e => e.role === 'admin' || e.role === 'project_head').length}
+              </h3>
+            </div>
+            <div className="p-3 bg-violet-600 rounded-xl text-white shadow-md shadow-violet-600/10">
+              <Shield size={20} className="stroke-[2.5]" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* EMPLOYEE DIRECTORY TAB */}
       {activeTab === 'directory' && (
@@ -1323,6 +1341,7 @@ export default function HRManagement({ user }) {
                     <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[200px]">Reason</th>
                     <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-28">Status</th>
                     <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[150px]">Reviewed By</th>
+                    <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[180px]">Remarks / Notes</th>
                     <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-32">Actions</th>
                   </tr>
                 </thead>
@@ -1371,24 +1390,36 @@ export default function HRManagement({ user }) {
                           <span className="text-amber-800 text-[11px] font-semibold italic">Awaiting Review</span>
                         )}
                       </td>
+                      <td className="px-4 py-3 border border-slate-300 text-[12.5px] font-normal text-slate-950">
+                        {leave.remarks ? (
+                          <div className="p-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-950 text-[12px] leading-tight">
+                            <span className="font-semibold text-slate-900 text-[10.5px] block uppercase tracking-wider mb-0.5">Reviewer Note:</span>
+                            {leave.remarks}
+                          </div>
+                        ) : (
+                          <span className="text-slate-700 italic text-[11.5px]">No remarks added</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 border border-slate-300 text-center">
                         {leave.status === 'pending' ? (
                           <div className="flex items-center justify-center gap-1.5">
                             <button
                               type="button"
-                              onClick={() => handleUpdateLeaveStatus(leave.id, 'approved')}
-                              className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg cursor-pointer"
+                              onClick={() => openLeaveReviewModal(leave, 'approved')}
+                              className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg cursor-pointer flex items-center gap-1 text-[12px] font-medium transition-colors"
                               title="Approve Leave"
                             >
-                              <CheckCircle2 size={16} />
+                              <CheckCircle2 size={15} />
+                              <span>Approve</span>
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleUpdateLeaveStatus(leave.id, 'rejected')}
-                              className="p-1.5 bg-red-50 hover:bg-red-100 text-red-800 border border-red-300 rounded-lg cursor-pointer"
+                              onClick={() => openLeaveReviewModal(leave, 'rejected')}
+                              className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-800 border border-red-300 rounded-lg cursor-pointer flex items-center gap-1 text-[12px] font-medium transition-colors"
                               title="Reject Leave"
                             >
-                              <XCircle size={16} />
+                              <XCircle size={15} />
+                              <span>Reject</span>
                             </button>
                           </div>
                         ) : (
@@ -1399,7 +1430,7 @@ export default function HRManagement({ user }) {
                   ))}
                   {leaveRecords.length === 0 && (
                     <tr>
-                      <td colSpan="8" className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
+                      <td colSpan="9" className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
                         No leave applications on record.
                       </td>
                     </tr>
@@ -1411,94 +1442,351 @@ export default function HRManagement({ user }) {
         </div>
       )}
 
-      {/* 4. WEEKLY TIMESHEETS TAB */}
-      {activeTab === 'timesheets' && (
-        <div className="space-y-4 animate-fade-in-fast">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-300 rounded-2xl p-4 shadow-sm">
-            <div>
-              <h3 className="text-[17px] font-bold text-slate-950">Employee Timesheets & Aggregated Hours</h3>
-              <p className="text-[12px] text-slate-900 font-normal">Real-time compilation of total hours logged against task progression reports</p>
-            </div>
-            <button
-              onClick={fetchTimesheets}
-              className="px-3.5 py-1.5 bg-white border border-slate-300 rounded-xl text-[12px] font-medium text-slate-950 hover:bg-slate-50 cursor-pointer shadow-xs"
-            >
-              Refresh Aggregates
-            </button>
-          </div>
+      {/* 4. EMPLOYEE REPORTS TAB */}
+      {activeTab === 'timesheets' && (() => {
+        // Filter daily reports by search, date, and user
+        const filteredReports = employeeReports.filter(rep => {
+          const empName = rep.user?.full_name?.toLowerCase() || '';
+          const taskName = rep.task?.title?.toLowerCase() || '';
+          const projName = rep.task?.project?.name?.toLowerCase() || '';
+          const content = rep.content?.toLowerCase() || '';
+          const s = reportSearchTerm.toLowerCase();
 
-          {timesheetLoading ? (
-            <div className="flex items-center justify-center h-48 bg-white rounded-2xl border border-slate-300">
-              <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-orange-500"></div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-[#3715ca] text-white">
-                      <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-16">S.No.</th>
-                      <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[200px]">Employee</th>
-                      <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-36">Total Hours Logged</th>
-                      <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-32">Reports Submitted</th>
-                      <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-32">Tasks Completed</th>
-                      <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-32">Days Present</th>
-                      <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[240px]">Recent Work Logs</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {timesheetSummaries.map((item, idx) => (
-                      <tr key={item.user.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-4 py-3 text-[13px] font-normal text-slate-900 border border-slate-300 text-center">
-                          {idx + 1}
-                        </td>
-                        <td className="px-4 py-3 border border-slate-300">
-                          <span className="block text-[14px] font-medium text-slate-950">{item.user.full_name}</span>
-                          <span className="block text-[11px] font-normal text-slate-900">{item.user.designation || 'Staff'} &bull; {item.user.department}</span>
-                        </td>
-                        <td className="px-4 py-3 border border-slate-300 text-center">
-                          <span className="inline-block px-3 py-1 bg-orange-50 border border-orange-200 text-orange-950 rounded-full text-[13px] font-semibold">
-                            {item.total_hours_logged} hrs
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 border border-slate-300 text-center text-[13px] font-medium text-slate-950">
-                          {item.reports_count}
-                        </td>
-                        <td className="px-4 py-3 border border-slate-300 text-center text-[13px] font-medium text-slate-950">
-                          {item.completed_tasks_count}
-                        </td>
-                        <td className="px-4 py-3 border border-slate-300 text-center text-[13px] font-medium text-slate-950">
-                          {item.days_present}
-                        </td>
-                        <td className="px-4 py-3 border border-slate-300 text-[12px] font-normal text-slate-900">
-                          {item.recent_reports && item.recent_reports.length > 0 ? (
-                            <ul className="list-disc list-inside space-y-1">
-                              {item.recent_reports.map(r => (
-                                <li key={r.id} className="truncate max-w-xs" title={r.content}>
-                                  <span className="text-slate-950 font-medium">{r.hours_spent}h</span> &bull; {r.content}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <span className="italic text-slate-900">No recent task logs</span>
-                          )}
-                        </td>
-                      </tr>
+          const matchesSearch = !s || empName.includes(s) || taskName.includes(s) || projName.includes(s) || content.includes(s);
+          if (!matchesSearch) return false;
+
+          if (reportFilterDate) {
+            const repDate = rep.created_at ? rep.created_at.split('T')[0] : '';
+            if (repDate !== reportFilterDate) return false;
+          }
+
+          if (reportFilterUser !== 'all') {
+            if (String(rep.submitted_by) !== String(reportFilterUser)) return false;
+          }
+
+          return true;
+        });
+
+        // Pagination for employee reports
+        const totalReportPages = Math.ceil(filteredReports.length / reportsPerPage) || 1;
+        const currentReportPage = Math.min(reportsCurrentPage, totalReportPages);
+        const reportStartIndex = (currentReportPage - 1) * reportsPerPage;
+        const currentReports = filteredReports.slice(reportStartIndex, reportStartIndex + reportsPerPage);
+
+        return (
+          <div className="space-y-4 animate-fade-in-fast">
+            {/* Top Toolbar / Filter Header */}
+            <div className="bg-white border border-slate-300 rounded-2xl p-4 shadow-sm space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-[17px] font-bold text-slate-950">Employee Daily Work Reports</h3>
+                  <p className="text-[12px] text-slate-900 font-normal">Daily activity submissions with task details, project allocation, and hours worked</p>
+                </div>
+                
+                {/* Export & Refresh Quick Actions */}
+                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const headers = [
+                        { label: 'S.No', key: 'sno' },
+                        { label: 'Date', key: 'date' },
+                        { label: 'Employee Name', key: 'name' },
+                        { label: 'Designation / Dept', key: 'dept' },
+                        { label: 'Total Hours Worked', key: 'hours' },
+                        { label: 'Project Name', key: 'project' },
+                        { label: 'Task Name', key: 'task' },
+                        { label: 'Report Put / Content', key: 'report' },
+                        { label: 'Progress (%)', key: 'progress' }
+                      ];
+                      const rows = filteredReports.map((r, idx) => ({
+                        sno: idx + 1,
+                        date: formatDateToDMY(r.created_at),
+                        name: r.user?.full_name || 'Staff Member',
+                        dept: `${r.user?.designation || 'Staff'} - ${r.user?.department || 'General'}`,
+                        hours: `${r.hours_spent || 0} hrs`,
+                        project: r.task?.project?.name || 'General Project',
+                        task: r.task?.title || 'Ad-hoc Assignment',
+                        report: r.content || '',
+                        progress: `${r.progress || 0}%`
+                      }));
+                      exportToCSV({
+                        filename: 'employee_daily_reports.csv',
+                        headers,
+                        rows
+                      });
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-xl text-[12px] font-semibold cursor-pointer shadow-xs active:scale-95"
+                    title="Export Filtered Reports to CSV"
+                  >
+                    <FileSpreadsheet size={13} className="text-emerald-600" />
+                    <span>Export CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const headers = [
+                        { label: '#', align: 'center' },
+                        { label: 'Date', align: 'center' },
+                        { label: 'Employee', align: 'left' },
+                        { label: 'Hours', align: 'center' },
+                        { label: 'Project', align: 'left' },
+                        { label: 'Task Name', align: 'left' },
+                        { label: 'Report Put', align: 'left' }
+                      ];
+                      const rows = filteredReports.map((r, idx) => [
+                        idx + 1,
+                        formatDateToDMY(r.created_at),
+                        r.user?.full_name || 'Staff',
+                        `${r.hours_spent || 0}h`,
+                        r.task?.project?.name || 'General Project',
+                        r.task?.title || 'Task',
+                        r.content || ''
+                      ]);
+                      const totalHours = filteredReports.reduce((sum, r) => sum + (Number(r.hours_spent) || 0), 0);
+                      exportToPDF({
+                        title: 'Employee Daily Work Reports',
+                        subtitle: 'Comprehensive daily activity and task execution log',
+                        summaryStats: [
+                          { label: 'Total Reports', value: filteredReports.length },
+                          { label: 'Total Hours Logged', value: `${totalHours} hrs` },
+                          { label: 'Active Employees', value: new Set(filteredReports.map(r => r.submitted_by)).size }
+                        ],
+                        headers,
+                        rows
+                      });
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-semibold cursor-pointer shadow-sm shadow-orange-600/20 active:scale-95"
+                    title="Export Formatted PDF"
+                  >
+                    <FileText size={13} />
+                    <span>Export PDF</span>
+                  </button>
+
+                  <button
+                    onClick={fetchEmployeeReports}
+                    className="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-[12px] font-medium text-slate-950 hover:bg-slate-50 cursor-pointer shadow-xs"
+                    title="Refresh Reports"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+              {/* Filter controls row */}
+              <div className="flex items-center gap-2.5 flex-wrap pt-2 border-t border-slate-200">
+                {/* Search */}
+                <div className="flex items-center bg-white border border-slate-300 rounded-xl px-3 py-1.5 shadow-xs flex-1 min-w-[220px]">
+                  <Search size={14} className="text-slate-600 mr-2 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Search by employee, task, project, report..."
+                    value={reportSearchTerm}
+                    onChange={(e) => { setReportSearchTerm(e.target.value); setReportsCurrentPage(1); }}
+                    className="bg-transparent text-[12.5px] text-slate-950 placeholder-slate-400 focus:outline-none w-full font-normal"
+                  />
+                  {reportSearchTerm && (
+                    <button onClick={() => setReportSearchTerm('')} className="text-slate-500 hover:text-black shrink-0">
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Date Filter */}
+                <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 shadow-xs">
+                  <span className="text-[11.5px] font-semibold text-slate-600">Date:</span>
+                  <input
+                    type="date"
+                    value={reportFilterDate}
+                    onChange={(e) => { setReportFilterDate(e.target.value); setReportsCurrentPage(1); }}
+                    className="bg-transparent text-[12px] text-slate-950 font-medium focus:outline-none cursor-pointer"
+                    title="Filter by report date"
+                  />
+                </div>
+
+                {/* Employee Filter */}
+                <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 shadow-xs">
+                  <span className="text-[11.5px] font-semibold text-slate-600">Employee:</span>
+                  <select
+                    value={reportFilterUser}
+                    onChange={(e) => { setReportFilterUser(e.target.value); setReportsCurrentPage(1); }}
+                    className="bg-transparent text-[12px] text-slate-950 font-medium focus:outline-none cursor-pointer max-w-[150px]"
+                  >
+                    <option value="all">All Members</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>{emp.full_name}</option>
                     ))}
-                    {timesheetSummaries.length === 0 && (
-                      <tr>
-                        <td colSpan="7" className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
-                          No timesheet data available.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                  </select>
+                </div>
+
+                {(reportSearchTerm || reportFilterDate || reportFilterUser !== 'all') && (
+                  <button
+                    onClick={() => { setReportSearchTerm(''); setReportFilterDate(''); setReportFilterUser('all'); setReportsCurrentPage(1); }}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12px] font-medium border border-slate-300 cursor-pointer transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Daily Reports Table */}
+            {reportsLoading ? (
+              <div className="flex items-center justify-center h-48 bg-white rounded-2xl border border-slate-300">
+                <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-orange-500"></div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-[#3715ca] text-white">
+                        <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-16">S.No.</th>
+                        <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 w-32">Date</th>
+                        <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[190px]">Employee Name</th>
+                        <th className="px-4 py-3.5 text-[13px] font-semibold text-center border border-slate-300 w-36">Total Hrs Worked</th>
+                        <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[170px]">Project Name</th>
+                        <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[200px]">Task Name</th>
+                        <th className="px-4 py-3.5 text-[13px] font-semibold border border-slate-300 min-w-[280px]">Report Put</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentReports.map((report, idx) => (
+                        <tr key={report.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-4 py-3 text-[13px] font-normal text-slate-900 border border-slate-300 text-center">
+                            {reportStartIndex + idx + 1}
+                          </td>
+                          <td className="px-4 py-3 border border-slate-300 text-[12.5px] font-normal text-slate-950 whitespace-nowrap">
+                            <span className="block font-medium">{formatDateToDMY(report.created_at)}</span>
+                            <span className="text-[10.5px] text-slate-600">
+                              {report.created_at ? new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 border border-slate-300">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 text-slate-900 flex items-center justify-center font-bold text-[12px] shrink-0">
+                                {report.user?.full_name ? report.user.full_name.substring(0, 2).toUpperCase() : 'EM'}
+                              </div>
+                              <div>
+                                <span className="block text-[13.5px] font-semibold text-slate-950">
+                                  {report.user?.full_name || 'Employee Member'}
+                                </span>
+                                <span className="block text-[11px] font-normal text-slate-600">
+                                  {report.user?.department || 'Staff'} &bull; <span className="capitalize">{report.user?.role?.replace('_', ' ') || 'Member'}</span>
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 border border-slate-300 text-center">
+                            <span className="inline-block px-3 py-1 bg-amber-50 border border-amber-300 text-amber-950 rounded-full text-[12.5px] font-bold">
+                              {report.hours_spent || 0} hrs
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 border border-slate-300 text-[13px] font-medium text-slate-950">
+                            {report.task?.project?.name ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0"></span>
+                                <span className="font-semibold text-indigo-950">{report.task.project.name}</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-600 italic text-[12px]">General / Internal Workspace</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 border border-slate-300">
+                            <span className="block text-[13px] font-semibold text-slate-950">
+                              {report.task?.title || 'Assignment Task'}
+                            </span>
+                            {report.progress !== undefined && report.progress !== null && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="w-20 bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                  <div
+                                    className="bg-emerald-600 h-full rounded-full"
+                                    style={{ width: `${Math.min(100, Math.max(0, report.progress))}%` }}
+                                  />
+                                </div>
+                                <span className="text-[10.5px] text-slate-700 font-semibold">{report.progress}%</span>
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 border border-slate-300 text-[12.5px] font-normal text-slate-950">
+                            <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl leading-relaxed">
+                              {report.content ? (
+                                <p className="whitespace-pre-line text-slate-900">{report.content}</p>
+                              ) : (
+                                <span className="text-slate-500 italic text-[11.5px]">No written report description recorded</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredReports.length === 0 && (
+                        <tr>
+                          <td colSpan="7" className="border border-slate-300 p-8 text-center text-slate-900 italic text-[13px] font-medium">
+                            No employee daily reports recorded under the current criteria.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* PAGINATION CONTROLS */}
+                {filteredReports.length > 0 && (
+                  <div className="p-4 border-t border-slate-300 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <span className="text-[12.5px] font-medium text-slate-900">
+                      Showing {reportStartIndex + 1} to {Math.min(reportStartIndex + reportsPerPage, filteredReports.length)} of {filteredReports.length} reports
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setReportsCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentReportPage === 1}
+                        className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium transition-all ${
+                          currentReportPage === 1
+                            ? 'border-slate-200 text-slate-400 cursor-not-allowed bg-slate-50'
+                            : 'border-slate-300 text-slate-900 hover:bg-slate-100 cursor-pointer'
+                        }`}
+                      >
+                        Previous
+                      </button>
+
+                      {Array.from({ length: totalReportPages }, (_, i) => i + 1).map(pageNo => (
+                        <button
+                          key={pageNo}
+                          type="button"
+                          onClick={() => setReportsCurrentPage(pageNo)}
+                          className={`w-8 h-8 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
+                            currentReportPage === pageNo
+                              ? 'bg-slate-900 text-white shadow-xs'
+                              : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
+                          }`}
+                        >
+                          {pageNo}
+                        </button>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() => setReportsCurrentPage(p => Math.min(totalReportPages, p + 1))}
+                        disabled={currentReportPage === totalReportPages}
+                        className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium transition-all ${
+                          currentReportPage === totalReportPages
+                            ? 'border-slate-200 text-slate-400 cursor-not-allowed bg-slate-50'
+                            : 'border-slate-300 text-slate-900 hover:bg-slate-100 cursor-pointer'
+                        }`}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* MODAL FOR APPLYING LEAVE */}
       {isLeaveModalOpen && (
@@ -2410,6 +2698,110 @@ export default function HRManagement({ user }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* LEAVE REVIEW & REMARKS MODAL */}
+      {reviewLeaveTarget && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in-fast">
+          <div className="w-full max-w-lg bg-white border border-slate-400 rounded-2xl shadow-2xl p-6 text-slate-950 animate-scale-up space-y-5">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <div className={`p-2 rounded-xl ${
+                  reviewLeaveTarget.status === 'approved' 
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                    : 'bg-red-100 text-red-800 border border-red-300'
+                }`}>
+                  {reviewLeaveTarget.status === 'approved' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+                </div>
+                <div>
+                  <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">
+                    {reviewLeaveTarget.status === 'approved' ? 'Approve Leave Application' : 'Reject Leave Application'}
+                  </h3>
+                  <p className="text-[12px] text-slate-700 font-normal">
+                    Confirm your review decision and provide optional feedback or remarks
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => { setReviewLeaveTarget(null); setReviewRemarks(''); }} 
+                className="p-1 rounded text-slate-700 hover:text-black hover:bg-slate-100 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Application Details Summary */}
+            <div className="bg-slate-50 border border-slate-300 rounded-xl p-3.5 space-y-2 text-[12.5px]">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600 font-medium">Employee:</span>
+                <span className="text-slate-950 font-bold">{reviewLeaveTarget.leave?.user?.full_name || 'Staff Member'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600 font-medium">Leave Type & Duration:</span>
+                <span className="text-slate-950 font-semibold">
+                  <span className="uppercase text-[11px] px-2 py-0.5 bg-slate-200 rounded mr-1.5">{reviewLeaveTarget.leave?.leave_type?.replace('_', ' ')}</span>
+                  {formatDateToDMY(reviewLeaveTarget.leave?.start_date)} to {formatDateToDMY(reviewLeaveTarget.leave?.end_date)} ({reviewLeaveTarget.leave?.days} day{reviewLeaveTarget.leave?.days > 1 ? 's' : ''})
+                </span>
+              </div>
+              <div className="border-t border-slate-200 pt-2">
+                <span className="text-slate-600 font-medium block mb-0.5">Application Reason:</span>
+                <p className="text-slate-900 font-normal italic bg-white p-2 rounded border border-slate-200">
+                  "{reviewLeaveTarget.leave?.reason || 'No reason provided'}"
+                </p>
+              </div>
+            </div>
+
+            {/* Remarks Input */}
+            <div className="space-y-1.5">
+              <label className="block text-[12px] font-bold text-slate-950 flex items-center justify-between">
+                <span>Reviewer Remarks / Feedback (Optional)</span>
+                <span className="text-[11px] font-normal text-slate-600">Visible to employee</span>
+              </label>
+              <textarea
+                rows={3}
+                value={reviewRemarks}
+                onChange={(e) => setReviewRemarks(e.target.value)}
+                placeholder={
+                  reviewLeaveTarget.status === 'approved'
+                    ? "e.g., Approved. Please coordinate handover with team lead..."
+                    : "e.g., Declined due to overlapping sprint deadlines / client presentation..."
+                }
+                className="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-950 text-[13px] font-medium placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => { setReviewLeaveTarget(null); setReviewRemarks(''); }}
+                disabled={reviewSubmitting}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12.5px] font-bold border border-slate-300 cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmLeaveReview}
+                disabled={reviewSubmitting}
+                className={`px-5 py-2 text-white rounded-xl text-[12.5px] font-bold shadow-md cursor-pointer transition-all flex items-center gap-1.5 ${
+                  reviewLeaveTarget.status === 'approved'
+                    ? 'bg-emerald-600 hover:bg-emerald-500'
+                    : 'bg-red-600 hover:bg-red-500'
+                }`}
+              >
+                {reviewSubmitting ? (
+                  <span>Processing...</span>
+                ) : (
+                  <>
+                    {reviewLeaveTarget.status === 'approved' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                    <span>Confirm {reviewLeaveTarget.status === 'approved' ? 'Approval' : 'Rejection'}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

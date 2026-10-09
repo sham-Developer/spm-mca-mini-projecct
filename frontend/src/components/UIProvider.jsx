@@ -31,12 +31,28 @@ export default function UIProvider({ children }) {
   }, []);
 
   // Custom Confirmation System
-  const confirmAction = useCallback(({ title, message, onConfirm }) => {
+  const confirmAction = useCallback((param1, param2, param3) => {
+    let title = '';
+    let message = '';
+    let onConfirm = () => {};
+
+    if (param1 && typeof param1 === 'object') {
+      title = param1.title || '';
+      message = param1.message || '';
+      onConfirm = param1.onConfirm || (() => {});
+    } else {
+      title = param1 || '';
+      message = param2 || '';
+      onConfirm = param3 || (() => {});
+    }
+
     setConfirmConfig({
       title,
       message,
       onConfirm: () => {
-        onConfirm();
+        if (typeof onConfirm === 'function') {
+          onConfirm();
+        }
         setConfirmConfig(null);
       }
     });

@@ -23,11 +23,17 @@ import {
   Info,
   BookOpen,
   X,
-  ChevronDown
+  ChevronDown,
+  Download,
+  FileSpreadsheet,
+  FileText
 } from 'lucide-react';
 import API_URL from '../config';
+import { exportToCSV, exportToPDF } from '../utils/exportUtils';
+import { useUI } from '../components/UIProvider';
 
 export default function Projects({ userRole, currentUserId }) {
+  const { showToast } = useUI();
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [projectHeads, setProjectHeads] = useState([]);
@@ -465,8 +471,10 @@ export default function Projects({ userRole, currentUserId }) {
   const handlePostReport = async (e) => {
     e.preventDefault();
     if (!selectedTask) return;
-    if (Number(reportProgress) < Number(selectedTask?.progress || 0)) {
-      alert(`Progress cannot be decreased below previously logged level (${selectedTask?.progress || 0}%).`);
+    const currentProg = Number(selectedTask?.progress || 0);
+    const targetProg = Number(reportProgress);
+    if (targetProg < currentProg) {
+      showToast(`Progress cannot be decreased below previously logged level (${currentProg}%).`, 'error');
       return;
     }
     try {
@@ -477,8 +485,8 @@ export default function Projects({ userRole, currentUserId }) {
           task_id: selectedTask.id,
           submitted_by: currentUserId || null,
           content: reportContent,
-          hours_spent: 0,
-          progress: Number(reportProgress),
+          hours_spent: Number(hoursSpent || 0),
+          progress: targetProg,
           status: 'submitted'
         })
       });
@@ -488,21 +496,22 @@ export default function Projects({ userRole, currentUserId }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: reportStatus,
-          progress: Number(reportProgress)
+          progress: targetProg
         })
       });
 
       if (reportRes.ok || taskRes.ok) {
+        showToast('Daily progress report submitted successfully!', 'success');
         setIsReportModalOpen(false);
         setReportContent('');
         setHoursSpent('');
         await loadAllData();
       } else {
-        alert("Server returned an error. Please try again.");
+        showToast('Server returned an error. Please try again.', 'error');
       }
     } catch (e) {
       console.error("Failed to submit progress report:", e);
-      alert("Error submitting report: " + e.message);
+      showToast('Error submitting report: ' + (e.message || 'Network error'), 'error');
     }
   };
 
@@ -547,62 +556,55 @@ export default function Projects({ userRole, currentUserId }) {
   return (
     <>
       <div className="space-y-6 animate-fade-in h-[calc(100vh-180px)] overflow-y-auto pr-2">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h2 className="text-[20px] font-bold text-slate-950 tracking-tight">Project Workspaces</h2>
-          <p className="text-[13px] text-slate-900 font-medium">Track deadlines, allocate workforce, and review progression metrics</p>
-        </div>
+      {/* STATUS FILTER TABS WITH ONBOARD ACTION INLINE (Tabs on left, Action on right) */}
+      {viewMode === 'list' && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-300 pb-2">
+          <div className="flex items-center gap-2 overflow-x-auto min-w-0 flex-1">
+            {[
+              { id: 'all', label: 'All Projects', count: roleProjects.length },
+              { id: 'active', label: 'Active', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'active').length },
+              { id: 'planning', label: 'Planning', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'planning').length },
+              { id: 'on_hold', label: 'On Hold', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'on_hold').length },
+              { id: 'completed', label: 'Completed', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'completed').length },
+            ].map((tab) => {
+              const isSelected = statusFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setStatusFilter(tab.id);
+                    setProjectsCurrentPage(1);
+                  }}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+                    isSelected
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${
+                    isSelected 
+                      ? 'bg-slate-700 text-white' 
+                      : tab.id === 'active' && tab.count > 0 
+                      ? 'bg-emerald-100 text-emerald-950 font-bold' 
+                      : 'bg-slate-100 text-slate-900'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="flex flex-wrap items-center gap-3">
           {(userRole === 'admin' || userRole === 'project_head') && (
             <button
               onClick={() => { resetProjectForm(); setIsProjectModalOpen(true); }}
-              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-[14px] font-semibold transition-all shadow-md shadow-orange-600/15 cursor-pointer"
+              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-[13px] font-semibold transition-all shadow-md shadow-orange-600/15 cursor-pointer shrink-0 self-start sm:self-auto"
             >
               <Plus size={16} className="stroke-[2]" />
               <span>Onboard Project</span>
             </button>
           )}
-        </div>
-      </div>
-
-      {/* STATUS FILTER TABS (Active projects prioritized) */}
-      {viewMode === 'list' && (
-        <div className="flex items-center gap-2 border-b border-slate-300 pb-2 overflow-x-auto">
-          {[
-            { id: 'all', label: 'All Projects', count: roleProjects.length },
-            { id: 'active', label: 'Active', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'active').length },
-            { id: 'planning', label: 'Planning', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'planning').length },
-            { id: 'on_hold', label: 'On Hold', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'on_hold').length },
-            { id: 'completed', label: 'Completed', count: roleProjects.filter(p => (p.status || '').toLowerCase() === 'completed').length },
-          ].map((tab) => {
-            const isSelected = statusFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setStatusFilter(tab.id);
-                  setProjectsCurrentPage(1);
-                }}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap ${
-                  isSelected
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-300'
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-                  isSelected 
-                    ? 'bg-slate-700 text-white' 
-                    : tab.id === 'active' && tab.count > 0 
-                    ? 'bg-emerald-100 text-emerald-950 font-bold' 
-                    : 'bg-slate-100 text-slate-900'
-                }`}>
-                  {tab.count}
-                </span>
-              </button>
-            );
-          })}
         </div>
       )}
 
@@ -1291,7 +1293,8 @@ export default function Projects({ userRole, currentUserId }) {
                                     </td>
                                     <td className="px-4 py-3 text-center border border-slate-300">
                                       <div className="flex items-center justify-center gap-1.5">
-                                        {(String(task.assigned_to) === String(currentUserId) || userRole === 'admin') && (
+                                        {/* Only assigned developer can Put Report */}
+                                        {String(task.assigned_to) === String(currentUserId) && (
                                           <button
                                             onClick={() => {
                                               setSelectedTask(task);
@@ -1308,6 +1311,21 @@ export default function Projects({ userRole, currentUserId }) {
                                             title="Put Progress Report"
                                           >
                                             Put Report
+                                          </button>
+                                        )}
+
+                                        {/* Higher-ups (admin / project_head) or non-assignees can view report history */}
+                                        {String(task.assigned_to) !== String(currentUserId) && (userRole === 'admin' || userRole === 'project_head') && (
+                                          <button
+                                            onClick={() => {
+                                              setSelectedTask(task);
+                                              setReportModalTab('history');
+                                              setIsReportModalOpen(true);
+                                            }}
+                                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-300 rounded-full text-[10.5px] font-semibold cursor-pointer transition-colors whitespace-nowrap"
+                                            title="View Task Reports"
+                                          >
+                                            View Reports
                                           </button>
                                         )}
                                         {(userRole === 'admin' || userRole === 'project_head') && (
@@ -1360,10 +1378,110 @@ export default function Projects({ userRole, currentUserId }) {
                   {projectViewTab === 'reports' && (
                     <div className="animate-fade-in">
                       {/* Developer Progress Reports logs */}
-                      <div className="bg-white rounded-[20px] p-5 shadow-md space-y-4 overflow-hidden">
-                        <h4 className="text-[13px] font-bold text-slate-950 uppercase tracking-widest flex items-center gap-1.5">
-                          <ClipboardList size={14} /> Developer Progress Reports
-                        </h4>
+                      <div className="bg-white rounded-[20px] p-5 shadow-md space-y-4 overflow-hidden border border-slate-300">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                          <div>
+                            <h4 className="text-[14px] font-bold text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
+                              <ClipboardList size={16} className="text-orange-600" /> Developer Progress Reports
+                            </h4>
+                            <p className="text-[12px] text-slate-600 font-medium mt-0.5">
+                              Audit history of submitted progression notes for {selectedProject?.name}
+                            </p>
+                          </div>
+                          
+                          {/* ROBUST EXPORT AS CSV & PDF ACTION BUTTONS */}
+                          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const projectReports = reports.filter(r => {
+                                  const task = tasks.find(t => t.id === r.task_id);
+                                  return task && task.project_id === selectedProject?.id;
+                                });
+                                const headers = [
+                                  { label: 'S.No', key: 'sno' },
+                                  { label: 'Developer', key: 'developer' },
+                                  { label: 'Task Title', key: 'task_title' },
+                                  { label: 'Progress (%)', key: 'progress' },
+                                  { label: 'Date Submitted (dd-mm-yyyy)', key: 'date_submitted' },
+                                  { label: 'Status', key: 'status' },
+                                  { label: 'Remarks / Notes', key: 'remarks' }
+                                ];
+                                const rows = projectReports.map((r, i) => ({
+                                  sno: i + 1,
+                                  developer: r.user?.full_name || teamMembers.find(m => m.id === r.submitted_by)?.full_name || 'Developer',
+                                  task_title: r.task?.title || tasks.find(t => t.id === r.task_id)?.title || 'Task',
+                                  progress: `${r.progress ?? 0}%`,
+                                  date_submitted: formatDate(r.created_at),
+                                  status: r.status === 'approved' ? 'Approved' : 'Pending Review',
+                                  remarks: r.content || ''
+                                }));
+                                exportToCSV({
+                                  filename: `${(selectedProject?.name || 'project').toLowerCase().replace(/\s+/g, '_')}_reports.csv`,
+                                  headers,
+                                  rows
+                                });
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-900 hover:text-slate-950 border border-slate-300 hover:border-slate-400 rounded-xl text-[12px] font-semibold transition-all shadow-xs cursor-pointer active:scale-95"
+                              title="Export reports as CSV file"
+                            >
+                              <FileSpreadsheet size={14} className="text-emerald-600" />
+                              <span>Export CSV</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const projectReports = reports.filter(r => {
+                                  const task = tasks.find(t => t.id === r.task_id);
+                                  return task && task.project_id === selectedProject?.id;
+                                });
+                                const headers = [
+                                  { label: '#', align: 'center' },
+                                  { label: 'Developer', align: 'left' },
+                                  { label: 'Task Title', align: 'left' },
+                                  { label: 'Progress', align: 'center' },
+                                  { label: 'Date Submitted', align: 'center' },
+                                  { label: 'Status', align: 'center' },
+                                  { label: 'Remarks / Content', align: 'left' }
+                                ];
+                                const rows = projectReports.map((r, i) => [
+                                  i + 1,
+                                  r.user?.full_name || teamMembers.find(m => m.id === r.submitted_by)?.full_name || 'Developer',
+                                  r.task?.title || tasks.find(t => t.id === r.task_id)?.title || 'Task',
+                                  `${r.progress ?? 0}%`,
+                                  formatDate(r.created_at),
+                                  r.status === 'approved' ? 'Approved' : 'Pending Review',
+                                  r.content || '--'
+                                ]);
+                                const approvedCount = projectReports.filter(r => r.status === 'approved').length;
+                                exportToPDF({
+                                  title: `${selectedProject?.name || 'Workspace'} - Progress Reports`,
+                                  subtitle: `Detailed progression log submitted by workforce allocations`,
+                                  metadata: [
+                                    { label: 'Workspace', value: selectedProject?.name || 'N/A' },
+                                    { label: 'Client', value: clients.find(c => c.id === selectedProject?.client_id)?.company_name || 'Internal' },
+                                    { label: 'Status', value: selectedProject?.status?.toUpperCase() || 'ACTIVE' }
+                                  ],
+                                  summaryStats: [
+                                    { label: 'Total Reports', value: projectReports.length },
+                                    { label: 'Approved Sign-offs', value: approvedCount },
+                                    { label: 'Pending Evaluations', value: projectReports.length - approvedCount },
+                                    { label: 'Total Tasks', value: tasks.filter(t => t.project_id === selectedProject?.id).length }
+                                  ],
+                                  headers,
+                                  rows
+                                });
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-semibold transition-all shadow-sm shadow-orange-600/20 cursor-pointer active:scale-95"
+                              title="Generate and print/save formatted PDF"
+                            >
+                              <FileText size={14} />
+                              <span>Export PDF</span>
+                            </button>
+                          </div>
+                        </div>
+
                         <div className="max-h-96 overflow-y-auto border border-slate-300 rounded-[20px]">
                           <table className="w-full border-separate border-spacing-0">
                             <thead>
@@ -1608,22 +1726,24 @@ export default function Projects({ userRole, currentUserId }) {
 
               {/* Sub-tabs toggle */}
               <div className="flex bg-slate-100 p-1 rounded-full border border-slate-300 self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => setReportModalTab('form')}
-                  className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
-                    reportModalTab === 'form' 
-                      ? 'bg-orange-600 text-white shadow-sm' 
-                      : 'text-slate-900 hover:text-slate-950'
-                  }`}
-                >
-                  Update Report
-                </button>
+                {String(selectedTask?.assigned_to) === String(currentUserId) && (
+                  <button
+                    type="button"
+                    onClick={() => setReportModalTab('form')}
+                    className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
+                      reportModalTab === 'form' 
+                        ? 'bg-orange-600 text-white shadow-sm' 
+                        : 'text-slate-900 hover:text-slate-950'
+                    }`}
+                  >
+                    Update Report
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setReportModalTab('history')}
                   className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
-                    reportModalTab === 'history' 
+                    reportModalTab === 'history' || String(selectedTask?.assigned_to) !== String(currentUserId)
                       ? 'bg-orange-600 text-white shadow-sm' 
                       : 'text-slate-900 hover:text-slate-950'
                   }`}
@@ -1633,17 +1753,49 @@ export default function Projects({ userRole, currentUserId }) {
               </div>
             </div>
 
-            {reportModalTab === 'form' ? (
+            {reportModalTab === 'form' && String(selectedTask?.assigned_to) === String(currentUserId) ? (
               <form onSubmit={handlePostReport} className="space-y-4">
-                {/* Progress Slider and Status Dropdown Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 items-center bg-slate-50 border border-slate-300 rounded-2xl p-3.5">
-                  <div className="md:col-span-2 space-y-1.5">
-                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-900">
-                      <span>Completion Progress</span>
-                      <span className="bg-orange-100 text-orange-800 border border-orange-300 px-2 py-0.5 rounded-full text-[11px] font-bold">
-                        {reportProgress}%
+                {/* Progress Slider + Numeric Input and Status Dropdown Grid */}
+                <div className="space-y-3 bg-slate-50 border border-slate-300 rounded-2xl p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <label className="text-[12px] font-bold text-slate-950">
+                      Completion Progress (%)
+                    </label>
+
+                    {/* Numeric Input & Badge */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center bg-white border border-slate-300 rounded-xl px-2.5 py-1 focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 shadow-xs transition-all">
+                        <input
+                          type="number"
+                          min={minProgress}
+                          max={100}
+                          value={reportProgress}
+                          onChange={(e) => {
+                            let val = Number(e.target.value);
+                            if (isNaN(val)) val = minProgress;
+                            if (val > 100) val = 100;
+                            if (val < 0) val = 0;
+                            setReportProgress(val);
+                            if (val === 100) {
+                              setReportStatus('completed');
+                            } else if (val > 0) {
+                              setReportStatus('in_progress');
+                            } else {
+                              setReportStatus('todo');
+                            }
+                          }}
+                          className="w-10 text-center font-bold text-[14px] text-slate-950 bg-transparent border-0 outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-[12px] font-bold text-slate-500 select-none pl-0.5">%</span>
+                      </div>
+                      <span className="bg-orange-100 text-orange-800 border border-orange-300 px-2.5 py-1 rounded-xl text-[11px] font-bold">
+                        {reportProgress === 100 ? 'Completed' : `${reportProgress}% Logged`}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Dual Control Slider */}
+                  <div className="space-y-1.5 pt-1">
                     <input
                       type="range"
                       min={minProgress}
@@ -1663,50 +1815,67 @@ export default function Projects({ userRole, currentUserId }) {
                       }}
                       className="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-orange-600"
                     />
-                    {minProgress > 0 && (
-                      <span className="text-[10px] text-slate-900 font-medium block">
-                        * Minimum allowed: {minProgress}% (cannot decrease)
-                      </span>
-                    )}
+                    <div className="flex justify-between items-center text-[10.5px] text-slate-600 font-medium">
+                      <span>Min: {minProgress}%</span>
+                      <span>50%</span>
+                      <span>100%</span>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-900 mb-1">Task Status</label>
-                    <select
-                      value={reportStatus}
-                      onChange={(e) => {
-                        const newStatus = e.target.value;
-                        setReportStatus(newStatus);
-                        if (newStatus === 'completed') {
-                          setReportProgress(100);
-                        } else if (newStatus === 'in_progress') {
-                          if (reportProgress === 100 || reportProgress === 0) {
-                            setReportProgress(Math.max(minProgress, 50));
+                  {/* Status & Hours Spent Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-900 mb-1">Task Status</label>
+                      <select
+                        value={reportStatus}
+                        onChange={(e) => {
+                          const newStatus = e.target.value;
+                          setReportStatus(newStatus);
+                          if (newStatus === 'completed') {
+                            setReportProgress(100);
+                          } else if (newStatus === 'in_progress') {
+                            if (reportProgress === 100 || reportProgress === 0) {
+                              setReportProgress(Math.max(minProgress, 50));
+                            }
+                          } else if (newStatus === 'todo') {
+                            if (minProgress === 0) {
+                              setReportProgress(0);
+                            }
                           }
-                        } else if (newStatus === 'todo') {
-                          if (minProgress === 0) {
-                            setReportProgress(0);
-                          }
-                        }
-                      }}
-                      className="w-full bg-white border border-slate-300 rounded-full px-3 py-1.5 text-slate-950 text-[12px] font-bold focus:outline-none focus:border-orange-500"
-                    >
-                      <option value="todo">To Do</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                    </select>
+                        }}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-950 text-[12.5px] font-semibold focus:outline-none focus:border-orange-500 shadow-xs"
+                      >
+                        <option value="todo">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-900 mb-1">Hours Worked Today (Optional)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="24"
+                        step="0.5"
+                        placeholder="e.g. 6.5"
+                        value={hoursSpent}
+                        onChange={(e) => setHoursSpent(e.target.value)}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-950 text-[12.5px] font-medium focus:outline-none focus:border-orange-500 shadow-xs"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-900 mb-1">New Progress/Report Remarks *</label>
+                  <label className="block text-[11px] font-bold text-slate-950 mb-1">New Progress/Report Remarks *</label>
                   <textarea
                     required
                     rows="3"
                     value={reportContent}
                     onChange={(e) => setReportContent(e.target.value)}
                     placeholder="Describe new progress, completed sub-tasks & remarks..."
-                    className="w-full bg-white border border-slate-300 rounded-2xl px-4 py-2 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-950 text-[13px] font-medium focus:outline-none focus:border-orange-500"
                   ></textarea>
                 </div>
 
@@ -1728,6 +1897,94 @@ export default function Projects({ userRole, currentUserId }) {
               </form>
             ) : (
               <div className="space-y-4">
+                {reports.filter(r => r.task_id === selectedTask?.id).length > 0 && (
+                  <div className="flex items-center justify-between bg-slate-50 border border-slate-300 p-2.5 rounded-xl">
+                    <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                      Export Task Progress Log
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const taskReps = reports
+                            .filter(r => r.task_id === selectedTask?.id)
+                            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                          const headers = [
+                            { label: 'S.No', key: 'sno' },
+                            { label: 'Developer', key: 'developer' },
+                            { label: 'Task Title', key: 'task_title' },
+                            { label: 'Progress (%)', key: 'progress' },
+                            { label: 'Date Submitted (dd-mm-yyyy)', key: 'date' },
+                            { label: 'Status', key: 'status' },
+                            { label: 'Notes', key: 'notes' }
+                          ];
+                          const rows = taskReps.map((r, i) => ({
+                            sno: i + 1,
+                            developer: r.user?.full_name || teamMembers.find(m => m.id === r.submitted_by)?.full_name || 'Developer',
+                            task_title: selectedTask?.title || 'Task',
+                            progress: `${r.progress ?? 0}%`,
+                            date: formatDate(r.created_at),
+                            status: r.status === 'approved' ? 'Approved' : 'Pending Review',
+                            notes: r.content || ''
+                          }));
+                          exportToCSV({
+                            filename: `${(selectedTask?.title || 'task').toLowerCase().replace(/\s+/g, '_')}_history.csv`,
+                            headers,
+                            rows
+                          });
+                        }}
+                        className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 rounded-lg text-[11px] font-semibold flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                      >
+                        <FileSpreadsheet size={12} className="text-emerald-600" /> CSV
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const taskReps = reports
+                            .filter(r => r.task_id === selectedTask?.id)
+                            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                          const headers = [
+                            { label: '#', align: 'center' },
+                            { label: 'Developer', align: 'left' },
+                            { label: 'Task Title', align: 'left' },
+                            { label: 'Progress', align: 'center' },
+                            { label: 'Submitted Date', align: 'center' },
+                            { label: 'Status', align: 'center' },
+                            { label: 'Notes / Remarks', align: 'left' }
+                          ];
+                          const rows = taskReps.map((r, i) => [
+                            i + 1,
+                            r.user?.full_name || teamMembers.find(m => m.id === r.submitted_by)?.full_name || 'Developer',
+                            selectedTask?.title || 'Task',
+                            `${r.progress ?? 0}%`,
+                            formatDate(r.created_at),
+                            r.status === 'approved' ? 'Approved' : 'Pending Review',
+                            r.content || '--'
+                          ]);
+                          exportToPDF({
+                            title: `Task Report History: ${selectedTask?.title || ''}`,
+                            subtitle: `Progression milestones submitted by developer team`,
+                            metadata: [
+                              { label: 'Task', value: selectedTask?.title || 'N/A' },
+                              { label: 'Current Progress', value: `${selectedTask?.progress || 0}%` },
+                              { label: 'Project', value: selectedProject?.name || 'N/A' }
+                            ],
+                            summaryStats: [
+                              { label: 'Total Updates', value: taskReps.length },
+                              { label: 'Current Status', value: (selectedTask?.status || 'Active').toUpperCase() }
+                            ],
+                            headers,
+                            rows
+                          });
+                        }}
+                        className="px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[11px] font-semibold flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                      >
+                        <FileText size={12} /> PDF
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                   {reports
                     .filter(r => r.task_id === selectedTask?.id)

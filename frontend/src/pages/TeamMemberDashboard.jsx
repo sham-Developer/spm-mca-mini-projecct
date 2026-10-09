@@ -88,21 +88,6 @@ export default function TeamMemberDashboard({ currentUserId }) {
 
   return (
     <div className="space-y-8 animate-fade-in text-slate-950 font-sans">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-[22px] font-bold text-slate-950 tracking-tight">Developer Workspace</h2>
-          <p className="text-[13px] text-slate-900 font-normal">Track your active allocations, submit progress reports, and review completed deliverables</p>
-        </div>
-        <button
-          onClick={() => navigate('/member/leaves')}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-400 hover:bg-slate-100 text-slate-950 rounded-xl text-[13px] font-semibold transition-all shadow-sm cursor-pointer self-start sm:self-auto"
-        >
-          <CalendarCheck size={16} className="text-orange-600 stroke-[2.5]" />
-          <span>Leaves & Permissions</span>
-        </button>
-      </div>
-
       {/* Team member KPI overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {/* My Assigned Tasks */}
@@ -153,9 +138,18 @@ export default function TeamMemberDashboard({ currentUserId }) {
       {/* Task progression list */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
-          <div>
-            <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">My Deliverables</h3>
-            <p className="text-[12px] text-slate-900 font-medium">Review specifications and report progressions of assigned workflows</p>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">My Deliverables</h3>
+              <p className="text-[12px] text-slate-900 font-medium">Review specifications and report progressions of assigned workflows</p>
+            </div>
+            <button
+              onClick={() => navigate('/member/leaves')}
+              className="flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-400 hover:bg-slate-100 text-slate-950 rounded-xl text-[12.5px] font-semibold transition-all shadow-sm cursor-pointer"
+            >
+              <CalendarCheck size={15} className="text-orange-600 stroke-[2.5]" />
+              <span>Leaves & Permissions</span>
+            </button>
           </div>
 
         <div className="bg-white rounded-[20px] overflow-hidden shadow-md">

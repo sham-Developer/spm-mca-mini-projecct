@@ -139,6 +139,42 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
     }
   };
 
+  const handleUpdatePreferences = async (newMode, newNotes) => {
+    if (!user?.id) return;
+    const mode = newMode !== undefined ? newMode : attWorkMode;
+    const notes = newNotes !== undefined ? newNotes : attNotes;
+    
+    // Only persist if there's already an active record or mode/notes changed
+    if (todayAttendance) {
+      try {
+        const payload = {
+          user_id: user.id,
+          date: todayDateStr,
+          status: todayAttendance.status || 'present',
+          work_mode: mode,
+          notes: notes,
+          check_in: todayAttendance.check_in,
+          check_out: todayAttendance.check_out,
+          morning_in: todayAttendance.morning_in,
+          morning_out: todayAttendance.morning_out,
+          afternoon_in: todayAttendance.afternoon_in,
+          afternoon_out: todayAttendance.afternoon_out,
+        };
+        const res = await fetch(`${API_URL}/attendance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const record = await res.json();
+          setTodayAttendance(record);
+        }
+      } catch (err) {
+        console.error('Failed to sync preferences:', err);
+      }
+    }
+  };
+
   // Sync profile data when prop changes
   useEffect(() => {
     if (user) {
@@ -212,19 +248,67 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
 
   const formatTimeAgo = (dateString) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-    if (seconds < 60) return 'Just now';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const seconds = Math.floor((now - date) / 1000);
+      if (seconds < 60) return 'Just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      let hrs = date.getHours();
+      const ampm = hrs >= 12 ? 'PM' : 'AM';
+      hrs = hrs % 12;
+      hrs = hrs ? hrs : 12;
+      const mins = String(date.getMinutes()).padStart(2, '0');
+      return `${day}-${month}-${year} ${hrs}:${mins} ${ampm}`;
+    } catch {
+      return '';
+    }
+  };
+
+  // Cleans up any long raw Date strings in notification body like "Fri Oct 09 2026 00:00:00 GMT+0530..." into "09-10-2026"
+  const formatNotificationMessage = (msg) => {
+    if (!msg || typeof msg !== 'string') return '';
+    return msg.replace(
+      /[A-Z][a-z]{2}\s[A-Z][a-z]{2}\s\d{1,2}\s\d{4}\s\d{2}:\d{2}:\d{2}\sGMT[+-]\d{4}\s\([^)]+\)/g,
+      (match) => {
+        try {
+          const d = new Date(match);
+          if (isNaN(d.getTime())) return match;
+          const day = String(d.getDate()).padStart(2, '0');
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const year = d.getFullYear();
+          return `${day}-${month}-${year}`;
+        } catch {
+          return match;
+        }
+      }
+    ).replace(
+      /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?/g,
+      (match) => {
+        try {
+          const d = new Date(match);
+          if (isNaN(d.getTime())) return match;
+          const day = String(d.getDate()).padStart(2, '0');
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const year = d.getFullYear();
+          let hrs = d.getHours();
+          const ampm = hrs >= 12 ? 'PM' : 'AM';
+          hrs = hrs % 12;
+          hrs = hrs ? hrs : 12;
+          const mins = String(d.getMinutes()).padStart(2, '0');
+          return `${day}-${month}-${year} ${hrs}:${mins} ${ampm}`;
+        } catch {
+          return match;
+        }
+      }
+    );
   };
 
   const formatDateToDMY = (dateStr) => {
@@ -417,7 +501,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                           </span>
                         </div>
                         <p className="text-[11.5px] text-slate-900 font-normal mt-1 leading-normal">
-                          {notif.message}
+                          {formatNotificationMessage(notif.message)}
                         </p>
                       </div>
                     ))}
@@ -852,6 +936,52 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                 )}
               </div>
 
+              {/* WORK MODE AND NOTES PREFERENCES (CONFIGURED BEFORE PUNCHING) */}
+              <div className="bg-white border border-slate-300 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <span className="text-[12px] font-bold text-slate-950 uppercase tracking-wider">
+                    Work Mode & Session Notes
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    Applies to your punches
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-[12px] font-medium text-slate-900 mb-1">
+                      Work Mode
+                    </label>
+                    <select
+                      value={attWorkMode}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAttWorkMode(val);
+                        handleUpdatePreferences(val, attNotes);
+                      }}
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-[13px] font-medium text-slate-950 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all cursor-pointer"
+                    >
+                      <option value="office">In Office (On-site)</option>
+                      <option value="remote">Remote / Work from Home</option>
+                      <option value="hybrid">Client Site / Hybrid</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-medium text-slate-900 mb-1">
+                      Session Notes (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Client meeting, sprint demo..."
+                      value={attNotes}
+                      onChange={(e) => setAttNotes(e.target.value)}
+                      onBlur={() => handleUpdatePreferences(attWorkMode, attNotes)}
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-[13px] font-normal text-slate-950 placeholder:text-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* SHIFT & SESSION PUNCHES */}
               <div className="space-y-3.5">
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -859,8 +989,8 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                     <h4 className="text-[14.5px] font-bold text-slate-950 tracking-tight">
                       Shift & Session Punches
                     </h4>
-                    <p className="text-[12px] text-slate-900 font-normal mt-0.5">
-                      Mark arrival and exit timestamps for morning and afternoon shifts
+                    <p className="text-[12px] text-slate-600 font-normal mt-0.5">
+                      Mark arrival and exit timestamps freely at any time during your work day
                     </p>
                   </div>
                   <span className="text-[11.5px] font-medium text-orange-950 bg-orange-100 border border-orange-300 px-2.5 py-0.5 rounded-lg">
@@ -878,8 +1008,8 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                         </div>
                         <span>Morning Session</span>
                       </div>
-                      <span className="text-[11px] font-medium text-orange-950 bg-orange-100 border border-orange-300 px-2.5 py-0.5 rounded-md">
-                        9 AM - 1 PM
+                      <span className="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+                        Flexible Timing
                       </span>
                     </div>
 
@@ -937,8 +1067,8 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                         </div>
                         <span>Afternoon Session</span>
                       </div>
-                      <span className="text-[11px] font-medium text-orange-950 bg-orange-100 border border-orange-300 px-2.5 py-0.5 rounded-md">
-                        2 PM - 6 PM
+                      <span className="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+                        Flexible Timing
                       </span>
                     </div>
 
@@ -986,37 +1116,6 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       </button>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* WORK MODE AND NOTES PREFERENCES */}
-              <div className="pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[12px] font-medium text-slate-950 mb-1">
-                    Work Mode
-                  </label>
-                  <select
-                    value={attWorkMode}
-                    onChange={(e) => setAttWorkMode(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-[13px] font-normal text-slate-950 focus:outline-none focus:border-orange-600 transition-colors"
-                  >
-                    <option value="office">In Office (On-site)</option>
-                    <option value="remote">Remote / Work from Home</option>
-                    <option value="hybrid">Client Site / Hybrid</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[12px] font-medium text-slate-950 mb-1">
-                    Session Notes (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Client meeting, sprint demo..."
-                    value={attNotes}
-                    onChange={(e) => setAttNotes(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-[13px] font-normal text-slate-950 placeholder:text-slate-500 focus:outline-none focus:border-orange-600 transition-colors"
-                  />
                 </div>
               </div>
             </div>

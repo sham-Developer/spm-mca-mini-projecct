@@ -848,11 +848,21 @@ app.get('/api/reports', async (req, res) => {
     try {
       const result = await pool.query(`
         SELECT r.*, 
-        row_to_json(t) as task, 
-        row_to_json(u) as user 
+        row_to_json(u) as user,
+        json_build_object(
+          'id', t.id,
+          'title', t.title,
+          'description', t.description,
+          'status', t.status,
+          'progress', t.progress,
+          'project_id', t.project_id,
+          'project', row_to_json(p)
+        ) as task
         FROM reports r 
         LEFT JOIN tasks t ON r.task_id = t.id 
+        LEFT JOIN projects p ON t.project_id = p.id
         LEFT JOIN users u ON r.submitted_by = u.id
+        ORDER BY r.created_at DESC
       `);
       return res.json(result.rows);
     } catch (err) {
@@ -860,11 +870,15 @@ app.get('/api/reports', async (req, res) => {
     }
   }
 
-  const mapped = reportsStore.map(r => ({
-    ...r,
-    task: tasksStore.find(t => t.id === r.task_id),
-    user: usersStore.find(u => u.id === r.submitted_by)
-  }));
+  const mapped = reportsStore.map(r => {
+    const taskObj = tasksStore.find(t => t.id === r.task_id);
+    const projectObj = taskObj ? projectsStore.find(p => p.id === taskObj.project_id) : null;
+    return {
+      ...r,
+      task: taskObj ? { ...taskObj, project: projectObj } : null,
+      user: usersStore.find(u => u.id === r.submitted_by)
+    };
+  }).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
   res.json(mapped);
 });
 
@@ -1238,16 +1252,45 @@ app.post('/api/leaves', async (req, res) => {
 // 5. Approve / Reject Leave Request
 app.put('/api/leaves/:id', async (req, res) => {
   const { id } = req.params;
-  const { status, reviewed_by } = req.body;
+  const { status, reviewed_by, remarks } = req.body;
 
   if (isDbConfigured && pool) {
     try {
+      // Ensure remarks column exists
+      try {
+        await pool.query(`ALTER TABLE leaves ADD COLUMN IF NOT EXISTS remarks TEXT;`);
+      } catch (e) {
+        // Ignore if exists
+      }
+
       const result = await pool.query(`
-        UPDATE leaves SET status = $1, reviewed_by = $2 WHERE id = $3 RETURNING *
-      `, [status, reviewed_by || null, id]);
+        UPDATE leaves 
+        SET status = $1, reviewed_by = $2, remarks = $3 
+        WHERE id = $4 RETURNING *
+      `, [status, reviewed_by || null, remarks || null, id]);
       if (result.rows.length > 0) {
         const leave = result.rows[0];
-        await createNotification(leave.user_id, `Leave Request ${status === 'approved' ? 'Approved' : 'Rejected'}`, `Your leave/permission request for ${leave.start_date} was ${status}.`);
+        const remarksMsg = remarks ? ` Remarks: "${remarks}"` : '';
+        const formatLeaveDate = (d) => {
+          if (!d) return '';
+          try {
+            const raw = typeof d === 'string' ? d : new Date(d).toISOString().split('T')[0];
+            const clean = raw.includes('T') ? raw.split('T')[0] : raw;
+            const parts = clean.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+              return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return clean;
+          } catch {
+            return String(d).split('T')[0];
+          }
+        };
+        const displayDate = formatLeaveDate(leave.start_date);
+        await createNotification(
+          leave.user_id, 
+          `Leave Request ${status === 'approved' ? 'Approved' : 'Rejected'}`, 
+          `Your leave/permission request for ${displayDate} was ${status}.${remarksMsg}`
+        );
         return res.json(leave);
       }
     } catch (err) {
@@ -1257,8 +1300,33 @@ app.put('/api/leaves/:id', async (req, res) => {
 
   const idx = leavesStore.findIndex(l => String(l.id) === String(id));
   if (idx !== -1) {
-    leavesStore[idx] = { ...leavesStore[idx], status, reviewed_by: reviewed_by || null };
-    createNotification(leavesStore[idx].user_id, `Leave Request ${status === 'approved' ? 'Approved' : 'Rejected'}`, `Your leave/permission request was ${status}.`);
+    leavesStore[idx] = { 
+      ...leavesStore[idx], 
+      status, 
+      reviewed_by: reviewed_by || null,
+      remarks: remarks || null
+    };
+    const remarksMsg = remarks ? ` Remarks: "${remarks}"` : '';
+    const formatLeaveDate = (d) => {
+      if (!d) return '';
+      try {
+        const raw = typeof d === 'string' ? d : new Date(d).toISOString().split('T')[0];
+        const clean = raw.includes('T') ? raw.split('T')[0] : raw;
+        const parts = clean.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+          return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return clean;
+      } catch {
+        return String(d).split('T')[0];
+      }
+    };
+    const displayDate = formatLeaveDate(leavesStore[idx].start_date);
+    createNotification(
+      leavesStore[idx].user_id, 
+      `Leave Request ${status === 'approved' ? 'Approved' : 'Rejected'}`, 
+      `Your leave/permission request for ${displayDate} was ${status}.${remarksMsg}`
+    );
     return res.json(leavesStore[idx]);
   }
   res.status(404).json({ error: 'Leave request not found' });
