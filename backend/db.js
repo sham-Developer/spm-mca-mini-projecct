@@ -11,7 +11,9 @@ if (isDbConfigured) {
     connectionString: databaseUrl,
     ssl: {
       rejectUnauthorized: false
-    }
+    },
+    connectionTimeoutMillis: 3000, // Fail fast in 3s if Supabase host is unreachable
+    idleTimeoutMillis: 10000
   });
 
   // Prevent uncaught ECONNRESET / idle disconnect exceptions from crashing the node process

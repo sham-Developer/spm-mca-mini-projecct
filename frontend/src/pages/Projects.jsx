@@ -27,10 +27,13 @@ import {
   Download,
   FileSpreadsheet,
   FileText
-} from 'lucide-react';
+} from '../components/Iconify';
 import API_URL from '../config';
 import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 import { useUI } from '../components/UIProvider';
+import { TableSkeleton } from '../components/Skeleton';
+import { cachedFetch, invalidateClientCache } from '../utils/clientCache';
+import { getSocket } from '../socket';
 
 export default function Projects({ userRole, currentUserId }) {
   const { showToast } = useUI();
@@ -207,20 +210,20 @@ export default function Projects({ userRole, currentUserId }) {
   const loadAllData = async () => {
     try {
       const [projRes, clientRes, userRes, taskRes, reqRes, reportRes] = await Promise.all([
-        fetch(`${API_URL}/projects`),
-        fetch(`${API_URL}/clients`),
-        fetch(`${API_URL}/users`),
-        fetch(`${API_URL}/tasks`),
-        fetch(`${API_URL}/deadline-requests`),
-        fetch(`${API_URL}/reports`)
+        cachedFetch(`${API_URL}/projects`),
+        cachedFetch(`${API_URL}/clients`),
+        cachedFetch(`${API_URL}/users`),
+        cachedFetch(`${API_URL}/tasks`),
+        cachedFetch(`${API_URL}/deadline-requests`),
+        cachedFetch(`${API_URL}/reports`)
       ]);
 
-      const projData = await projRes.json();
-      const clientData = await clientRes.json();
-      const userData = await userRes.json();
-      const taskData = await taskRes.json();
-      const reqData = await reqRes.json();
-      const reportData = await reportRes.json();
+      const projData = projRes.data || [];
+      const clientData = clientRes.data || [];
+      const userData = userRes.data || [];
+      const taskData = taskRes.data || [];
+      const reqData = reqRes.data || [];
+      const reportData = reportRes.data || [];
 
       setProjects(projData);
       setClients(clientData.filter(c => c.status === 'onboarded' || c.status === 'onboard'));
@@ -255,6 +258,19 @@ export default function Projects({ userRole, currentUserId }) {
 
   useEffect(() => {
     loadAllData();
+
+    // Real-time synchronization
+    const socket = getSocket();
+    const handleDbChange = (event) => {
+      if (['projects', 'tasks', 'deadline_requests', 'reports', 'clients', 'users'].includes(event?.type)) {
+        invalidateClientCache();
+        loadAllData();
+      }
+    };
+    socket.on('db_changed', handleDbChange);
+    return () => {
+      socket.off('db_changed', handleDbChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -586,7 +602,7 @@ export default function Projects({ userRole, currentUserId }) {
                     isSelected 
                       ? 'bg-slate-700 text-white' 
                       : tab.id === 'active' && tab.count > 0 
-                      ? 'bg-emerald-100 text-emerald-950 font-bold' 
+                      ? 'bg-emerald-100 text-emerald-950 font-semibold' 
                       : 'bg-slate-100 text-slate-900'
                   }`}>
                     {tab.count}
@@ -613,7 +629,7 @@ export default function Projects({ userRole, currentUserId }) {
           <div className="w-full max-w-4xl bg-white border border-slate-400 rounded-2xl p-6 shadow-xl max-h-[90vh] overflow-y-auto space-y-6">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-[18px] font-bold text-slate-950">
+                <h3 className="text-[18px] font-semibold text-slate-950">
                   {editingProject ? `Edit Workspace Parameters: ${editingProject.name}` : 'Onboard Corporate Workspace'}
                 </h3>
                 <p className="text-[13px] text-slate-900 font-medium">
@@ -811,7 +827,7 @@ export default function Projects({ userRole, currentUserId }) {
                   <select
                     value={projectStatus}
                     onChange={(e) => setProjectStatus(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[12px] font-bold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    className="w-full bg-white border border-slate-300 rounded-full px-3.5 py-1.5 text-slate-950 text-[12px] font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   >
                     <option value="planning">Planning</option>
                     <option value="active">Active</option>
@@ -884,7 +900,7 @@ export default function Projects({ userRole, currentUserId }) {
                 <button
                   type="button"
                   onClick={resetProjectForm}
-                  className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
+                  className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-semibold border border-slate-300 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -901,9 +917,7 @@ export default function Projects({ userRole, currentUserId }) {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
-        </div>
+        <TableSkeleton rows={6} cols={8} />
       ) : (
         <>
           {/* ========================================================= */}
@@ -1032,21 +1046,21 @@ export default function Projects({ userRole, currentUserId }) {
               {/* PAGINATION PANEL */}
               {displayedProjects.length > 5 && (
                 <div className="p-4 border-t border-slate-300 bg-slate-50 flex items-center justify-between">
-                  <span className="text-[12px] text-slate-900 font-bold">
+                  <span className="text-[12px] text-slate-900 font-semibold">
                     Showing Page {projectsCurrentPage} of {Math.ceil(displayedProjects.length / projectsItemsPerPage)}
                   </span>
                   <div className="flex gap-2">
                     <button
                       disabled={projectsCurrentPage === 1}
                       onClick={() => setProjectsCurrentPage(projectsCurrentPage - 1)}
-                      className="px-3 py-1 bg-white border border-slate-400 rounded text-[12px] font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1 bg-white border border-slate-400 rounded text-[12px] font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                     >
                       Prev
                     </button>
                     <button
                       disabled={projectsCurrentPage >= Math.ceil(displayedProjects.length / projectsItemsPerPage)}
                       onClick={() => setProjectsCurrentPage(projectsCurrentPage + 1)}
-                      className="px-3 py-1 bg-white border border-slate-400 rounded text-[12px] font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1 bg-white border border-slate-400 rounded text-[12px] font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                     >
                       Next
                     </button>
@@ -1158,7 +1172,7 @@ export default function Projects({ userRole, currentUserId }) {
                       {/* Name & Priority badge */}
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-[18px] font-bold text-slate-950">{selectedProject.name}</h3>
+                          <h3 className="text-[18px] font-semibold text-slate-950">{selectedProject.name}</h3>
                           <span className="text-[10px] uppercase tracking-wider text-orange-950 font-medium bg-orange-100 border border-orange-300 px-2 py-0.5 rounded">
                             {selectedProject.priority || 'Medium'}
                           </span>
@@ -1381,7 +1395,7 @@ export default function Projects({ userRole, currentUserId }) {
                       <div className="bg-white rounded-[20px] p-5 shadow-md space-y-4 overflow-hidden border border-slate-300">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
                           <div>
-                            <h4 className="text-[14px] font-bold text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
+                            <h4 className="text-[14px] font-semibold text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
                               <ClipboardList size={16} className="text-orange-600" /> Developer Progress Reports
                             </h4>
                             <p className="text-[12px] text-slate-600 font-medium mt-0.5">
@@ -1565,7 +1579,7 @@ export default function Projects({ userRole, currentUserId }) {
                     </button>
 
                     <div className="mb-4 pr-8">
-                      <h3 className="text-[18px] font-bold text-slate-950">
+                      <h3 className="text-[18px] font-semibold text-slate-950">
                         {editingTask ? 'Modify Task Details' : 'Add / Edit Task'}
                       </h3>
                       <p className="text-[12px] text-slate-900">Fill in task parameters and developer assignments</p>
@@ -1589,7 +1603,7 @@ export default function Projects({ userRole, currentUserId }) {
                             required
                             value={assignedTo}
                             onChange={(e) => setAssignedTo(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-full px-4 py-1.5 text-slate-950 text-[13px] font-bold focus:outline-none"
+                            className="w-full bg-white border border-slate-300 rounded-full px-4 py-1.5 text-slate-950 text-[13px] font-semibold focus:outline-none"
                           >
                             <option value="">Select Team Member</option>
                             {teamMembers.map(tm => <option key={tm.id} value={tm.id}>{tm.full_name}</option>)}
@@ -1632,7 +1646,7 @@ export default function Projects({ userRole, currentUserId }) {
                         <button
                           type="button"
                           onClick={() => { setShowTaskForm(false); setEditingTask(null); }}
-                          className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
+                          className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-semibold border border-slate-300 cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -1658,7 +1672,7 @@ export default function Projects({ userRole, currentUserId }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-md bg-white border border-slate-400 rounded-2xl p-6 space-y-6 shadow-xl">
             <div>
-              <h3 className="text-[18px] font-bold text-slate-950">Request Deadline Change</h3>
+              <h3 className="text-[18px] font-semibold text-slate-950">Request Deadline Change</h3>
               <p className="text-[13px] text-slate-900 font-medium">Provide rationale for extension requests</p>
             </div>
             <form onSubmit={handleRequestDeadline} className="space-y-4">
@@ -1696,7 +1710,7 @@ export default function Projects({ userRole, currentUserId }) {
                 <button
                   type="button"
                   onClick={() => setIsRequestModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-855 rounded-xl text-[14px] font-bold border border-slate-400 cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-855 rounded-xl text-[14px] font-semibold border border-slate-400 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1718,7 +1732,7 @@ export default function Projects({ userRole, currentUserId }) {
           <div className="w-full max-w-xl bg-white border border-slate-400 rounded-2xl p-6 space-y-5 shadow-2xl animate-scale-up text-slate-950">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3.5">
               <div>
-                <h3 className="text-[17px] font-bold text-slate-950">
+                <h3 className="text-[17px] font-semibold text-slate-950">
                   {selectedTask ? `Progress Report: ${selectedTask.title}` : 'Submit Task Progress Report'}
                 </h3>
                 <p className="text-[12px] text-slate-900 font-medium">Log new progression updates or inspect previous report logs</p>
@@ -1730,7 +1744,7 @@ export default function Projects({ userRole, currentUserId }) {
                   <button
                     type="button"
                     onClick={() => setReportModalTab('form')}
-                    className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
+                    className={`px-3 py-1 text-[11px] font-semibold rounded-full transition-all cursor-pointer ${
                       reportModalTab === 'form' 
                         ? 'bg-orange-600 text-white shadow-sm' 
                         : 'text-slate-900 hover:text-slate-950'
@@ -1742,7 +1756,7 @@ export default function Projects({ userRole, currentUserId }) {
                 <button
                   type="button"
                   onClick={() => setReportModalTab('history')}
-                  className={`px-3 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
+                  className={`px-3 py-1 text-[11px] font-semibold rounded-full transition-all cursor-pointer ${
                     reportModalTab === 'history' || String(selectedTask?.assigned_to) !== String(currentUserId)
                       ? 'bg-orange-600 text-white shadow-sm' 
                       : 'text-slate-900 hover:text-slate-950'
@@ -1758,7 +1772,7 @@ export default function Projects({ userRole, currentUserId }) {
                 {/* Progress Slider + Numeric Input and Status Dropdown Grid */}
                 <div className="space-y-3 bg-slate-50 border border-slate-300 rounded-2xl p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <label className="text-[12px] font-bold text-slate-950">
+                    <label className="text-[12px] font-semibold text-slate-950">
                       Completion Progress (%)
                     </label>
 
@@ -1784,11 +1798,11 @@ export default function Projects({ userRole, currentUserId }) {
                               setReportStatus('todo');
                             }
                           }}
-                          className="w-10 text-center font-bold text-[14px] text-slate-950 bg-transparent border-0 outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-10 text-center font-semibold text-[14px] text-slate-950 bg-transparent border-0 outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
-                        <span className="text-[12px] font-bold text-slate-500 select-none pl-0.5">%</span>
+                        <span className="text-[12px] font-semibold text-slate-500 select-none pl-0.5">%</span>
                       </div>
-                      <span className="bg-orange-100 text-orange-800 border border-orange-300 px-2.5 py-1 rounded-xl text-[11px] font-bold">
+                      <span className="bg-orange-100 text-orange-800 border border-orange-300 px-2.5 py-1 rounded-xl text-[11px] font-semibold">
                         {reportProgress === 100 ? 'Completed' : `${reportProgress}% Logged`}
                       </span>
                     </div>
@@ -1868,7 +1882,7 @@ export default function Projects({ userRole, currentUserId }) {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-950 mb-1">New Progress/Report Remarks *</label>
+                  <label className="block text-[11px] font-semibold text-slate-950 mb-1">New Progress/Report Remarks *</label>
                   <textarea
                     required
                     rows="3"
@@ -1883,7 +1897,7 @@ export default function Projects({ userRole, currentUserId }) {
                   <button
                     type="button"
                     onClick={() => setIsReportModalOpen(false)}
-                    className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
+                    className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-full text-[13px] font-semibold border border-slate-300 cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -1899,7 +1913,7 @@ export default function Projects({ userRole, currentUserId }) {
               <div className="space-y-4">
                 {reports.filter(r => r.task_id === selectedTask?.id).length > 0 && (
                   <div className="flex items-center justify-between bg-slate-50 border border-slate-300 p-2.5 rounded-xl">
-                    <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                    <span className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide">
                       Export Task Progress Log
                     </span>
                     <div className="flex items-center gap-2">
@@ -1992,14 +2006,14 @@ export default function Projects({ userRole, currentUserId }) {
                     .map((rep, idx) => (
                       <div key={rep.id || idx} className="bg-slate-50 border border-slate-300 rounded-2xl p-4 space-y-2 shadow-sm">
                         <div className="flex justify-between items-center flex-wrap gap-2 text-[12px]">
-                          <span className="font-bold text-slate-950">
+                          <span className="font-semibold text-slate-950">
                             {rep.user?.full_name || teamMembers.find(m => m.id === rep.submitted_by)?.full_name || 'Developer'}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="bg-orange-100 text-orange-850 font-bold px-2.5 py-0.5 rounded-full text-[11px] border border-orange-300">
+                            <span className="bg-orange-100 text-orange-850 font-semibold px-2.5 py-0.5 rounded-full text-[11px] border border-orange-300">
                               {rep.progress ?? (selectedTask?.progress || 0)}% Progress
                             </span>
-                            <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                            <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
                               rep.status === 'approved' 
                                 ? 'bg-emerald-100 border-emerald-400 text-emerald-950'
                                 : 'bg-amber-100 border-amber-400 text-amber-950'
@@ -2028,7 +2042,7 @@ export default function Projects({ userRole, currentUserId }) {
                   <button
                     type="button"
                     onClick={() => setIsReportModalOpen(false)}
-                    className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-full text-[13px] font-bold border border-slate-300 cursor-pointer"
+                    className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-full text-[13px] font-semibold border border-slate-300 cursor-pointer"
                   >
                     Close
                   </button>
@@ -2044,15 +2058,15 @@ export default function Projects({ userRole, currentUserId }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-2xl bg-white border border-slate-400 rounded-2xl p-6 space-y-6 shadow-xl">
             <div>
-              <h3 className="text-[18px] font-bold text-slate-950">Evaluate Extension Requests</h3>
+              <h3 className="text-[18px] font-semibold text-slate-950">Evaluate Extension Requests</h3>
               <p className="text-[13px] text-slate-900 font-medium">Approve or decline timeline change requests</p>
             </div>
             <div className="max-h-96 overflow-y-auto space-y-3">
               {deadlineRequests.filter(r => r.status === 'pending').map((req) => (
                 <div key={req.id} className="p-4 bg-slate-50 rounded-xl border border-slate-400 flex flex-col sm:flex-row justify-between items-start gap-4">
                   <div className="space-y-1 max-w-md">
-                    <span className="text-[12px] font-bold text-slate-900">Task ID: {req.task_id}</span>
-                    <h5 className="text-[14px] font-bold text-slate-950">Task: {req.task?.title}</h5>
+                    <span className="text-[12px] font-semibold text-slate-900">Task ID: {req.task_id}</span>
+                    <h5 className="text-[14px] font-semibold text-slate-950">Task: {req.task?.title}</h5>
                     <p className="text-[13px] text-slate-900 font-medium italic">"Reason: {req.reason}"</p>
                     <div className="flex gap-4 text-[12px] text-slate-900 font-semibold pt-1">
                       <span>Current: {req.current_end_date}</span>
@@ -2062,13 +2076,13 @@ export default function Projects({ userRole, currentUserId }) {
                   <div className="flex gap-2 self-end sm:self-start">
                     <button
                       onClick={() => handleRejectDeadline(req.id)}
-                      className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-lg text-[12px] font-bold cursor-pointer"
+                      className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-lg text-[12px] font-semibold cursor-pointer"
                     >
                       Decline
                     </button>
                     <button
                       onClick={() => handleApproveDeadline(req.id, req.task_id, req.requested_end_date)}
-                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[12px] font-bold border border-emerald-300 shadow-sm cursor-pointer"
+                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[12px] font-semibold border border-emerald-300 shadow-sm cursor-pointer"
                     >
                       Approve
                     </button>
@@ -2082,7 +2096,7 @@ export default function Projects({ userRole, currentUserId }) {
             <div className="flex justify-end pt-4">
               <button
                 onClick={() => setIsReviewRequestsModalOpen(false)}
-                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-855 rounded-xl text-[14px] font-bold border border-slate-400 cursor-pointer"
+                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-855 rounded-xl text-[14px] font-semibold border border-slate-400 cursor-pointer"
               >
                 Close Window
               </button>
@@ -2098,7 +2112,7 @@ export default function Projects({ userRole, currentUserId }) {
             <div className="flex items-start gap-3">
               <AlertCircle className="text-red-650 shrink-0 mt-0.5" size={24} />
               <div>
-                <h3 className="text-[18px] font-bold text-slate-950">Confirm Project Deletion</h3>
+                <h3 className="text-[18px] font-semibold text-slate-950">Confirm Project Deletion</h3>
                 <p className="text-[13px] text-slate-900 font-normal mt-1">
                   You are about to delete <strong>{projectToDelete.name}</strong>. This will delete all tasks and reports associated with this workspace permanently.
                 </p>
@@ -2107,7 +2121,7 @@ export default function Projects({ userRole, currentUserId }) {
 
             <div className="space-y-3">
               <label className="block text-[12px] font-medium text-slate-900">
-                To confirm, type <span className="font-bold text-red-700">I confirm to delete this project</span> in the input below:
+                To confirm, type <span className="font-semibold text-red-700">I confirm to delete this project</span> in the input below:
               </label>
               <input
                 type="text"
@@ -2122,7 +2136,7 @@ export default function Projects({ userRole, currentUserId }) {
               <button
                 type="button"
                 onClick={() => { setIsDeleteModalOpen(false); setProjectToDelete(null); setDeleteConfirmText(''); }}
-                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-xl text-[13px] font-bold border border-slate-300 cursor-pointer"
+                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-xl text-[13px] font-semibold border border-slate-300 cursor-pointer"
               >
                 Cancel
               </button>
@@ -2130,7 +2144,7 @@ export default function Projects({ userRole, currentUserId }) {
                 type="button"
                 onClick={handleConfirmDeleteProject}
                 disabled={deleteConfirmText !== "I confirm to delete this project"}
-                className="px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-[13px] font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-[13px] font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Permanently Delete Project
               </button>

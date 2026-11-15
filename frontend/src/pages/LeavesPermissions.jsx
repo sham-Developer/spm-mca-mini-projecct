@@ -15,7 +15,7 @@ import {
   User,
   ShieldCheck,
   ChevronRight
-} from 'lucide-react';
+} from '../components/Iconify';
 import API_URL from '../config';
 import { useUI } from '../components/UIProvider';
 
@@ -212,7 +212,7 @@ export default function LeavesPermissions({ user }) {
         <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-[11.5px] font-medium text-slate-900 uppercase tracking-wider block">Total Applied</span>
-            <span className="text-[22px] font-bold text-slate-950">{myLeaves.length}</span>
+            <span className="text-[22px] font-semibold text-slate-950">{myLeaves.length}</span>
           </div>
           <div className="p-2.5 bg-slate-100 rounded-lg text-slate-900 border border-slate-300">
             <Calendar size={19} />
@@ -222,7 +222,7 @@ export default function LeavesPermissions({ user }) {
         <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-[11.5px] font-medium text-amber-900 uppercase tracking-wider block">Pending Approval</span>
-            <span className="text-[22px] font-bold text-amber-950">{myPendingCount}</span>
+            <span className="text-[22px] font-semibold text-amber-950">{myPendingCount}</span>
           </div>
           <div className="p-2.5 bg-amber-50 rounded-lg text-amber-900 border border-amber-300">
             <Clock size={19} />
@@ -232,7 +232,7 @@ export default function LeavesPermissions({ user }) {
         <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-[11.5px] font-medium text-emerald-900 uppercase tracking-wider block">Approved</span>
-            <span className="text-[22px] font-bold text-emerald-950">{myApprovedCount}</span>
+            <span className="text-[22px] font-semibold text-emerald-950">{myApprovedCount}</span>
           </div>
           <div className="p-2.5 bg-emerald-50 rounded-lg text-emerald-900 border border-emerald-300">
             <CheckCircle2 size={19} />
@@ -242,7 +242,7 @@ export default function LeavesPermissions({ user }) {
         <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-[11.5px] font-medium text-red-900 uppercase tracking-wider block">Rejected</span>
-            <span className="text-[22px] font-bold text-red-950">{myRejectedCount}</span>
+            <span className="text-[22px] font-semibold text-red-950">{myRejectedCount}</span>
           </div>
           <div className="p-2.5 bg-red-50 rounded-lg text-red-900 border border-red-300">
             <XCircle size={19} />
@@ -322,7 +322,7 @@ export default function LeavesPermissions({ user }) {
         <div className="bg-white rounded-xl border border-slate-400 overflow-hidden shadow-md">
           <div className="p-4 border-b border-slate-300 bg-slate-50 flex items-center justify-between">
             <div>
-              <h3 className="text-[16px] font-bold text-slate-950">My Request History</h3>
+              <h3 className="text-[16px] font-semibold text-slate-950">My Request History</h3>
               <p className="text-[12px] text-slate-900 font-normal">Real-time status of your permissions and leave applications</p>
             </div>
             <span className="text-[12px] font-medium text-slate-900">
@@ -424,7 +424,7 @@ export default function LeavesPermissions({ user }) {
         <div className="bg-white rounded-xl border border-slate-400 overflow-hidden shadow-md">
           <div className="p-4 border-b border-slate-300 bg-slate-50 flex items-center justify-between">
             <div>
-              <h3 className="text-[16px] font-bold text-slate-950">
+              <h3 className="text-[16px] font-semibold text-slate-950">
                 {isProjectHead ? 'Subordinates & Project Team Members History' : 'All Organization Employee Applications'}
               </h3>
               <p className="text-[12px] text-slate-900 font-normal">
@@ -579,7 +579,7 @@ export default function LeavesPermissions({ user }) {
             </button>
 
             <div>
-              <h3 className="text-[18px] font-bold text-slate-950">Apply Leave or Permission</h3>
+              <h3 className="text-[18px] font-semibold text-slate-950">Apply Leave or Permission</h3>
               <p className="text-[12px] text-slate-900 font-normal">
                 Submits request directly to executive administration for approval
               </p>
@@ -694,7 +694,7 @@ export default function LeavesPermissions({ user }) {
                   {reviewTarget.status === 'approved' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">
+                  <h3 className="text-[17px] font-semibold text-slate-950 tracking-tight">
                     {reviewTarget.status === 'approved' ? 'Approve Leave Application' : 'Reject Leave Application'}
                   </h3>
                   <p className="text-[12px] text-slate-700 font-normal">
@@ -715,7 +715,7 @@ export default function LeavesPermissions({ user }) {
             <div className="bg-slate-50 border border-slate-300 rounded-xl p-3.5 space-y-2 text-[12.5px]">
               <div className="flex justify-between items-center">
                 <span className="text-slate-600 font-medium">Applicant:</span>
-                <span className="text-slate-950 font-bold">{reviewTarget.leave?.user?.full_name || 'Employee'}</span>
+                <span className="text-slate-950 font-semibold">{reviewTarget.leave?.user?.full_name || 'Employee'}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-600 font-medium">Leave Type & Duration:</span>
@@ -734,7 +734,7 @@ export default function LeavesPermissions({ user }) {
 
             {/* Remarks Input */}
             <div className="space-y-1.5">
-              <label className="block text-[12px] font-bold text-slate-950 flex items-center justify-between">
+              <label className="block text-[12px] font-semibold text-slate-950 flex items-center justify-between">
                 <span>Review Remarks / Notes (Optional)</span>
                 <span className="text-[11px] font-normal text-slate-600">Visible to applicant</span>
               </label>
@@ -757,7 +757,7 @@ export default function LeavesPermissions({ user }) {
                 type="button"
                 onClick={() => { setReviewTarget(null); setReviewRemarks(''); }}
                 disabled={reviewSubmitting}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12.5px] font-bold border border-slate-300 cursor-pointer transition-colors"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12.5px] font-semibold border border-slate-300 cursor-pointer transition-colors"
               >
                 Cancel
               </button>
@@ -765,7 +765,7 @@ export default function LeavesPermissions({ user }) {
                 type="button"
                 onClick={handleReviewTeamLeave}
                 disabled={reviewSubmitting}
-                className={`px-5 py-2 text-white rounded-xl text-[12.5px] font-bold shadow-md cursor-pointer transition-all flex items-center gap-1.5 ${
+                className={`px-5 py-2 text-white rounded-xl text-[12.5px] font-semibold shadow-md cursor-pointer transition-all flex items-center gap-1.5 ${
                   reviewTarget.status === 'approved'
                     ? 'bg-emerald-600 hover:bg-emerald-500'
                     : 'bg-red-600 hover:bg-red-500'

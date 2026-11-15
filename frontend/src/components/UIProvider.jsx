@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, Info } from './Iconify';
 
 const UIContext = createContext(null);
 
@@ -102,7 +102,7 @@ export default function UIProvider({ children }) {
                 <AlertCircle size={20} className="stroke-[2.5]" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-[18px] font-bold text-slate-950 tracking-tight">{confirmConfig.title}</h3>
+                <h3 className="text-[18px] font-semibold text-slate-950 tracking-tight">{confirmConfig.title}</h3>
                 <p className="text-[13px] text-slate-900 font-medium leading-relaxed">{confirmConfig.message}</p>
               </div>
             </div>

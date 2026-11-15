@@ -10,5 +10,9 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "compression": "^1.8.2",
+    "socket.io": "^4.8.4"
   }
 }

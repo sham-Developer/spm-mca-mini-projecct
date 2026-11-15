@@ -6,10 +6,13 @@ import {
   CheckCircle2, 
   AlertCircle,
   CalendarCheck 
-} from 'lucide-react';
+} from '../components/Iconify';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, PieChart, Pie, Tooltip, Cell, Legend } from 'recharts';
 import API_URL from '../config';
+import { MetricCardSkeleton, TableSkeleton } from '../components/Skeleton';
+import { cachedFetch, invalidateClientCache } from '../utils/clientCache';
+import { getSocket } from '../socket';
 
 export default function TeamMemberDashboard({ currentUserId }) {
   const navigate = useNavigate();
@@ -26,29 +29,43 @@ export default function TeamMemberDashboard({ currentUserId }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  const fetchMemberDashboardData = async () => {
+    try {
+      const response = await cachedFetch(`${API_URL}/tasks`);
+      const allTasks = response.data || [];
+
+      // Filter tasks assigned to this team member
+      const myTasks = allTasks.filter(t => t.assigned_to === currentUserId);
+
+      setTasks(myTasks);
+      setStats({
+        myTasksCount: myTasks.length,
+        inProgressTasksCount: myTasks.filter(t => t.status === 'in_progress' || t.status === 'todo').length,
+        reviewTasksCount: myTasks.filter(t => t.status === 'review').length,
+        completedTasksCount: myTasks.filter(t => t.status === 'completed').length
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMemberDashboardData = async () => {
-      try {
-        const response = await fetch(`${API_URL}/tasks`);
-        const allTasks = await response.json();
+    fetchMemberDashboardData();
 
-        // Filter tasks assigned to this team member
-        const myTasks = allTasks.filter(t => t.assigned_to === currentUserId);
-
-        setTasks(myTasks);
-        setStats({
-          myTasksCount: myTasks.length,
-          inProgressTasksCount: myTasks.filter(t => t.status === 'in_progress' || t.status === 'todo').length,
-          reviewTasksCount: myTasks.filter(t => t.status === 'review').length,
-          completedTasksCount: myTasks.filter(t => t.status === 'completed').length
-        });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
+    // Real-time synchronization
+    const socket = getSocket();
+    const handleDbChange = (event) => {
+      if (['tasks'].includes(event?.type)) {
+        invalidateClientCache();
+        fetchMemberDashboardData();
       }
     };
-    fetchMemberDashboardData();
+    socket.on('db_changed', handleDbChange);
+    return () => {
+      socket.off('db_changed', handleDbChange);
+    };
   }, [currentUserId]);
 
   const formatDate = (dateString) => {
@@ -63,8 +80,14 @@ export default function TeamMemberDashboard({ currentUserId }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
+      <div className="space-y-8 animate-fade-in text-slate-950 font-sans">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+        </div>
+        <TableSkeleton rows={5} cols={5} />
       </div>
     );
   }
@@ -89,48 +112,48 @@ export default function TeamMemberDashboard({ currentUserId }) {
   return (
     <div className="space-y-8 animate-fade-in text-slate-950 font-sans">
       {/* Team member KPI overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
         {/* My Assigned Tasks */}
-        <div className="bg-gradient-to-br from-slate-100/70 to-slate-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
-          <div className="space-y-2">
-            <span className="text-[11px] font-bold text-slate-900 uppercase tracking-widest block">Total Assigned</span>
-            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">{stats.myTasksCount}</h3>
+        <div className="bg-white border border-slate-300 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-400 p-5 flex items-start justify-between transition-all duration-200">
+          <div className="space-y-1">
+            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">Total Assigned</span>
+            <h3 className="text-3xl font-semibold text-slate-900 tracking-tight">{stats.myTasksCount}</h3>
           </div>
-          <div className="p-3 bg-slate-700 rounded-xl text-white shadow-md shadow-slate-700/10">
-            <ClipboardList size={20} className="stroke-[2.5]" />
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-300">
+            <ClipboardList size={20} className="stroke-[2.2]" />
           </div>
         </div>
 
         {/* To Do / In Progress */}
-        <div className="bg-gradient-to-br from-orange-100/70 to-orange-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
-          <div className="space-y-2">
-            <span className="text-[11px] font-bold text-orange-950 uppercase tracking-widest block">In Progress / Todo</span>
-            <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">{stats.inProgressTasksCount}</h3>
+        <div className="bg-white border border-slate-300 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-400 p-5 flex items-start justify-between transition-all duration-200">
+          <div className="space-y-1">
+            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">In Progress / Todo</span>
+            <h3 className="text-3xl font-semibold text-slate-900 tracking-tight">{stats.inProgressTasksCount}</h3>
           </div>
-          <div className="p-3 bg-orange-600 rounded-xl text-white shadow-md shadow-orange-600/10">
-            <Clock size={20} className="stroke-[2.5]" />
+          <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center border border-orange-200/80">
+            <Clock size={20} className="stroke-[2.2]" />
           </div>
         </div>
 
         {/* Submitted (In Review) */}
-        <div className="bg-gradient-to-br from-blue-100/70 to-blue-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
-          <div className="space-y-2">
-            <span className="text-[11px] font-bold text-blue-900 uppercase tracking-widest block">Pending Review</span>
-            <h3 className="text-[30px] font-bold text-blue-900 tracking-tight">{stats.reviewTasksCount}</h3>
+        <div className="bg-white border border-slate-300 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-400 p-5 flex items-start justify-between transition-all duration-200">
+          <div className="space-y-1">
+            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">Pending Review</span>
+            <h3 className="text-3xl font-semibold text-blue-700 tracking-tight">{stats.reviewTasksCount}</h3>
           </div>
-          <div className="p-3 bg-blue-600 rounded-xl text-white shadow-md shadow-blue-600/10">
-            <Calendar size={20} className="stroke-[2.5]" />
+          <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center border border-blue-200/80">
+            <Calendar size={20} className="stroke-[2.2]" />
           </div>
         </div>
 
         {/* Tasks Approved */}
-        <div className="bg-gradient-to-br from-emerald-100/70 to-emerald-50/40 border border-slate-400 rounded-2xl shadow-md p-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
-          <div className="space-y-2">
-            <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Tasks Completed</span>
-            <h3 className="text-[30px] font-bold text-emerald-800 tracking-tight">{stats.completedTasksCount}</h3>
+        <div className="bg-white border border-slate-300 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-400 p-5 flex items-start justify-between transition-all duration-200">
+          <div className="space-y-1">
+            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">Tasks Completed</span>
+            <h3 className="text-3xl font-semibold text-emerald-700 tracking-tight">{stats.completedTasksCount}</h3>
           </div>
-          <div className="p-3 bg-emerald-600 rounded-xl text-white shadow-md shadow-emerald-600/10">
-            <CheckCircle2 size={20} className="stroke-[2.5]" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200/80">
+            <CheckCircle2 size={20} className="stroke-[2.2]" />
           </div>
         </div>
       </div>
@@ -140,7 +163,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
-              <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">My Deliverables</h3>
+              <h3 className="text-[17px] font-semibold text-slate-950 tracking-tight">My Deliverables</h3>
               <p className="text-[12px] text-slate-900 font-medium">Review specifications and report progressions of assigned workflows</p>
             </div>
             <button
@@ -217,14 +240,14 @@ export default function TeamMemberDashboard({ currentUserId }) {
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-xs font-bold rounded-xl text-slate-900 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-xs font-semibold rounded-xl text-slate-900 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-xs font-bold rounded-xl text-slate-900 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-300 text-xs font-semibold rounded-xl text-slate-900 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -232,7 +255,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-[12px] text-slate-900 font-normal">
-                    Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{Math.min(indexOfLastItem, tasks.length)}</span> of <span className="font-bold">{tasks.length}</span> results
+                    Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, tasks.length)}</span> of <span className="font-semibold">{tasks.length}</span> results
                   </p>
                 </div>
                 <div>
@@ -240,7 +263,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                     <button
                       disabled={currentPage === 1}
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      className="relative inline-flex items-center px-3 py-1.5 rounded-l-full border border-slate-300 bg-white text-xs font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="relative inline-flex items-center px-3 py-1.5 rounded-l-full border border-slate-300 bg-white text-xs font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Previous
                     </button>
@@ -248,7 +271,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                       <button
                         key={i + 1}
                         onClick={() => setCurrentPage(i + 1)}
-                        className={`relative inline-flex items-center px-3.5 py-1.5 border-t border-b border-slate-300 text-xs font-bold transition-colors cursor-pointer ${
+                        className={`relative inline-flex items-center px-3.5 py-1.5 border-t border-b border-slate-300 text-xs font-semibold transition-colors cursor-pointer ${
                           currentPage === i + 1
                             ? 'z-10 bg-orange-600 text-white'
                             : 'bg-white text-slate-900 hover:bg-slate-50'
@@ -260,7 +283,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                     <button
                       disabled={currentPage === totalPages}
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      className="relative inline-flex items-center px-3 py-1.5 rounded-r-full border border-slate-300 bg-white text-xs font-bold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="relative inline-flex items-center px-3 py-1.5 rounded-r-full border border-slate-300 bg-white text-xs font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Next
                     </button>
@@ -275,7 +298,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
          {/* Right Column: Workload Distribution Chart */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">Workload Distribution</h3>
+            <h3 className="text-[17px] font-semibold text-slate-950 tracking-tight">Workload Distribution</h3>
             <p className="text-[12px] text-slate-900 font-medium">Status breakdown of your assigned tasks</p>
           </div>
           
@@ -307,7 +330,7 @@ export default function TeamMemberDashboard({ currentUserId }) {
                     iconSize={6}
                     formatter={(value) => {
                       const payload = taskStatusData.find(d => d.name === value);
-                      return <span className="text-[10.5px] font-bold text-slate-900 mr-1.5">{value} ({payload?.value || 0})</span>;
+                      return <span className="text-[10.5px] font-semibold text-slate-900 mr-1.5">{value} ({payload?.value || 0})</span>;
                     }}
                   />
                 </PieChart>

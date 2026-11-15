@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Server, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Server, ShieldCheck, AlertCircle, Eye, EyeOff } from '../components/Iconify';
 import API_URL from '../config';
 
 export default function Login({ onLoginSuccess }) {
@@ -70,7 +70,7 @@ export default function Login({ onLoginSuccess }) {
       <div className="w-full max-w-md bg-white/95 backdrop-blur-md border border-slate-200 rounded-3xl shadow-2xl overflow-hidden relative z-10 transition-all duration-300 hover:shadow-orange-500/10">
         <div className="p-8">
           <div className="flex justify-center mb-6">
-            <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center font-bold text-2xl text-white shadow-lg shadow-orange-600/20">
+            <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center font-semibold text-2xl text-white shadow-lg shadow-orange-600/20">
               N
             </div>
           </div>

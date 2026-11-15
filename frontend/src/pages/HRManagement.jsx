@@ -32,10 +32,13 @@ import {
   Timer,
   CheckSquare,
   FileSpreadsheet
-} from 'lucide-react';
+} from '../components/Iconify';
 import API_URL from '../config';
 import { useUI } from '../components/UIProvider';
 import { exportToCSV, exportToPDF } from '../utils/exportUtils';
+import { TableSkeleton } from '../components/Skeleton';
+import { cachedFetch, invalidateClientCache } from '../utils/clientCache';
+import { getSocket } from '../socket';
 
 export default function HRManagement({ user }) {
   const { showToast, confirmAction } = useUI();
@@ -100,8 +103,8 @@ export default function HRManagement({ user }) {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch(`${API_URL}/users`);
-      const data = await response.json();
+      const response = await cachedFetch(`${API_URL}/users`);
+      const data = response.data || [];
       const normalizedData = (data || []).map(emp => {
         let docs = [];
         if (Array.isArray(emp.documents)) {
@@ -325,6 +328,22 @@ export default function HRManagement({ user }) {
     fetchAttendance();
     fetchLeaves();
     fetchEmployeeReports();
+
+    // Real-time synchronization
+    const socket = getSocket();
+    const handleDbChange = (event) => {
+      if (['users', 'attendance', 'leaves', 'reports'].includes(event?.type)) {
+        invalidateClientCache();
+        fetchEmployees();
+        fetchAttendance();
+        fetchLeaves();
+        fetchEmployeeReports();
+      }
+    };
+    socket.on('db_changed', handleDbChange);
+    return () => {
+      socket.off('db_changed', handleDbChange);
+    };
   }, []);
 
   // Format YYYY-MM-DD -> DD-MM-YYYY
@@ -624,14 +643,34 @@ export default function HRManagement({ user }) {
     }
   };
 
-  // Dedicated Documents Modal & Management Handlers
-  const openDocsModal = (emp) => {
+  // Dedicated Documents Modal & Management Handlers - loads full documents on-demand
+  const openDocsModal = async (emp) => {
     setDocsModalEmployee(emp);
     setIsDocsModalOpen(true);
     setSelectedDetailDoc(null);
     setSelectedDetailDocIndex(null);
     setIsEditingDoc(false);
     setIsAddingDocInModal(false);
+
+    // If documents don't have base64 or file data loaded yet, fetch full details for this specific employee
+    try {
+      const res = await cachedFetch(`${API_URL}/users/${emp.id}?full=true`, {}, 300000);
+      if (res?.data) {
+        let fullDocs = [];
+        if (Array.isArray(res.data.documents)) {
+          fullDocs = res.data.documents;
+        } else if (typeof res.data.documents === 'string') {
+          try {
+            fullDocs = JSON.parse(res.data.documents);
+          } catch (e) {
+            fullDocs = [];
+          }
+        }
+        setDocsModalEmployee(prev => prev && prev.id === emp.id ? { ...prev, documents: fullDocs } : prev);
+      }
+    } catch (err) {
+      console.warn('Could not fetch full user documents:', err.message);
+    }
   };
 
   const closeDocsModal = () => {
@@ -899,7 +938,7 @@ export default function HRManagement({ user }) {
             <Clock size={16} />
             <span>Leave Management</span>
             {leaveRecords.filter(l => l.status === 'pending').length > 0 && (
-              <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+              <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-semibold">
                 {leaveRecords.filter(l => l.status === 'pending').length}
               </span>
             )}
@@ -946,8 +985,8 @@ export default function HRManagement({ user }) {
           {/* Total Directory Count */}
           <div className="bg-gradient-to-br from-blue-200 to-white border border-indigo-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
             <div className="space-y-2">
-              <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-widest block">Total Directory</span>
-              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
+              <span className="text-[11px] font-semibold text-indigo-900 uppercase tracking-widest block">Total Directory</span>
+              <h3 className="text-[30px] font-semibold text-slate-950 tracking-tight">
                 {employees.length}
               </h3>
             </div>
@@ -959,8 +998,8 @@ export default function HRManagement({ user }) {
           {/* On-Role Staff */}
           <div className="bg-gradient-to-br from-orange-200 to-white border border-orange-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
             <div className="space-y-2">
-              <span className="text-[11px] font-bold text-orange-950 uppercase tracking-widest block">On Role Staff</span>
-              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
+              <span className="text-[11px] font-semibold text-orange-950 uppercase tracking-widest block">On Role Staff</span>
+              <h3 className="text-[30px] font-semibold text-slate-950 tracking-tight">
                 {employees.filter(e => e.employment_type === 'on role' || e.employment_type === 'on_role' || !e.employment_type).length}
               </h3>
             </div>
@@ -972,8 +1011,8 @@ export default function HRManagement({ user }) {
           {/* Active Engineers */}
           <div className="bg-gradient-to-br from-emerald-100 to-white border border-emerald-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
             <div className="space-y-2">
-              <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-widest block">Active Engineers</span>
-              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
+              <span className="text-[11px] font-semibold text-emerald-950 uppercase tracking-widest block">Active Engineers</span>
+              <h3 className="text-[30px] font-semibold text-slate-950 tracking-tight">
                 {employees.filter(e => e.role === 'team_member' && e.status === 'active').length}
               </h3>
             </div>
@@ -985,8 +1024,8 @@ export default function HRManagement({ user }) {
           {/* Leadership & Admins */}
           <div className="bg-gradient-to-br from-violet-200 to-white border border-violet-100 rounded-2xl shadow-md py-3 px-5 flex items-start justify-between transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg">
             <div className="space-y-2">
-              <span className="text-[11px] font-bold text-violet-900 uppercase tracking-widest block">Admins & Heads</span>
-              <h3 className="text-[30px] font-bold text-slate-950 tracking-tight">
+              <span className="text-[11px] font-semibold text-violet-900 uppercase tracking-widest block">Admins & Heads</span>
+              <h3 className="text-[30px] font-semibold text-slate-950 tracking-tight">
                 {employees.filter(e => e.role === 'admin' || e.role === 'project_head').length}
               </h3>
             </div>
@@ -1017,30 +1056,30 @@ export default function HRManagement({ user }) {
 
         {/* Right Side: Joining Date Range Filters & Clear Button */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-bold text-slate-950">
+          <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-semibold text-slate-950">
             <span className="text-slate-900 font-medium">Joined From:</span>
             <input 
               type="date"
               value={filterStartDate}
               onChange={(e) => { setFilterStartDate(e.target.value); setCurrentPage(1); }}
-              className="bg-transparent border-none text-[12px] font-bold text-slate-950 focus:outline-none cursor-pointer"
+              className="bg-transparent border-none text-[12px] font-semibold text-slate-950 focus:outline-none cursor-pointer"
             />
           </div>
 
-          <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-bold text-slate-950">
+          <div className="flex items-center gap-2 bg-white border border-slate-400 rounded-xl px-3 py-1 text-[12px] font-semibold text-slate-950">
             <span className="text-slate-900 font-medium">To:</span>
             <input 
               type="date"
               value={filterEndDate}
               onChange={(e) => { setFilterEndDate(e.target.value); setCurrentPage(1); }}
-              className="bg-transparent border-none text-[12px] font-bold text-slate-950 focus:outline-none cursor-pointer"
+              className="bg-transparent border-none text-[12px] font-semibold text-slate-950 focus:outline-none cursor-pointer"
             />
           </div>
 
           {(searchTerm || filterStartDate || filterEndDate) && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-950 border border-slate-400 rounded-xl text-[12px] font-bold transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-950 border border-slate-400 rounded-xl text-[12px] font-semibold transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
             >
               <FilterX size={14} />
               <span>Reset</span>
@@ -1051,9 +1090,7 @@ export default function HRManagement({ user }) {
 
       {/* TABLE VIEW */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
-        </div>
+        <TableSkeleton rows={6} cols={7} />
       ) : (
         <div className="bg-white rounded-[20px] overflow-hidden shadow-md">
           <div className="overflow-x-auto">
@@ -1158,21 +1195,21 @@ export default function HRManagement({ user }) {
             <div className="flex items-center justify-between px-4 py-3 bg-slate-100 border-t border-slate-400 sm:px-6">
               <div>
                 <p className="text-xs text-slate-950 font-medium">
-                  Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{Math.min(indexOfLastItem, filteredEmployees.length)}</span> of <span className="font-bold">{filteredEmployees.length}</span> results
+                  Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, filteredEmployees.length)}</span> of <span className="font-semibold">{filteredEmployees.length}</span> results
                 </p>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-bold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                  className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-semibold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                 >
                   Prev
                 </button>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-bold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                  className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-semibold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                 >
                   Next
                 </button>
@@ -1189,7 +1226,7 @@ export default function HRManagement({ user }) {
         <div className="space-y-4 animate-fade-in-fast">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-300 rounded-2xl p-4 shadow-sm">
             <div>
-              <h3 className="text-[17px] font-bold text-slate-950">Daily Attendance Log</h3>
+              <h3 className="text-[17px] font-semibold text-slate-950">Daily Attendance Log</h3>
               <p className="text-[12px] text-slate-900 font-normal">Monitor check-in status, work location, and operational remarks</p>
             </div>
             <div className="flex items-center gap-2">
@@ -1269,18 +1306,18 @@ export default function HRManagement({ user }) {
                         </td>
                         <td className="px-4 py-3 border border-slate-300 text-[12px]">
                           <div className="flex items-center gap-1 font-semibold text-slate-950">
-                            <span className="text-emerald-700 font-bold">In:</span> {mIn}
+                            <span className="text-emerald-700 font-semibold">In:</span> {mIn}
                           </div>
                           <div className="flex items-center gap-1 text-slate-700 font-medium mt-0.5">
-                            <span className="text-amber-700 font-bold">Out:</span> {mOut}
+                            <span className="text-amber-700 font-semibold">Out:</span> {mOut}
                           </div>
                         </td>
                         <td className="px-4 py-3 border border-slate-300 text-[12px]">
                           <div className="flex items-center gap-1 font-semibold text-slate-950">
-                            <span className="text-indigo-700 font-bold">In:</span> {aIn}
+                            <span className="text-indigo-700 font-semibold">In:</span> {aIn}
                           </div>
                           <div className="flex items-center gap-1 text-slate-700 font-medium mt-0.5">
-                            <span className="text-rose-700 font-bold">Out:</span> {aOut}
+                            <span className="text-rose-700 font-semibold">Out:</span> {aOut}
                           </div>
                         </td>
                         <td className="px-4 py-3 border border-slate-300">
@@ -1317,7 +1354,7 @@ export default function HRManagement({ user }) {
         <div className="space-y-4 animate-fade-in-fast">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-300 rounded-2xl p-4 shadow-sm">
             <div>
-              <h3 className="text-[17px] font-bold text-slate-950">Employee Leave Applications</h3>
+              <h3 className="text-[17px] font-semibold text-slate-950">Employee Leave Applications</h3>
               <p className="text-[12px] text-slate-900 font-normal">Review leave requests, reason justifications, and authorize approvals</p>
             </div>
             <button
@@ -1479,7 +1516,7 @@ export default function HRManagement({ user }) {
             <div className="bg-white border border-slate-300 rounded-2xl p-4 shadow-sm space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h3 className="text-[17px] font-bold text-slate-950">Employee Daily Work Reports</h3>
+                  <h3 className="text-[17px] font-semibold text-slate-950">Employee Daily Work Reports</h3>
                   <p className="text-[12px] text-slate-900 font-normal">Daily activity submissions with task details, project allocation, and hours worked</p>
                 </div>
                 
@@ -1665,7 +1702,7 @@ export default function HRManagement({ user }) {
                           </td>
                           <td className="px-4 py-3 border border-slate-300">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 text-slate-900 flex items-center justify-center font-bold text-[12px] shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 text-slate-900 flex items-center justify-center font-semibold text-[12px] shrink-0">
                                 {report.user?.full_name ? report.user.full_name.substring(0, 2).toUpperCase() : 'EM'}
                               </div>
                               <div>
@@ -1679,7 +1716,7 @@ export default function HRManagement({ user }) {
                             </div>
                           </td>
                           <td className="px-4 py-3 border border-slate-300 text-center">
-                            <span className="inline-block px-3 py-1 bg-amber-50 border border-amber-300 text-amber-950 rounded-full text-[12.5px] font-bold">
+                            <span className="inline-block px-3 py-1 bg-amber-50 border border-amber-300 text-amber-950 rounded-full text-[12.5px] font-semibold">
                               {report.hours_spent || 0} hrs
                             </span>
                           </td>
@@ -1800,7 +1837,7 @@ export default function HRManagement({ user }) {
             </button>
 
             <div>
-              <h3 className="text-[17px] font-bold text-slate-950">Apply for Leave</h3>
+              <h3 className="text-[17px] font-semibold text-slate-950">Apply for Leave</h3>
               <p className="text-[12px] text-slate-900 font-normal">Submit formal leave request for approval</p>
             </div>
 
@@ -1926,7 +1963,7 @@ export default function HRManagement({ user }) {
                 {/* PROFILE & ORGANIZATIONAL DETAILS */}
                 <div className="p-6 space-y-4">
                   <div>
-                    <h3 className="text-[18px] font-bold text-orange-600">
+                    <h3 className="text-[18px] font-semibold text-orange-600">
                       {isEditing ? 'Manage Employee Profile' : 'Add New Organization Employee'}
                     </h3>
                     <p className="text-[12px] text-slate-900">Fill in background profile, role controls and credentials</p>
@@ -2089,7 +2126,7 @@ export default function HRManagement({ user }) {
                   {/* DOCUMENT DEPOSIT BOX */}
                   <div className="border-t border-slate-300 pt-4 space-y-3">
                     <div className="flex justify-between items-center">
-                      <h4 className="text-[13px] font-bold text-orange-600 uppercase tracking-wider">Deposited Documents</h4>
+                      <h4 className="text-[13px] font-semibold text-orange-600 uppercase tracking-wider">Deposited Documents</h4>
                     </div>
 
                     {/* NEW DOCUMENT INPUT */}
@@ -2130,11 +2167,11 @@ export default function HRManagement({ user }) {
 
                       {newDocBase64 && (
                         <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-950 text-[12px] font-semibold animate-fade-in">
-                          <span className="truncate mr-2">Selected: <strong className="font-bold">{uploadingDocName}</strong></span>
+                          <span className="truncate mr-2">Selected: <strong className="font-semibold">{uploadingDocName}</strong></span>
                           <button
                             type="button"
                             onClick={handleDepositNewDoc}
-                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-[11px] font-bold shadow-xs cursor-pointer transition-colors shrink-0"
+                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-[11px] font-semibold shadow-xs cursor-pointer transition-colors shrink-0"
                           >
                             + Add to Documents List
                           </button>
@@ -2144,7 +2181,7 @@ export default function HRManagement({ user }) {
                       <button
                         type="button"
                         onClick={handleDepositNewDoc}
-                        className="w-full bg-slate-200 hover:bg-slate-300 text-slate-900 border border-slate-300 py-1.5 rounded-full text-[12px] font-bold shadow-sm cursor-pointer transition-colors"
+                        className="w-full bg-slate-200 hover:bg-slate-300 text-slate-900 border border-slate-300 py-1.5 rounded-full text-[12px] font-semibold shadow-sm cursor-pointer transition-colors"
                       >
                         Add to Profile Documents
                       </button>
@@ -2161,7 +2198,7 @@ export default function HRManagement({ user }) {
                             <div className="flex items-center gap-2 overflow-hidden mr-2">
                               <FileText size={16} className="text-orange-600 shrink-0" />
                               <div className="overflow-hidden">
-                                <span className="block text-[12.5px] font-bold text-slate-950 truncate leading-tight">{displayName}</span>
+                                <span className="block text-[12.5px] font-semibold text-slate-950 truncate leading-tight">{displayName}</span>
                                 <span className="block text-[9.5px] text-slate-900 font-semibold truncate mt-0.5">{filename}</span>
                               </div>
                             </div>
@@ -2216,7 +2253,7 @@ export default function HRManagement({ user }) {
                 <button
                   type="button"
                   onClick={() => { setIsFormModalOpen(false); resetForm(); }}
-                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-xl text-[13px] font-bold border border-slate-300 cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-xl text-[13px] font-semibold border border-slate-300 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -2246,8 +2283,8 @@ export default function HRManagement({ user }) {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-[17px] font-bold text-slate-950 leading-tight">Employee Documents</h3>
-                    <span className="px-2 py-0.5 bg-orange-100 text-orange-800 border border-orange-200 rounded-full text-[11px] font-bold">
+                    <h3 className="text-[17px] font-semibold text-slate-950 leading-tight">Employee Documents</h3>
+                    <span className="px-2 py-0.5 bg-orange-100 text-orange-800 border border-orange-200 rounded-full text-[11px] font-semibold">
                       {docsModalEmployee.documents?.length || 0} Files
                     </span>
                   </div>
@@ -2261,7 +2298,7 @@ export default function HRManagement({ user }) {
                 <button
                   type="button"
                   onClick={() => setIsAddingDocInModal(!isAddingDocInModal)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-bold shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-semibold shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Plus size={14} />
                   <span>{isAddingDocInModal ? 'Cancel Add' : 'Add Document'}</span>
@@ -2281,7 +2318,7 @@ export default function HRManagement({ user }) {
             {isAddingDocInModal && (
               <form onSubmit={handleModalAddNewDoc} className="p-4 bg-orange-50/70 border-b border-orange-200 animate-fade-in space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-bold text-orange-900 uppercase tracking-wide">Attach New Document</span>
+                  <span className="text-[12px] font-semibold text-orange-900 uppercase tracking-wide">Attach New Document</span>
                   <span className="text-[11px] text-slate-900">Select file and assign a label</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2326,13 +2363,13 @@ export default function HRManagement({ user }) {
                       setModalNewDocBase64('');
                       setModalNewDocFilename('');
                     }}
-                    className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-[12px] font-bold border border-slate-300 cursor-pointer"
+                    className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-[12px] font-semibold border border-slate-300 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-bold shadow-xs cursor-pointer transition-all hover:scale-[1.02]"
+                    className="px-4 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-semibold shadow-xs cursor-pointer transition-all hover:scale-[1.02]"
                   >
                     Upload & Save
                   </button>
@@ -2368,17 +2405,17 @@ export default function HRManagement({ user }) {
                             ) : isPdf ? (
                               <div className="flex flex-col items-center justify-center p-2 text-center bg-red-50 w-full h-full">
                                 <FileText size={36} className="text-red-500 mb-1" />
-                                <span className="text-[11px] font-bold text-red-700 uppercase tracking-wider">PDF File</span>
+                                <span className="text-[11px] font-semibold text-red-700 uppercase tracking-wider">PDF File</span>
                               </div>
                             ) : (
                               <div className="flex flex-col items-center justify-center p-2 text-center bg-orange-50 w-full h-full">
                                 <FileText size={36} className="text-orange-500 mb-1" />
-                                <span className="text-[11px] font-bold text-orange-700 uppercase tracking-wider">Document</span>
+                                <span className="text-[11px] font-semibold text-orange-700 uppercase tracking-wider">Document</span>
                               </div>
                             )}
 
                             {/* HOVER OVERLAY */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1.5 transition-opacity text-white text-[12px] font-bold">
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1.5 transition-opacity text-white text-[12px] font-semibold">
                               <Eye size={16} />
                               <span>Preview</span>
                             </div>
@@ -2387,10 +2424,10 @@ export default function HRManagement({ user }) {
                           {/* INFO */}
                           <div className="space-y-0.5">
                             <div className="flex items-center justify-between gap-1">
-                              <h4 className="text-[13.5px] font-bold text-slate-950 truncate" title={docName}>
+                              <h4 className="text-[13.5px] font-semibold text-slate-950 truncate" title={docName}>
                                 {docName}
                               </h4>
-                              <span className={`px-1.5 py-0.2 rounded text-[9.5px] font-bold shrink-0 border ${
+                              <span className={`px-1.5 py-0.2 rounded text-[9.5px] font-semibold shrink-0 border ${
                                 isPdf ? 'bg-red-50 text-red-700 border-red-200' : isImg ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-slate-100 text-slate-900 border-slate-200'
                               }`}>
                                 {isPdf ? 'PDF' : isImg ? 'IMG' : 'DOC'}
@@ -2407,7 +2444,7 @@ export default function HRManagement({ user }) {
                           <button
                             type="button"
                             onClick={() => openDetailDoc(doc, idx)}
-                            className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-lg text-[11.5px] font-bold transition-colors cursor-pointer shadow-xs"
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer shadow-xs"
                             title="View detailed document"
                           >
                             <Eye size={13} />
@@ -2454,7 +2491,7 @@ export default function HRManagement({ user }) {
                   <button
                     type="button"
                     onClick={() => setIsAddingDocInModal(true)}
-                    className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-bold shadow-xs cursor-pointer"
+                    className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-semibold shadow-xs cursor-pointer"
                   >
                     <Plus size={13} />
                     <span>Upload Document</span>
@@ -2466,12 +2503,12 @@ export default function HRManagement({ user }) {
             {/* MODAL FOOTER */}
             <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200">
               <span className="text-[12px] text-slate-900 font-medium">
-                Showing <strong className="font-bold text-slate-900">{docsModalEmployee.documents?.length || 0}</strong> attached files
+                Showing <strong className="font-semibold text-slate-900">{docsModalEmployee.documents?.length || 0}</strong> attached files
               </span>
               <button
                 type="button"
                 onClick={closeDocsModal}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12px] font-bold border border-slate-300 cursor-pointer transition-colors"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12px] font-semibold border border-slate-300 cursor-pointer transition-colors"
               >
                 Close
               </button>
@@ -2491,13 +2528,13 @@ export default function HRManagement({ user }) {
                 <button
                   type="button"
                   onClick={() => { setSelectedDetailDoc(null); setSelectedDetailDocIndex(null); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-[12px] font-bold border border-slate-300 transition-colors cursor-pointer shadow-xs"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-[12px] font-semibold border border-slate-300 transition-colors cursor-pointer shadow-xs"
                 >
                   <ArrowLeft size={14} />
                   <span>Back to Grid</span>
                 </button>
                 <div>
-                  <h3 className="text-[16px] font-bold text-slate-950 leading-tight">
+                  <h3 className="text-[16px] font-semibold text-slate-950 leading-tight">
                     {selectedDetailDoc.name || selectedDetailDoc.label || 'Document Details'}
                   </h3>
                   <p className="text-[11px] font-normal text-slate-900">
@@ -2552,7 +2589,7 @@ export default function HRManagement({ user }) {
                   <div className="w-full max-w-md py-12 px-6 bg-white border border-slate-300 rounded-2xl shadow-sm text-center space-y-3">
                     <FileText size={52} className="mx-auto text-orange-500" />
                     <div>
-                      <h4 className="text-[16px] font-bold text-slate-900">{selectedDetailDoc.name || 'File Document'}</h4>
+                      <h4 className="text-[16px] font-semibold text-slate-900">{selectedDetailDoc.name || 'File Document'}</h4>
                       <p className="text-[12px] text-slate-900 mt-1">{selectedDetailDoc.filename || 'Direct preview is unavailable for this format.'}</p>
                     </div>
                     <p className="text-[11px] text-slate-900">
@@ -2565,22 +2602,22 @@ export default function HRManagement({ user }) {
               {/* METADATA INFO BAR */}
               <div className="w-full mt-4 bg-white border border-slate-300 rounded-xl p-3.5 shadow-xs grid grid-cols-2 md:grid-cols-4 gap-3 text-left">
                 <div>
-                  <span className="block text-[10px] font-bold text-slate-900 uppercase">Document Name</span>
-                  <span className="block text-[12px] font-bold text-slate-900 truncate">{selectedDetailDoc.name || 'Document'}</span>
+                  <span className="block text-[10px] font-semibold text-slate-900 uppercase">Document Name</span>
+                  <span className="block text-[12px] font-semibold text-slate-900 truncate">{selectedDetailDoc.name || 'Document'}</span>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold text-slate-900 uppercase">Original File</span>
-                  <span className="block text-[12px] font-bold text-slate-900 truncate">{selectedDetailDoc.filename || selectedDetailDoc.name}</span>
+                  <span className="block text-[10px] font-semibold text-slate-900 uppercase">Original File</span>
+                  <span className="block text-[12px] font-semibold text-slate-900 truncate">{selectedDetailDoc.filename || selectedDetailDoc.name}</span>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold text-slate-900 uppercase">Format</span>
-                  <span className="block text-[12px] font-bold text-slate-900">
+                  <span className="block text-[10px] font-semibold text-slate-900 uppercase">Format</span>
+                  <span className="block text-[12px] font-semibold text-slate-900">
                     {selectedDetailDoc.file?.startsWith('data:application/pdf') ? 'PDF Document' : selectedDetailDoc.file?.startsWith('data:image') ? 'Image File' : 'Standard File'}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold text-slate-900 uppercase">Employee</span>
-                  <span className="block text-[12px] font-bold text-slate-900 truncate">{docsModalEmployee?.full_name || 'Staff'}</span>
+                  <span className="block text-[10px] font-semibold text-slate-900 uppercase">Employee</span>
+                  <span className="block text-[12px] font-semibold text-slate-900 truncate">{docsModalEmployee?.full_name || 'Staff'}</span>
                 </div>
               </div>
             </div>
@@ -2592,7 +2629,7 @@ export default function HRManagement({ user }) {
                   <button
                     type="button"
                     onClick={() => downloadFile(selectedDetailDoc.file, selectedDetailDoc.filename || selectedDetailDoc.name)}
-                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-bold shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-semibold shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Download size={14} />
                     <span>Download File</span>
@@ -2602,7 +2639,7 @@ export default function HRManagement({ user }) {
                   <button
                     type="button"
                     onClick={() => openBase64File(selectedDetailDoc.file, selectedDetailDoc.filename || selectedDetailDoc.name)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-300 rounded-xl text-[12px] font-bold transition-all cursor-pointer shadow-xs"
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-300 rounded-xl text-[12px] font-semibold transition-all cursor-pointer shadow-xs"
                   >
                     <ExternalLink size={14} />
                     <span>Open in New Tab</span>
@@ -2614,7 +2651,7 @@ export default function HRManagement({ user }) {
                 <button
                   type="button"
                   onClick={() => startEditDoc(selectedDetailDocIndex)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-[12px] font-bold transition-all cursor-pointer shadow-xs"
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-[12px] font-semibold transition-all cursor-pointer shadow-xs"
                 >
                   <Edit size={14} />
                   <span>Update Document</span>
@@ -2622,7 +2659,7 @@ export default function HRManagement({ user }) {
                 <button
                   type="button"
                   onClick={() => handleDeleteDoc(selectedDetailDocIndex)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 rounded-xl text-[12px] font-bold transition-all cursor-pointer shadow-xs"
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 rounded-xl text-[12px] font-semibold transition-all cursor-pointer shadow-xs"
                 >
                   <Trash2 size={14} />
                   <span>Delete Document</span>
@@ -2638,7 +2675,7 @@ export default function HRManagement({ user }) {
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in-fast">
           <div className="w-full max-w-md bg-white border border-slate-400 rounded-2xl shadow-2xl p-6 text-slate-950 animate-scale-up space-y-4">
             <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-              <h3 className="text-[16px] font-bold text-slate-900">Update Document</h3>
+              <h3 className="text-[16px] font-semibold text-slate-900">Update Document</h3>
               <button 
                 type="button"
                 onClick={() => setIsEditingDoc(false)} 
@@ -2686,13 +2723,13 @@ export default function HRManagement({ user }) {
                 <button
                   type="button"
                   onClick={() => setIsEditingDoc(false)}
-                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12px] font-bold border border-slate-300 cursor-pointer"
+                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12px] font-semibold border border-slate-300 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-bold shadow-sm cursor-pointer transition-all hover:scale-[1.02]"
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-semibold shadow-sm cursor-pointer transition-all hover:scale-[1.02]"
                 >
                   Save Changes
                 </button>
@@ -2715,7 +2752,7 @@ export default function HRManagement({ user }) {
                   {reviewLeaveTarget.status === 'approved' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-bold text-slate-950 tracking-tight">
+                  <h3 className="text-[17px] font-semibold text-slate-950 tracking-tight">
                     {reviewLeaveTarget.status === 'approved' ? 'Approve Leave Application' : 'Reject Leave Application'}
                   </h3>
                   <p className="text-[12px] text-slate-700 font-normal">
@@ -2736,7 +2773,7 @@ export default function HRManagement({ user }) {
             <div className="bg-slate-50 border border-slate-300 rounded-xl p-3.5 space-y-2 text-[12.5px]">
               <div className="flex justify-between items-center">
                 <span className="text-slate-600 font-medium">Employee:</span>
-                <span className="text-slate-950 font-bold">{reviewLeaveTarget.leave?.user?.full_name || 'Staff Member'}</span>
+                <span className="text-slate-950 font-semibold">{reviewLeaveTarget.leave?.user?.full_name || 'Staff Member'}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-600 font-medium">Leave Type & Duration:</span>
@@ -2755,7 +2792,7 @@ export default function HRManagement({ user }) {
 
             {/* Remarks Input */}
             <div className="space-y-1.5">
-              <label className="block text-[12px] font-bold text-slate-950 flex items-center justify-between">
+              <label className="block text-[12px] font-semibold text-slate-950 flex items-center justify-between">
                 <span>Reviewer Remarks / Feedback (Optional)</span>
                 <span className="text-[11px] font-normal text-slate-600">Visible to employee</span>
               </label>
@@ -2778,7 +2815,7 @@ export default function HRManagement({ user }) {
                 type="button"
                 onClick={() => { setReviewLeaveTarget(null); setReviewRemarks(''); }}
                 disabled={reviewSubmitting}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12.5px] font-bold border border-slate-300 cursor-pointer transition-colors"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12.5px] font-semibold border border-slate-300 cursor-pointer transition-colors"
               >
                 Cancel
               </button>
@@ -2786,7 +2823,7 @@ export default function HRManagement({ user }) {
                 type="button"
                 onClick={handleConfirmLeaveReview}
                 disabled={reviewSubmitting}
-                className={`px-5 py-2 text-white rounded-xl text-[12.5px] font-bold shadow-md cursor-pointer transition-all flex items-center gap-1.5 ${
+                className={`px-5 py-2 text-white rounded-xl text-[12.5px] font-semibold shadow-md cursor-pointer transition-all flex items-center gap-1.5 ${
                   reviewLeaveTarget.status === 'approved'
                     ? 'bg-emerald-600 hover:bg-emerald-500'
                     : 'bg-red-600 hover:bg-red-500'

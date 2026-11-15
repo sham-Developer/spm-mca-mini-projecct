@@ -22,8 +22,9 @@ import {
   Sun,
   Sunset,
   CheckCircle2,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+  ArrowUpRight
+} from './Iconify';
 import API_URL from '../config';
 import { useUI } from './UIProvider';
 
@@ -40,6 +41,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
   const [isOpen, setIsOpen] = useState(false);
 
   // Profile Popup State
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState(user);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -437,7 +439,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
             >
               <Bell size={18} className="stroke-[2]" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-600 text-white rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-bold font-sans">
+                <span className="absolute -top-1 -right-1 bg-orange-600 text-white rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-medium font-sans">
                   {unreadCount}
                 </span>
               )}
@@ -474,7 +476,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                         }`}
                       >
                         <div className="flex justify-between items-start gap-1.5">
-                          <h5 className={`text-[12.5px] leading-tight ${notif.is_read ? 'font-medium text-slate-900' : 'font-bold text-slate-950'}`}>
+                          <h5 className={`text-[12.5px] leading-tight ${notif.is_read ? 'font-medium text-slate-900' : 'font-semibold text-slate-950'}`}>
                             {notif.title}
                           </h5>
                           <span className="text-[10px] text-slate-900 font-medium whitespace-nowrap">
@@ -498,27 +500,112 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
             )}
           </div>
 
-          <div className="h-6 w-px bg-slate-400"></div>
+          <div className="h-6 w-px bg-slate-300"></div>
 
-          {/* INTERACTIVE USER PROFILE TRIGGER */}
-          <button
-            type="button"
-            onClick={handleOpenProfile}
-            className="flex items-center gap-3 p-1 rounded-xl hover:bg-slate-100 transition-all cursor-pointer border border-transparent hover:border-slate-300 group text-left focus:outline-none"
-            title="Click to view detailed profile"
-          >
-            <div className="text-right hidden sm:block">
-              <span className="block text-[14px] font-bold text-slate-950 group-hover:text-orange-600 transition-colors">
-                {profileData?.full_name || user?.full_name}
-              </span>
-              <span className="block text-[11px] text-slate-900 font-medium uppercase tracking-widest">
-                {profileData?.designation || user?.designation || (user?.role?.replace('_', ' '))}
-              </span>
-            </div>
-            <div className="w-9 h-9 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center font-bold text-[13px] border border-orange-300 shadow-xs group-hover:scale-105 transition-transform">
-              {initials}
-            </div>
-          </button>
+          {/* INTERACTIVE USER PROFILE TRIGGER & DROPDOWN */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-slate-100 transition-all cursor-pointer border border-transparent hover:border-slate-300 group text-left focus:outline-none"
+              title="Click to view profile options"
+            >
+              <div className="text-right hidden sm:block">
+                <span className="block text-[14px] font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                  {profileData?.full_name || user?.full_name}
+                </span>
+                <span className="block text-[11px] text-slate-500 font-medium uppercase tracking-wider">
+                  {profileData?.designation || user?.designation || (user?.role?.replace('_', ' '))}
+                </span>
+              </div>
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-semibold text-[13px] shadow-xs group-hover:scale-105 transition-transform">
+                {initials}
+              </div>
+            </button>
+
+            {/* SMALL PROFILE DROPDOWN CARD */}
+            {isProfileDropdownOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40 bg-transparent" 
+                  onClick={() => setIsProfileDropdownOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-300 rounded-2xl shadow-xl z-50 text-slate-900 font-sans animate-fade-in overflow-hidden">
+                  {/* Top user summary */}
+                  <div className="p-4 bg-slate-50 border-b border-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-semibold text-sm shadow-xs shrink-0">
+                        {initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-[14px] font-semibold text-slate-900 truncate leading-snug">
+                          {profileData?.full_name || user?.full_name}
+                        </h4>
+                        <p className="text-[11.5px] text-slate-500 truncate mt-0.5">
+                          {profileData?.email || user?.email}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-200 text-[10px] font-semibold uppercase tracking-wider rounded-md">
+                            {profileData?.role?.replace('_', ' ') || user?.role}
+                          </span>
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-semibold uppercase tracking-wider rounded-md">
+                            Active
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Details List */}
+                  <div className="p-3.5 space-y-2 text-xs border-b border-slate-100">
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span className="flex items-center gap-1.5 text-slate-500">
+                        <Briefcase size={13} /> Designation:
+                      </span>
+                      <span className="font-semibold text-slate-800 truncate max-w-[140px]">
+                        {profileData?.designation || user?.designation || 'Staff'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span className="flex items-center gap-1.5 text-slate-500">
+                        <Building size={13} /> Department:
+                      </span>
+                      <span className="font-semibold text-slate-800 truncate max-w-[140px]">
+                        {profileData?.department || user?.department || 'Operations'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions: View More & Sign Out */}
+                  <div className="p-3 bg-white space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileDropdownOpen(false);
+                        handleOpenProfile();
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      <span>View Full Profile</span>
+                      <ArrowUpRight size={14} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileDropdownOpen(false);
+                        onLogout?.();
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-200 hover:border-red-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      <LogOut size={14} />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -534,7 +621,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   <User size={20} />
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-bold text-slate-950 leading-tight">
+                  <h3 className="text-[17px] font-semibold text-slate-950 leading-tight">
                     User Profile
                   </h3>
                   <p className="text-[12px] font-normal text-slate-900 mt-0.5">
@@ -557,12 +644,12 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
             <div className="px-6 py-4 bg-white border-b border-slate-200 shrink-0">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-14 h-14 rounded-full bg-orange-100 text-orange-700 border-2 border-orange-300 shadow-xs flex items-center justify-center text-[18px] font-bold shrink-0">
+                  <div className="w-14 h-14 rounded-full bg-orange-100 text-orange-700 border-2 border-orange-300 shadow-xs flex items-center justify-center text-[18px] font-medium shrink-0">
                     {initials}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-[17px] font-bold text-slate-950 truncate leading-tight">
+                      <h4 className="text-[17px] font-semibold text-slate-950 truncate leading-tight">
                         {profileData?.full_name || user?.full_name}
                       </h4>
                       <span className="px-2 py-0.5 bg-orange-100 text-orange-950 border border-orange-200 rounded-full text-[10.5px] font-medium uppercase tracking-wide shrink-0">
@@ -587,7 +674,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                 /* INLINE EDIT FORM */
                 <form onSubmit={handleSaveProfile} className="space-y-3.5 bg-white border border-slate-300 rounded-xl p-4 shadow-xs">
                   <div className="border-b border-slate-200 pb-2">
-                    <h4 className="text-[14px] font-bold text-slate-950">Edit Profile Details</h4>
+                    <h4 className="text-[14px] font-semibold text-slate-950">Edit Profile Details</h4>
                     <p className="text-[11.5px] font-normal text-slate-900">Update your name, contact phone, or credentials</p>
                   </div>
 
@@ -845,7 +932,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-[17px] sm:text-[18px] font-bold text-slate-950 leading-tight">
+                    <h3 className="text-[17px] sm:text-[18px] font-semibold text-slate-950 leading-tight">
                       Daily Attendance & Marker
                     </h3>
                     <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-orange-100 text-orange-950 border border-orange-300">
@@ -876,7 +963,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                 <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-200">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-orange-600"></span>
-                    <span className="text-[12px] font-bold text-slate-950 uppercase tracking-wider">
+                    <span className="text-[12px] font-semibold text-slate-950 uppercase tracking-wider">
                       Today's Attendance Status
                     </span>
                   </div>
@@ -920,7 +1007,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
               {/* WORK MODE AND NOTES PREFERENCES (CONFIGURED BEFORE PUNCHING) */}
               <div className="bg-white border border-slate-300 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                  <span className="text-[12px] font-bold text-slate-950 uppercase tracking-wider">
+                  <span className="text-[12px] font-semibold text-slate-950 uppercase tracking-wider">
                     Work Mode & Session Notes
                   </span>
                   <span className="text-[11px] text-slate-500 font-medium">
@@ -967,7 +1054,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
               <div className="space-y-3.5">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
-                    <h4 className="text-[14.5px] font-bold text-slate-950 tracking-tight">
+                    <h4 className="text-[14.5px] font-semibold text-slate-950 tracking-tight">
                       Shift & Session Punches
                     </h4>
                     <p className="text-[12px] text-slate-600 font-normal mt-0.5">
@@ -983,7 +1070,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   {/* 1. MORNING SESSION */}
                   <div className="bg-white border border-slate-300 hover:border-orange-400 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs transition-colors">
                     <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
-                      <div className="flex items-center gap-2 text-slate-950 font-bold text-[14px]">
+                      <div className="flex items-center gap-2 text-slate-950 font-semibold text-[14px]">
                         <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center">
                           <Sun size={16} className="stroke-[2.5]" />
                         </div>
@@ -1042,7 +1129,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   {/* 2. AFTERNOON SESSION */}
                   <div className="bg-white border border-slate-300 hover:border-orange-400 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs transition-colors">
                     <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
-                      <div className="flex items-center gap-2 text-slate-950 font-bold text-[14px]">
+                      <div className="flex items-center gap-2 text-slate-950 font-semibold text-[14px]">
                         <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center">
                           <Sunset size={16} className="stroke-[2.5]" />
                         </div>

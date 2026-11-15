@@ -20,9 +20,12 @@ import {
   Phone,
   Building,
   CheckCircle
-} from 'lucide-react';
+} from '../components/Iconify';
 import API_URL from '../config';
 import { useUI } from '../components/UIProvider';
+import { TableSkeleton, KanbanSkeleton } from '../components/Skeleton';
+import { cachedFetch, invalidateClientCache } from '../utils/clientCache';
+import { getSocket } from '../socket';
 
 const STATUS_ORDER = ['initiated', 'inprogress', 'budgetary', 'proposal', 'lead', 'onboard'];
 
@@ -122,13 +125,13 @@ export default function ClientManagement() {
   const loadData = async () => {
     try {
       const [clientsRes, projectsRes, usersRes] = await Promise.all([
-        fetch(`${API_URL}/clients`),
-        fetch(`${API_URL}/projects`),
-        fetch(`${API_URL}/users`)
+        cachedFetch(`${API_URL}/clients`),
+        cachedFetch(`${API_URL}/projects`),
+        cachedFetch(`${API_URL}/users`)
       ]);
-      const clientsData = await clientsRes.json();
-      const projectsData = await projectsRes.json();
-      const usersData = await usersRes.json();
+      const clientsData = clientsRes.data || [];
+      const projectsData = projectsRes.data || [];
+      const usersData = usersRes.data || [];
 
       setClients(clientsData);
       setProjects(projectsData);
@@ -143,6 +146,19 @@ export default function ClientManagement() {
 
   useEffect(() => {
     loadData();
+
+    // Real-time synchronization
+    const socket = getSocket();
+    const handleDbChange = (event) => {
+      if (['clients', 'projects', 'users'].includes(event?.type)) {
+        invalidateClientCache();
+        loadData();
+      }
+    };
+    socket.on('db_changed', handleDbChange);
+    return () => {
+      socket.off('db_changed', handleDbChange);
+    };
   }, []);
 
   // Format YYYY-MM-DD -> DD-MM-YYYY
@@ -585,30 +601,30 @@ export default function ClientManagement() {
             />
           </div>
 
-          <div className="flex items-center gap-1.5 bg-white border border-slate-400 rounded-xl px-2.5 py-1 text-[11.5px] font-bold text-slate-950 shadow-2xs">
+          <div className="flex items-center gap-1.5 bg-white border border-slate-400 rounded-xl px-2.5 py-1 text-[11.5px] font-semibold text-slate-950 shadow-2xs">
             <span className="text-slate-700 font-medium">Activity From:</span>
             <input
               type="date"
               value={filterStartDate}
               onChange={(e) => { setFilterStartDate(e.target.value); setCurrentPage(1); }}
-              className="bg-transparent border-none text-[12px] font-bold text-slate-950 focus:outline-none cursor-pointer"
+              className="bg-transparent border-none text-[12px] font-semibold text-slate-950 focus:outline-none cursor-pointer"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 bg-white border border-slate-400 rounded-xl px-2.5 py-1 text-[11.5px] font-bold text-slate-950 shadow-2xs">
+          <div className="flex items-center gap-1.5 bg-white border border-slate-400 rounded-xl px-2.5 py-1 text-[11.5px] font-semibold text-slate-950 shadow-2xs">
             <span className="text-slate-700 font-medium">To:</span>
             <input
               type="date"
               value={filterEndDate}
               onChange={(e) => { setFilterEndDate(e.target.value); setCurrentPage(1); }}
-              className="bg-transparent border-none text-[12px] font-bold text-slate-950 focus:outline-none cursor-pointer"
+              className="bg-transparent border-none text-[12px] font-semibold text-slate-950 focus:outline-none cursor-pointer"
             />
           </div>
 
           {(searchTerm || filterStartDate || filterEndDate) && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1 px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-950 border border-slate-400 rounded-xl text-[11.5px] font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
+              className="flex items-center gap-1 px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-950 border border-slate-400 rounded-xl text-[11.5px] font-semibold transition-all cursor-pointer shadow-2xs active:scale-95"
               title="Reset Filters"
             >
               <FilterX size={13} />
@@ -622,14 +638,14 @@ export default function ClientManagement() {
           <div className="bg-white border border-slate-400 rounded-xl p-1 flex items-center shadow-2xs">
             <button
               onClick={() => setViewMode('kanban')}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer transition-colors ${viewMode === 'kanban' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-900 hover:bg-slate-50'}`}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer transition-colors ${viewMode === 'kanban' ? 'bg-orange-100 text-orange-700 font-semibold' : 'text-slate-900 hover:bg-slate-50'}`}
             >
               <Columns size={15} />
               <span>Kanban</span>
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer transition-colors ${viewMode === 'table' ? 'bg-orange-100 text-orange-700 font-bold' : 'text-slate-900 hover:bg-slate-50'}`}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer transition-colors ${viewMode === 'table' ? 'bg-orange-100 text-orange-700 font-semibold' : 'text-slate-900 hover:bg-slate-50'}`}
             >
               <LayoutGrid size={15} />
               <span>Table</span>
@@ -646,11 +662,13 @@ export default function ClientManagement() {
         </div>
       </div>
 
-      {/* LOADING */}
+      {/* LOADING SKELETON */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
-        </div>
+        viewMode === 'kanban' ? (
+          <KanbanSkeleton columns={6} />
+        ) : (
+          <TableSkeleton rows={6} cols={6} />
+        )
       ) : (
         <>
           {/* ==================== KANBAN BOARD VIEW ==================== */}
@@ -668,10 +686,10 @@ export default function ClientManagement() {
                   >
                     {/* Column Header */}
                     <div className={`flex items-center justify-between pb-3 mb-4 border-b border-slate-350 ${theme.headerBg} -mx-4 -mt-4 p-3 rounded-t-xl`}>
-                      <span className="text-[12px] font-bold uppercase tracking-wider capitalize">
+                      <span className="text-[12px] font-semibold uppercase tracking-wider capitalize">
                         {status === 'inprogress' ? 'In Progress' : status}
                       </span>
-                      <span className={`px-2 py-0.5 border rounded-md text-[11px] font-bold ${theme.badge}`}>
+                      <span className={`px-2 py-0.5 border rounded-md text-[11px] font-semibold ${theme.badge}`}>
                         {columnClients.length}
                       </span>
                     </div>
@@ -697,9 +715,9 @@ export default function ClientManagement() {
                               }`}
                           >
                             <div className="flex justify-between items-start gap-1 mb-1">
-                              <h4 className="text-[14px] font-bold text-slate-950 leading-tight">{client.name}</h4>
+                              <h4 className="text-[14px] font-semibold text-slate-950 leading-tight">{client.name}</h4>
                               {isActionDue && (
-                                <span className="bg-red-650 text-white text-[9px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0">
+                                <span className="bg-red-650 text-white text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded shrink-0">
                                   Action Due
                                 </span>
                               )}
@@ -713,7 +731,7 @@ export default function ClientManagement() {
                                 Last Activity: {formatDateToDMY(lastEditedRaw)}
                               </div>
                               {client.next_followup_date && (
-                                <div className={`text-[10px] font-bold pt-1 ${isActionDue ? 'text-red-700' : 'text-slate-705'}`}>
+                                <div className={`text-[10px] font-semibold pt-1 ${isActionDue ? 'text-red-700' : 'text-slate-705'}`}>
                                   Next Followup: {formatDateToDMY(client.next_followup_date)}
                                 </div>
                               )}
@@ -923,21 +941,21 @@ export default function ClientManagement() {
                 <div className="flex items-center justify-between px-4 py-3 bg-slate-100 border-t border-slate-400 sm:px-6">
                   <div>
                     <p className="text-xs text-slate-950 font-medium">
-                      Showing <span className="font-bold">{indexOfFirstItem + 1}</span> to <span className="font-bold">{Math.min(indexOfLastItem, filteredClients.length)}</span> of <span className="font-bold">{filteredClients.length}</span> results
+                      Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, filteredClients.length)}</span> of <span className="font-semibold">{filteredClients.length}</span> results
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-bold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-semibold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                     >
                       Prev
                     </button>
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-bold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                      className="px-3 py-1.5 bg-white border border-slate-400 rounded text-xs font-semibold text-slate-950 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                     >
                       Next
                     </button>
@@ -955,7 +973,7 @@ export default function ClientManagement() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in-fast">
           <div className="w-full max-w-lg bg-white border border-slate-400 rounded-2xl p-6 space-y-6 shadow-2xl animate-scale-up text-slate-950">
             <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-              <h3 className="text-[17px] font-bold text-orange-600">
+              <h3 className="text-[17px] font-semibold text-orange-600">
                 {isEditingClient ? 'Edit Lead/Client Details' : 'Add New Sales Lead'}
               </h3>
               <button onClick={() => setIsClientModalOpen(false)} className="text-slate-900 hover:text-black transition-colors cursor-pointer">
@@ -1026,7 +1044,7 @@ export default function ClientManagement() {
                 <button
                   type="button"
                   onClick={() => { resetClientForm(); setIsClientModalOpen(false); }}
-                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-xl text-[13px] font-bold border border-slate-300 cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-xl text-[13px] font-semibold border border-slate-300 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1061,15 +1079,15 @@ export default function ClientManagement() {
             <div className="md:w-1/3 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-400 p-5 flex flex-col justify-between overflow-y-auto">
               <div className="space-y-4">
                 <div>
-                  <span className="block text-[11px] font-bold text-slate-900 uppercase tracking-widest mb-1.5">Pipeline Stage</span>
-                  <span className="inline-block text-[10px] font-bold uppercase px-2.5 py-0.5 bg-orange-100 border border-orange-400 text-orange-950 rounded-full tracking-wide">
+                  <span className="block text-[11px] font-semibold text-slate-900 uppercase tracking-widest mb-1.5">Pipeline Stage</span>
+                  <span className="inline-block text-[10px] font-semibold uppercase px-2.5 py-0.5 bg-orange-100 border border-orange-400 text-orange-950 rounded-full tracking-wide">
                     {selectedClient.status}
                   </span>
                 </div>
 
                 <div className="space-y-3 border-t border-slate-300 pt-3">
                   <div>
-                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Client Name</span>
+                    <span className="block text-[11px] font-semibold text-black uppercase tracking-widest mb-1">Client Name</span>
                     <input
                       type="text"
                       readOnly
@@ -1078,7 +1096,7 @@ export default function ClientManagement() {
                     />
                   </div>
                   <div>
-                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Company</span>
+                    <span className="block text-[11px] font-semibold text-black uppercase tracking-widest mb-1">Company</span>
                     <input
                       type="text"
                       readOnly
@@ -1087,7 +1105,7 @@ export default function ClientManagement() {
                     />
                   </div>
                   <div>
-                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Email</span>
+                    <span className="block text-[11px] font-semibold text-black uppercase tracking-widest mb-1">Email</span>
                     <input
                       type="text"
                       readOnly
@@ -1096,7 +1114,7 @@ export default function ClientManagement() {
                     />
                   </div>
                   <div>
-                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Phone</span>
+                    <span className="block text-[11px] font-semibold text-black uppercase tracking-widest mb-1">Phone</span>
                     <input
                       type="text"
                       readOnly
@@ -1105,10 +1123,10 @@ export default function ClientManagement() {
                     />
                   </div>
                   <div>
-                    <span className="block text-[11px] font-bold text-black uppercase tracking-widest mb-1">Linked Workspaces</span>
+                    <span className="block text-[11px] font-semibold text-black uppercase tracking-widest mb-1">Linked Workspaces</span>
                     <div className="mt-1.5 space-y-1">
                       {projects.filter(p => p.client_id === selectedClient.id).map(proj => (
-                        <div key={proj.id} className="text-[12px] font-bold text-slate-950 bg-white border border-slate-350 rounded px-2.5 py-1">
+                        <div key={proj.id} className="text-[12px] font-semibold text-slate-950 bg-white border border-slate-350 rounded px-2.5 py-1">
                           {proj.name}
                         </div>
                       ))}
@@ -1127,7 +1145,7 @@ export default function ClientManagement() {
 
                 {/* NEW LOG ACTION FORM */}
                 <div>
-                  <h4 className="text-[15px] font-bold text-slate-950 mb-3.5">Log Discussion & Update Stage</h4>
+                  <h4 className="text-[15px] font-semibold text-slate-950 mb-3.5">Log Discussion & Update Stage</h4>
                   <form onSubmit={handleAddFollowup} className="space-y-3.5 bg-slate-50 border border-slate-400 rounded-xl p-4">
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1244,7 +1262,7 @@ export default function ClientManagement() {
                     <button
                       type="submit"
                       disabled={isSavingFollowup}
-                      className="w-full py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[13.5px] font-bold shadow-md cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] mt-3"
+                      className="w-full py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[13.5px] font-semibold shadow-md cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] mt-3"
                     >
                       {isSavingFollowup && <div className="animate-spin rounded-full h-3.5 w-3.5 border-t-2 border-white"></div>}
                       <span>Submit Action Entry</span>
@@ -1254,7 +1272,7 @@ export default function ClientManagement() {
 
                 {/* ARCHIVED FOLLOWUPS LIST */}
                 <div className="space-y-3.5">
-                  <h4 className="text-[15px] font-bold text-slate-950 border-b border-slate-300 pb-2 font-bold">Interaction Log & Files History</h4>
+                  <h4 className="text-[15px] font-semibold text-slate-950 border-b border-slate-300 pb-2 font-semibold">Interaction Log & Files History</h4>
                   <div className="flex flex-col-reverse gap-3 max-h-[250px] overflow-y-auto pr-1">
                     {selectedClient.follow_up_notes?.map((entry, index) => {
                       const isEditing = editingNoteIndex === index;
@@ -1268,7 +1286,7 @@ export default function ClientManagement() {
                             </div>
                             <div className="flex items-center gap-2">
                               {entry.next_followup_date && (
-                                <span className="text-[10px] text-red-700 font-bold bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-bold">
+                                <span className="text-[10px] text-red-700 font-semibold bg-red-50 border border-red-200 px-1.5 py-0.5 rounded font-semibold">
                                   Followup: {formatDateToDMY(entry.next_followup_date)}
                                 </span>
                               )}
@@ -1346,14 +1364,14 @@ export default function ClientManagement() {
                                     setEditingFileName('');
                                     setEditingFileBase64('');
                                   }}
-                                  className="px-2.5 py-1 bg-white border border-slate-300 rounded text-[11px] font-bold text-slate-900 hover:bg-slate-50 cursor-pointer"
+                                  className="px-2.5 py-1 bg-white border border-slate-300 rounded text-[11px] font-semibold text-slate-900 hover:bg-slate-50 cursor-pointer"
                                 >
                                   Cancel
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleSaveEditedNote(index)}
-                                  className="px-2.5 py-1 bg-orange-600 text-white rounded text-[11px] font-bold hover:bg-orange-500 cursor-pointer"
+                                  className="px-2.5 py-1 bg-orange-600 text-white rounded text-[11px] font-semibold hover:bg-orange-500 cursor-pointer"
                                 >
                                   Save Edit
                                 </button>
@@ -1370,7 +1388,7 @@ export default function ClientManagement() {
                                   setEditingFileName(entry.status_to === 'budgetary' ? (entry.budget_filename || '') : (entry.proposal_filename || ''));
                                   setEditingFileBase64('');
                                 }}
-                                className="text-black hover:text-black hover:underline text-[11px] font-bold shrink-0 cursor-pointer"
+                                className="text-black hover:text-black hover:underline text-[11px] font-semibold shrink-0 cursor-pointer"
                               >
                                 Edit Log
                               </button>
@@ -1386,7 +1404,7 @@ export default function ClientManagement() {
                               </div>
                               <button
                                 onClick={() => openBase64File(entry.budget_file, entry.budget_filename)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 rounded border border-emerald-400 text-[11px] font-bold cursor-pointer transition-colors"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 rounded border border-emerald-400 text-[11px] font-semibold cursor-pointer transition-colors"
                               >
                                 <Eye size={12} />
                                 <span>View Budget</span>
@@ -1403,7 +1421,7 @@ export default function ClientManagement() {
                               </div>
                               <button
                                 onClick={() => openBase64File(entry.proposal_file, entry.proposal_filename)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-950 rounded border border-blue-400 text-[11px] font-bold cursor-pointer transition-colors"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-950 rounded border border-blue-400 text-[11px] font-semibold cursor-pointer transition-colors"
                               >
                                 <Eye size={12} />
                                 <span>View Proposal</span>

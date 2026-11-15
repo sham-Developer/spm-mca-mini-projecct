@@ -29,7 +29,7 @@ export default function App() {
   };
 
   // Helper route wrapper for layouts
-  const ProtectedLayout = ({ children, allowedRoles, title }) => {
+  const ProtectedLayout = ({ children, allowedRoles, title, noScroll = false }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     if (!user) {
@@ -62,12 +62,9 @@ export default function App() {
             }}
           />
           <main 
-            className="p-4 sm:p-8 flex-grow overflow-y-auto"
-            style={{
-              backgroundColor: '#f1f5f9',
-              backgroundImage: 'radial-gradient(circle, #b8c5d6 1.2px, transparent 1.2px)',
-              backgroundSize: '22px 22px'
-            }}
+            className={`p-3 sm:p-5 lg:p-6 flex-grow bg-slate-100 ${
+              noScroll ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'
+            }`}
           >
             {children}
           </main>
@@ -90,7 +87,7 @@ export default function App() {
           <Route 
             path="/admin" 
             element={
-              <ProtectedLayout allowedRoles={['admin']} title="Executive Admin Dashboard">
+              <ProtectedLayout allowedRoles={['admin']} title="Executive Admin Dashboard" noScroll={true}>
                 <AdminDashboard />
               </ProtectedLayout>
             } 
