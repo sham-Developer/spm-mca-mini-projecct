@@ -62,7 +62,7 @@ export default function App() {
             }}
           />
           <main 
-            className={`p-3 sm:p-5 lg:p-6 flex-grow bg-slate-100 ${
+            className={`p-3 sm:p-5 lg:p-6 flex-grow bg-slate-200/70 ${
               noScroll ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'
             }`}
           >

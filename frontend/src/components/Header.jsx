@@ -23,7 +23,10 @@ import {
   Sunset,
   CheckCircle2,
   AlertCircle,
-  ArrowUpRight
+  ArrowUpRight,
+  FolderKanban,
+  CheckSquare,
+  FileCheck
 } from './Iconify';
 import API_URL from '../config';
 import { useUI } from './UIProvider';
@@ -402,11 +405,11 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
 
   return (
     <>
-      <header className="bg-white/80 border-b border-slate-400 h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md min-h-[60px]">
+      <header className="bg-white border-b-2 border-slate-350 h-16 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-10 shadow-xs min-h-[60px]">
         <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
           <button 
             onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 rounded-lg text-slate-800 hover:bg-slate-100 hover:text-black focus:outline-none cursor-pointer shrink-0"
+            className="lg:hidden p-2 -ml-2 rounded-lg text-slate-900 hover:bg-slate-200 hover:text-black focus:outline-none cursor-pointer shrink-0"
           >
             <Menu size={20} />
           </button>
@@ -420,26 +423,26 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
           {/* ATTENDANCE MODAL TRIGGER BUTTON */}
           <button
             onClick={() => setIsAttModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-400 hover:bg-slate-50 text-slate-950 rounded-lg text-[12.5px] font-semibold transition-all shadow-sm cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 border-2 border-slate-400 hover:border-slate-500 text-slate-950 rounded-lg text-[12.5px] font-semibold transition-all shadow-xs cursor-pointer"
             title="Open Attendance Tracker & In/Out Marker"
           >
-            <Clock size={15} className="text-orange-600 stroke-[2.5]" />
+            <Clock size={15} className="text-orange-700 stroke-[2.6]" />
             <span className="hidden sm:inline">Attendance</span>
           </button>
 
-          <div className="hidden md:flex items-center gap-2 text-slate-900 text-[13px] bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-400 font-medium">
-            <Calendar size={14} className="stroke-[2]" />
+          <div className="hidden md:flex items-center gap-2 text-slate-950 text-[13px] bg-slate-100 px-3 py-1.5 rounded-lg border-2 border-slate-400 font-medium">
+            <Calendar size={14} className="stroke-[2.2] text-slate-800" />
             <span>{today}</span>
           </div>
 
           <div className="relative">
             <button 
               onClick={() => setIsOpen(!isOpen)}
-              className="relative w-9 h-9 flex items-center justify-center text-slate-900 hover:text-black bg-slate-50 rounded-lg border border-slate-400 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="relative w-9 h-9 flex items-center justify-center text-slate-950 hover:text-black bg-slate-100 rounded-lg border-2 border-slate-400 hover:bg-slate-200 transition-colors cursor-pointer"
             >
-              <Bell size={18} className="stroke-[2]" />
+              <Bell size={18} className="stroke-[2.2]" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-600 text-white rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-medium font-sans">
+                <span className="absolute -top-1 -right-1 bg-orange-600 text-white rounded-full text-[9px] w-4.5 h-4.5 flex items-center justify-center font-medium font-sans border border-white">
                   {unreadCount}
                 </span>
               )}
@@ -451,47 +454,98 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   className="fixed inset-0 z-40 bg-transparent" 
                   onClick={() => setIsOpen(false)}
                 />
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-400 rounded-xl shadow-2xl z-50 text-slate-950 flex flex-col font-sans animate-fade-in">
-                  <div className="px-4 py-3 border-b border-slate-400 flex items-center justify-between bg-slate-50 rounded-t-xl">
-                    <span className="text-[13px] font-medium text-slate-950 uppercase tracking-wider">Notifications</span>
+                <div className="absolute right-0 mt-2.5 w-84 sm:w-[410px] bg-slate-50 border border-slate-350 rounded-2xl shadow-2xl z-50 text-slate-950 flex flex-col font-sans overflow-hidden animate-fade-in">
+                  {/* POPUP HEADER */}
+                  <div className="px-4.5 py-3.5 bg-white border-b border-slate-300 flex items-center justify-between shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-orange-100/90 border border-orange-300 flex items-center justify-center text-orange-700 shadow-2xs">
+                        <Bell size={14} />
+                      </div>
+                      <span className="text-[13px] font-semibold text-slate-950 tracking-tight">Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-800 border border-orange-200">
+                          {unreadCount} new
+                        </span>
+                      )}
+                    </div>
                     {unreadCount > 0 && (
                       <button 
                         onClick={handleMarkAllAsRead}
-                        className="text-[11px] font-medium text-orange-600 hover:text-orange-500 cursor-pointer hover:underline"
+                        className="text-[11px] font-semibold text-orange-700 hover:text-orange-900 cursor-pointer hover:underline transition-colors flex items-center gap-1"
                       >
-                        Mark all read
+                        <Check size={12} />
+                        <span>Mark all read</span>
                       </button>
                     )}
                   </div>
 
-                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-200">
-                    {notifications.map((notif) => (
-                      <div 
-                        key={notif.id}
-                        onClick={() => {
-                          if (!notif.is_read) handleMarkAsRead(notif.id);
-                        }}
-                        className={`p-3 text-left transition-colors cursor-pointer ${
-                          notif.is_read ? 'hover:bg-slate-50 bg-white' : 'bg-slate-50/80 hover:bg-slate-100/90'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start gap-1.5">
-                          <h5 className={`text-[12.5px] leading-tight ${notif.is_read ? 'font-medium text-slate-900' : 'font-semibold text-slate-950'}`}>
-                            {notif.title}
-                          </h5>
-                          <span className="text-[10px] text-slate-900 font-medium whitespace-nowrap">
-                            {formatTimeAgo(notif.created_at)}
-                          </span>
+                  {/* NOTIFICATION CARDS LIST */}
+                  <div className="max-h-[380px] overflow-y-auto p-3 space-y-2.5 bg-slate-100/80">
+                    {notifications.map((notif) => {
+                      const titleLower = (notif.title || '').toLowerCase();
+                      const isTask = titleLower.includes('task') || titleLower.includes('report') || titleLower.includes('work');
+                      const isProject = titleLower.includes('project');
+                      const isLeave = titleLower.includes('leave') || titleLower.includes('permission');
+
+                      let IconComp = Bell;
+                      let iconColor = 'bg-blue-100 text-blue-700 border-blue-300';
+                      if (isTask) {
+                        IconComp = CheckSquare;
+                        iconColor = 'bg-amber-100 text-amber-800 border-amber-300';
+                      } else if (isProject) {
+                        IconComp = FolderKanban;
+                        iconColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                      } else if (isLeave) {
+                        IconComp = FileCheck;
+                        iconColor = 'bg-purple-100 text-purple-800 border-purple-300';
+                      }
+
+                      return (
+                        <div 
+                          key={notif.id}
+                          onClick={() => {
+                            if (!notif.is_read) handleMarkAsRead(notif.id);
+                          }}
+                          className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer text-left flex items-start gap-3 relative ${
+                            notif.is_read 
+                              ? 'bg-white/90 border-slate-300 hover:border-slate-400 hover:bg-white shadow-2xs' 
+                              : 'bg-white border-orange-350 shadow-sm ring-2 ring-orange-500/10 hover:border-orange-500'
+                          }`}
+                        >
+                          {/* Left Notification Type Icon */}
+                          <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 shadow-2xs ${iconColor}`}>
+                            <IconComp size={16} />
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0 pr-1">
+                            <div className="flex justify-between items-start gap-2">
+                              <h5 className={`text-[12.5px] leading-snug line-clamp-1 ${notif.is_read ? 'font-medium text-slate-900' : 'font-semibold text-slate-950'}`}>
+                                {notif.title}
+                              </h5>
+                              <span className="text-[10px] text-slate-800 font-medium whitespace-nowrap shrink-0">
+                                {formatTimeAgo(notif.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-[11.5px] text-slate-800 font-normal mt-1 leading-relaxed">
+                              {formatNotificationMessage(notif.message)}
+                            </p>
+                          </div>
+
+                          {/* Unread Indicator Dot */}
+                          {!notif.is_read && (
+                            <span className="w-2 h-2 rounded-full bg-orange-600 shrink-0 self-center"></span>
+                          )}
                         </div>
-                        <p className="text-[11.5px] text-slate-900 font-normal mt-1 leading-normal">
-                          {formatNotificationMessage(notif.message)}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {notifications.length === 0 && (
-                      <div className="p-6 text-center text-slate-900 font-medium text-[12px]">
-                        All caught up! No notifications.
+                      <div className="py-8 px-4 text-center">
+                        <div className="w-10 h-10 rounded-full bg-slate-200/80 border border-slate-300 flex items-center justify-center text-slate-600 mx-auto mb-2">
+                          <CheckCircle2 size={18} />
+                        </div>
+                        <p className="text-slate-800 font-medium text-[12px]">All caught up! No notifications.</p>
                       </div>
                     )}
                   </div>
@@ -530,25 +584,25 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   className="fixed inset-0 z-40 bg-transparent" 
                   onClick={() => setIsProfileDropdownOpen(false)}
                 />
-                <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-300 rounded-2xl shadow-xl z-50 text-slate-900 font-sans animate-fade-in overflow-hidden">
+                <div className="absolute right-0 mt-2 w-72 bg-white border-2 border-slate-400 rounded-2xl shadow-2xl z-50 text-slate-950 font-sans animate-fade-in overflow-hidden">
                   {/* Top user summary */}
-                  <div className="p-4 bg-slate-50 border-b border-slate-200">
+                  <div className="p-4 bg-slate-100 border-b-2 border-slate-300">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-semibold text-sm shadow-xs shrink-0">
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-700 to-indigo-700 text-white flex items-center justify-center font-semibold text-sm shadow-xs shrink-0">
                         {initials}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="text-[14px] font-semibold text-slate-900 truncate leading-snug">
+                        <h4 className="text-[14px] font-semibold text-slate-950 truncate leading-snug">
                           {profileData?.full_name || user?.full_name}
                         </h4>
-                        <p className="text-[11.5px] text-slate-500 truncate mt-0.5">
+                        <p className="text-[11.5px] text-slate-700 truncate mt-0.5 font-medium">
                           {profileData?.email || user?.email}
                         </p>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-200 text-[10px] font-semibold uppercase tracking-wider rounded-md">
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-900 border border-blue-400 text-[10px] font-semibold uppercase tracking-wider rounded-md">
                             {profileData?.role?.replace('_', ' ') || user?.role}
                           </span>
-                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-semibold uppercase tracking-wider rounded-md">
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 text-[10px] font-semibold uppercase tracking-wider rounded-md">
                             Active
                           </span>
                         </div>
@@ -557,37 +611,37 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   </div>
 
                   {/* Quick Details List */}
-                  <div className="p-3.5 space-y-2 text-xs border-b border-slate-100">
-                    <div className="flex items-center justify-between text-slate-600">
-                      <span className="flex items-center gap-1.5 text-slate-500">
+                  <div className="p-3.5 space-y-2 text-xs border-b-2 border-slate-200 bg-white">
+                    <div className="flex items-center justify-between text-slate-800">
+                      <span className="flex items-center gap-1.5 text-slate-700 font-medium">
                         <Briefcase size={13} /> Designation:
                       </span>
-                      <span className="font-semibold text-slate-800 truncate max-w-[140px]">
+                      <span className="font-semibold text-slate-950 truncate max-w-[140px]">
                         {profileData?.designation || user?.designation || 'Staff'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-600">
-                      <span className="flex items-center gap-1.5 text-slate-500">
+                    <div className="flex items-center justify-between text-slate-800">
+                      <span className="flex items-center gap-1.5 text-slate-700 font-medium">
                         <Building size={13} /> Department:
                       </span>
-                      <span className="font-semibold text-slate-800 truncate max-w-[140px]">
+                      <span className="font-semibold text-slate-950 truncate max-w-[140px]">
                         {profileData?.department || user?.department || 'Operations'}
                       </span>
                     </div>
                   </div>
 
                   {/* Actions: View More & Sign Out */}
-                  <div className="p-3 bg-white space-y-2">
+                  <div className="p-3 bg-slate-50 space-y-2">
                     <button
                       type="button"
                       onClick={() => {
                         setIsProfileDropdownOpen(false);
                         handleOpenProfile();
                       }}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-blue-100 hover:bg-blue-200 text-blue-900 border-2 border-blue-400 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                     >
                       <span>View Full Profile</span>
-                      <ArrowUpRight size={14} />
+                      <ArrowUpRight size={14} className="stroke-[2.5]" />
                     </button>
 
                     <button
@@ -596,9 +650,9 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                         setIsProfileDropdownOpen(false);
                         onLogout?.();
                       }}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-200 hover:border-red-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-white hover:bg-red-100 text-slate-900 hover:text-red-950 border-2 border-slate-350 hover:border-red-400 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                     >
-                      <LogOut size={14} />
+                      <LogOut size={14} className="stroke-[2.2]" />
                       <span>Sign Out</span>
                     </button>
                   </div>
@@ -611,13 +665,13 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
 
       {/* DETAILED USER PROFILE POPUP MODAL */}
       {isProfileOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in-fast font-sans">
-          <div className="w-full max-w-lg bg-white border border-slate-400 rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden text-slate-950 animate-scale-up relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in-fast font-sans">
+          <div className="w-full max-w-lg bg-white border-2 border-slate-400 rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden text-slate-950 animate-scale-up relative">
             
             {/* CLEAN MODAL TOP BAR (NO GRADIENTS) */}
-            <div className="bg-slate-50 border-b border-slate-300 px-6 py-4 flex items-center justify-between shrink-0">
+            <div className="bg-slate-100 border-b-2 border-slate-300 px-6 py-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center text-orange-600 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 border-2 border-orange-300 flex items-center justify-center text-orange-700 shrink-0">
                   <User size={20} />
                 </div>
                 <div>
@@ -669,10 +723,10 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
             </div>
 
             {/* SCROLLABLE BODY */}
-            <div className="px-6 py-5 overflow-y-auto max-h-[62vh] space-y-4 bg-slate-50/60">
+            <div className="px-6 py-5 overflow-y-auto max-h-[62vh] space-y-4 bg-slate-100/90">
               {isEditingProfile ? (
                 /* INLINE EDIT FORM */
-                <form onSubmit={handleSaveProfile} className="space-y-3.5 bg-white border border-slate-300 rounded-xl p-4 shadow-xs">
+                <form onSubmit={handleSaveProfile} className="space-y-3.5 bg-white border border-slate-350 rounded-xl p-4.5 shadow-sm">
                   <div className="border-b border-slate-200 pb-2">
                     <h4 className="text-[14px] font-semibold text-slate-950">Edit Profile Details</h4>
                     <p className="text-[11.5px] font-normal text-slate-900">Update your name, contact phone, or credentials</p>
@@ -685,7 +739,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       required
                       value={editFullName}
                       onChange={(e) => setEditFullName(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-950 text-[13px] font-normal focus:bg-white focus:outline-none"
+                      className="w-full bg-slate-50 border border-slate-350 rounded-xl px-3.5 py-2 text-slate-950 text-[13px] font-normal focus:bg-white focus:outline-none focus:border-orange-500 shadow-2xs"
                     />
                   </div>
 
@@ -696,7 +750,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       placeholder="e.g. +91 9876543210"
                       value={editPhone}
                       onChange={(e) => setEditPhone(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-950 text-[13px] font-normal focus:bg-white focus:outline-none"
+                      className="w-full bg-slate-50 border border-slate-350 rounded-xl px-3.5 py-2 text-slate-950 text-[13px] font-normal focus:bg-white focus:outline-none focus:border-orange-500 shadow-2xs"
                     />
                   </div>
 
@@ -707,7 +761,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       placeholder="Enter street, city, postal code"
                       value={editAddress}
                       onChange={(e) => setEditAddress(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-950 text-[13px] font-normal focus:bg-white focus:outline-none"
+                      className="w-full bg-slate-50 border border-slate-350 rounded-xl px-3.5 py-2 text-slate-950 text-[13px] font-normal focus:bg-white focus:outline-none focus:border-orange-500 shadow-2xs"
                     />
                   </div>
 
@@ -718,7 +772,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       placeholder="Leave blank to keep current password"
                       value={editPassword}
                       onChange={(e) => setEditPassword(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-950 text-[13px] font-normal focus:bg-white focus:outline-none"
+                      className="w-full bg-slate-50 border border-slate-350 rounded-xl px-3.5 py-2 text-slate-950 text-[13px] font-normal focus:bg-white focus:outline-none focus:border-orange-500 shadow-2xs"
                     />
                   </div>
 
@@ -726,14 +780,14 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                     <button
                       type="button"
                       onClick={() => setIsEditingProfile(false)}
-                      className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12px] font-medium border border-slate-300 cursor-pointer"
+                      className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[12px] font-medium border border-slate-350 shadow-2xs cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={savingProfile}
-                      className="px-4 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-medium shadow-xs cursor-pointer transition-all hover:scale-[1.02] flex items-center gap-1.5"
+                      className="px-4 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-medium border border-orange-600 shadow-xs cursor-pointer transition-all hover:scale-[1.02] flex items-center gap-1.5"
                     >
                       {savingProfile && <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-white"></div>}
                       <span>Save Changes</span>
@@ -744,14 +798,14 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                 /* PROFILE INFORMATION CARDS */
                 <>
                   {/* WORK & ORGANIZATION DETAILS */}
-                  <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-xs space-y-3">
+                  <div className="bg-white border border-slate-350 rounded-xl p-4.5 shadow-sm space-y-3.5">
                     <span className="text-[12px] font-medium text-slate-950 uppercase tracking-wider block">
                       Work & Position
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 text-left">
                       <div className="flex items-start gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600 shrink-0 mt-0.5">
-                          <Building size={14} />
+                        <div className="w-8 h-8 rounded-lg bg-orange-100/80 border border-orange-300 flex items-center justify-center text-orange-700 shrink-0 mt-0.5 shadow-2xs">
+                          <Building size={15} />
                         </div>
                         <div>
                           <span className="block text-[11px] font-medium text-slate-900 uppercase">Department</span>
@@ -760,8 +814,8 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       </div>
 
                       <div className="flex items-start gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600 shrink-0 mt-0.5">
-                          <Briefcase size={14} />
+                        <div className="w-8 h-8 rounded-lg bg-orange-100/80 border border-orange-300 flex items-center justify-center text-orange-700 shrink-0 mt-0.5 shadow-2xs">
+                          <Briefcase size={15} />
                         </div>
                         <div>
                           <span className="block text-[11px] font-medium text-slate-900 uppercase">Designation</span>
@@ -770,8 +824,8 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       </div>
 
                       <div className="flex items-start gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600 shrink-0 mt-0.5">
-                          <Calendar size={14} />
+                        <div className="w-8 h-8 rounded-lg bg-orange-100/80 border border-orange-300 flex items-center justify-center text-orange-700 shrink-0 mt-0.5 shadow-2xs">
+                          <Calendar size={15} />
                         </div>
                         <div>
                           <span className="block text-[11px] font-medium text-slate-900 uppercase">Date of Joining</span>
@@ -780,8 +834,8 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       </div>
 
                       <div className="flex items-start gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600 shrink-0 mt-0.5">
-                          <Shield size={14} />
+                        <div className="w-8 h-8 rounded-lg bg-orange-100/80 border border-orange-300 flex items-center justify-center text-orange-700 shrink-0 mt-0.5 shadow-2xs">
+                          <Shield size={15} />
                         </div>
                         <div>
                           <span className="block text-[11px] font-medium text-slate-900 uppercase">Employment Type</span>
@@ -792,14 +846,16 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   </div>
 
                   {/* CONTACT DETAILS */}
-                  <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-xs space-y-3">
+                  <div className="bg-white border border-slate-350 rounded-xl p-4.5 shadow-sm space-y-3.5">
                     <span className="text-[12px] font-medium text-slate-950 uppercase tracking-wider block">
                       Contact Information
                     </span>
                     <div className="space-y-2.5">
-                      <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-300 rounded-xl shadow-2xs">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <Mail size={15} className="text-slate-800 shrink-0" />
+                          <div className="w-7 h-7 rounded-lg bg-white border border-slate-300 flex items-center justify-center text-slate-700 shrink-0 shadow-2xs">
+                            <Mail size={14} />
+                          </div>
                           <div className="min-w-0">
                             <span className="block text-[11px] font-medium text-slate-900 uppercase">Email Address</span>
                             <span className="block text-[13px] font-normal text-slate-950 truncate">{profileData?.email}</span>
@@ -808,16 +864,18 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                         <button
                           type="button"
                           onClick={() => copyToClipboard(profileData?.email, 'Email')}
-                          className="p-1.5 hover:bg-slate-200 text-slate-900 rounded-lg transition-colors cursor-pointer shrink-0"
+                          className="p-1.5 hover:bg-slate-200 text-slate-800 rounded-lg border border-transparent hover:border-slate-300 transition-colors cursor-pointer shrink-0"
                           title="Copy email"
                         >
                           <Copy size={13} />
                         </button>
                       </div>
 
-                      <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-300 rounded-xl shadow-2xs">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <Phone size={15} className="text-slate-800 shrink-0" />
+                          <div className="w-7 h-7 rounded-lg bg-white border border-slate-300 flex items-center justify-center text-slate-700 shrink-0 shadow-2xs">
+                            <Phone size={14} />
+                          </div>
                           <div className="min-w-0">
                             <span className="block text-[11px] font-medium text-slate-900 uppercase">Phone Number</span>
                             <span className="block text-[13px] font-normal text-slate-950">{profileData?.phone || 'Not provided'}</span>
@@ -827,7 +885,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                           <button
                             type="button"
                             onClick={() => copyToClipboard(profileData?.phone, 'Phone')}
-                            className="p-1.5 hover:bg-slate-200 text-slate-900 rounded-lg transition-colors cursor-pointer shrink-0"
+                            className="p-1.5 hover:bg-slate-200 text-slate-800 rounded-lg border border-transparent hover:border-slate-300 transition-colors cursor-pointer shrink-0"
                             title="Copy phone"
                           >
                             <Copy size={13} />
@@ -836,8 +894,10 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       </div>
 
                       {profileData?.address && (
-                        <div className="flex items-start gap-2.5 p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-                          <MapPin size={15} className="text-slate-800 shrink-0 mt-0.5" />
+                        <div className="flex items-start gap-2.5 p-3 bg-slate-50 border border-slate-300 rounded-xl shadow-2xs">
+                          <div className="w-7 h-7 rounded-lg bg-white border border-slate-300 flex items-center justify-center text-slate-700 shrink-0 shadow-2xs mt-0.5">
+                            <MapPin size={14} />
+                          </div>
                           <div>
                             <span className="block text-[11px] font-medium text-slate-900 uppercase">Residential Address</span>
                             <span className="block text-[13px] font-normal text-slate-950 leading-relaxed">{profileData.address}</span>
@@ -848,25 +908,25 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   </div>
 
                   {/* PERSONAL & RECORD DETAILS */}
-                  <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-xs space-y-3">
+                  <div className="bg-white border border-slate-350 rounded-xl p-4.5 shadow-sm space-y-3.5">
                     <span className="text-[12px] font-medium text-slate-950 uppercase tracking-wider block">
                       Personal & Documents
                     </span>
                     <div className="grid grid-cols-2 gap-3 text-left">
-                      <div>
+                      <div className="p-2.5 bg-slate-50 border border-slate-300 rounded-xl shadow-2xs">
                         <span className="block text-[11px] font-medium text-slate-900 uppercase">Date of Birth</span>
                         <span className="block text-[13px] font-normal text-slate-950">{formatDateToDMY(profileData?.dob)}</span>
                       </div>
-                      <div>
+                      <div className="p-2.5 bg-slate-50 border border-slate-300 rounded-xl shadow-2xs">
                         <span className="block text-[11px] font-medium text-slate-900 uppercase">Gender</span>
                         <span className="block text-[13px] font-normal text-slate-950 capitalize">{profileData?.gender || 'Not specified'}</span>
                       </div>
-                      <div className="col-span-2 pt-2 border-t border-slate-200 flex items-center justify-between">
+                      <div className="col-span-2 pt-2.5 border-t border-slate-200 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <FileText size={14} className="text-orange-600" />
+                          <FileText size={15} className="text-orange-600" />
                           <span className="text-[12px] font-medium text-slate-950">Deposited Documents</span>
                         </div>
-                        <span className="px-2 py-0.5 bg-orange-50 border border-orange-200 text-orange-950 rounded-full text-[11px] font-medium">
+                        <span className="px-2.5 py-0.5 bg-orange-100/90 border border-orange-300 text-orange-950 rounded-full text-[11px] font-medium shadow-2xs">
                           {Array.isArray(profileData?.documents) ? profileData.documents.length : 0} Files
                         </span>
                       </div>
@@ -877,7 +937,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
             </div>
 
             {/* POPUP FOOTER */}
-            <div className="px-6 py-3.5 bg-white border-t border-slate-200 flex items-center justify-between shrink-0">
+            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-300 flex items-center justify-between shrink-0 shadow-2xs">
               {onLogout ? (
                 <button
                   type="button"
@@ -885,7 +945,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                     setIsProfileOpen(false);
                     onLogout();
                   }}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 rounded-xl text-[12px] font-medium transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-350 hover:border-red-400 rounded-xl text-[12px] font-medium shadow-xs transition-colors cursor-pointer"
                   title="Sign out of account"
                 >
                   <LogOut size={14} />
@@ -895,12 +955,12 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                 <div></div>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 {!isEditingProfile ? (
                   <button
                     type="button"
                     onClick={() => setIsEditingProfile(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-950 border border-slate-300 rounded-xl text-[12px] font-medium transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-950 border border-slate-350 hover:border-slate-400 rounded-xl text-[12px] font-medium shadow-xs transition-colors cursor-pointer"
                   >
                     <Edit3 size={13} />
                     <span>Edit Profile</span>
@@ -909,7 +969,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                 <button
                   type="button"
                   onClick={() => { setIsProfileOpen(false); setIsEditingProfile(false); }}
-                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[12px] font-medium shadow-xs cursor-pointer transition-all hover:scale-[1.02]"
+                  className="px-4.5 py-2 bg-orange-600 hover:bg-orange-500 text-white border border-orange-600 rounded-xl text-[12px] font-medium shadow-xs cursor-pointer transition-all hover:scale-[1.02]"
                 >
                   Close
                 </button>
@@ -957,9 +1017,9 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
             </div>
 
             {/* SCROLLABLE MODAL BODY */}
-            <div className="p-5 sm:p-6 space-y-5 flex-1 min-h-0 overflow-y-auto bg-slate-50/50">
+            <div className="p-5 sm:p-6 space-y-5 flex-1 min-h-0 overflow-y-auto bg-slate-100">
               {/* TODAY'S ATTENDANCE STATUS OVERVIEW */}
-              <div className="bg-white border border-slate-300 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xs">
+              <div className="bg-white border border-slate-350 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-sm">
                 <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-200">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-orange-600"></span>
@@ -977,8 +1037,8 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl shadow-2xs">
-                    <span className="text-[11px] text-slate-900 font-medium uppercase tracking-wider block mb-1">
+                  <div className="bg-slate-50 border border-slate-300 p-3.5 rounded-xl shadow-xs">
+                    <span className="text-[11px] text-slate-700 font-semibold uppercase tracking-wider block mb-1">
                       Work Mode
                     </span>
                     <span className="text-[13.5px] font-semibold text-slate-950 capitalize flex items-center gap-1.5">
@@ -986,37 +1046,37 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       {todayAttendance?.work_mode || attWorkMode}
                     </span>
                   </div>
-                  <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl shadow-2xs">
-                    <span className="text-[11px] text-slate-900 font-medium uppercase tracking-wider block mb-1">
+                  <div className="bg-slate-50 border border-slate-300 p-3.5 rounded-xl shadow-xs">
+                    <span className="text-[11px] text-slate-700 font-semibold uppercase tracking-wider block mb-1">
                       First In / Last Out
                     </span>
                     <span className="text-[13.5px] font-semibold text-slate-950">
-                      {todayAttendance?.check_in || '--'} <span className="text-slate-700 font-normal mx-1.5">to</span> {todayAttendance?.check_out || '--'}
+                      {todayAttendance?.check_in || '--'} <span className="text-slate-600 font-medium mx-1.5">to</span> {todayAttendance?.check_out || '--'}
                     </span>
                   </div>
                 </div>
 
                 {todayAttendance?.notes && (
-                  <div className="text-[12.5px] text-slate-950 bg-orange-50/70 border border-orange-200 px-3.5 py-2.5 rounded-xl">
+                  <div className="text-[12.5px] text-slate-950 bg-orange-50 border border-orange-300 px-3.5 py-2.5 rounded-xl">
                     <span className="font-semibold text-orange-950 mr-1.5">Note:</span>
-                    <span className="font-normal">"{todayAttendance.notes}"</span>
+                    <span className="font-normal text-slate-900">"{todayAttendance.notes}"</span>
                   </div>
                 )}
               </div>
 
               {/* WORK MODE AND NOTES PREFERENCES (CONFIGURED BEFORE PUNCHING) */}
-              <div className="bg-white border border-slate-300 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+              <div className="bg-white border border-slate-350 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <span className="text-[12px] font-semibold text-slate-950 uppercase tracking-wider">
                     Work Mode & Session Notes
                   </span>
-                  <span className="text-[11px] text-slate-500 font-medium">
+                  <span className="text-[11px] text-slate-600 font-medium">
                     Applies to your punches
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="block text-[12px] font-medium text-slate-900 mb-1">
+                    <label className="block text-[12px] font-semibold text-slate-800 mb-1">
                       Work Mode
                     </label>
                     <select
@@ -1026,7 +1086,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                         setAttWorkMode(val);
                         handleUpdatePreferences(val, attNotes);
                       }}
-                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-[13px] font-medium text-slate-950 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all cursor-pointer"
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-350 rounded-xl px-3.5 py-2 text-[13px] font-medium text-slate-950 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all cursor-pointer shadow-2xs"
                     >
                       <option value="office">In Office (On-site)</option>
                       <option value="remote">Remote / Work from Home</option>
@@ -1035,7 +1095,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   </div>
 
                   <div>
-                    <label className="block text-[12px] font-medium text-slate-900 mb-1">
+                    <label className="block text-[12px] font-semibold text-slate-800 mb-1">
                       Session Notes (Optional)
                     </label>
                     <input
@@ -1044,7 +1104,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                       value={attNotes}
                       onChange={(e) => setAttNotes(e.target.value)}
                       onBlur={() => handleUpdatePreferences(attWorkMode, attNotes)}
-                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-[13px] font-normal text-slate-950 placeholder:text-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                      className="w-full bg-slate-50 hover:bg-white focus:bg-white border border-slate-350 rounded-xl px-3.5 py-2 text-[13px] font-normal text-slate-950 placeholder:text-slate-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all shadow-2xs"
                     />
                   </div>
                 </div>
@@ -1057,26 +1117,26 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                     <h4 className="text-[14.5px] font-semibold text-slate-950 tracking-tight">
                       Shift & Session Punches
                     </h4>
-                    <p className="text-[12px] text-slate-600 font-normal mt-0.5">
+                    <p className="text-[12px] text-slate-700 font-normal mt-0.5">
                       Mark arrival and exit timestamps freely at any time during your work day
                     </p>
                   </div>
-                  <span className="text-[11.5px] font-medium text-orange-950 bg-orange-100 border border-orange-300 px-2.5 py-0.5 rounded-lg">
+                  <span className="text-[11.5px] font-medium text-orange-950 bg-orange-100 border border-orange-300 px-2.5 py-0.5 rounded-lg shadow-2xs">
                     Click to stamp current time
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* 1. MORNING SESSION */}
-                  <div className="bg-white border border-slate-300 hover:border-orange-400 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs transition-colors">
+                  <div className="bg-white border border-slate-350 hover:border-orange-400 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-sm transition-colors">
                     <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
                       <div className="flex items-center gap-2 text-slate-950 font-semibold text-[14px]">
-                        <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center border border-orange-200">
                           <Sun size={16} className="stroke-[2.5]" />
                         </div>
                         <span>Morning Session</span>
                       </div>
-                      <span className="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+                      <span className="text-[11px] font-medium text-slate-700 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-md">
                         Flexible Timing
                       </span>
                     </div>
@@ -1084,7 +1144,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                     {/* Morning In */}
                     <div className="flex items-center justify-between py-1">
                       <div>
-                        <span className="text-[11.5px] font-medium text-slate-900 block">Morning In</span>
+                        <span className="text-[11.5px] font-medium text-slate-800 block">Morning In</span>
                         <span className="text-[14px] font-semibold text-slate-950">
                           {todayAttendance?.morning_in || todayAttendance?.check_in || '--'}
                         </span>
@@ -1106,7 +1166,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                     {/* Morning Out (Break) */}
                     <div className="flex items-center justify-between pt-2.5 border-t border-slate-200">
                       <div>
-                        <span className="text-[11.5px] font-medium text-slate-900 block">Morning Out (Break)</span>
+                        <span className="text-[11.5px] font-medium text-slate-800 block">Morning Out (Break)</span>
                         <span className="text-[14px] font-semibold text-slate-950">
                           {todayAttendance?.morning_out || '--'}
                         </span>
@@ -1118,7 +1178,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                         className={`px-3.5 py-1.5 rounded-xl text-[12px] font-medium transition-all cursor-pointer border ${
                           todayAttendance?.morning_out
                             ? 'bg-slate-100 text-slate-700 border-slate-300 cursor-not-allowed'
-                            : 'bg-white hover:bg-orange-100 text-orange-950 border-slate-300 hover:border-orange-400 shadow-2xs'
+                            : 'bg-white hover:bg-orange-50 text-orange-950 border-slate-350 hover:border-orange-400 shadow-2xs'
                         }`}
                       >
                         {todayAttendance?.morning_out ? 'Out Marked' : 'Stamp Out'}
@@ -1127,15 +1187,15 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                   </div>
 
                   {/* 2. AFTERNOON SESSION */}
-                  <div className="bg-white border border-slate-300 hover:border-orange-400 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs transition-colors">
+                  <div className="bg-white border border-slate-350 hover:border-orange-400 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-sm transition-colors">
                     <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
                       <div className="flex items-center gap-2 text-slate-950 font-semibold text-[14px]">
-                        <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center border border-orange-200">
                           <Sunset size={16} className="stroke-[2.5]" />
                         </div>
                         <span>Afternoon Session</span>
                       </div>
-                      <span className="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+                      <span className="text-[11px] font-medium text-slate-700 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-md">
                         Flexible Timing
                       </span>
                     </div>
@@ -1143,7 +1203,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                     {/* Afternoon In */}
                     <div className="flex items-center justify-between py-1">
                       <div>
-                        <span className="text-[11.5px] font-medium text-slate-900 block">Afternoon In</span>
+                        <span className="text-[11.5px] font-medium text-slate-800 block">Afternoon In</span>
                         <span className="text-[14px] font-semibold text-slate-950">
                           {todayAttendance?.afternoon_in || '--'}
                         </span>
@@ -1165,7 +1225,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                     {/* Afternoon Out (Day End) */}
                     <div className="flex items-center justify-between pt-2.5 border-t border-slate-200">
                       <div>
-                        <span className="text-[11.5px] font-medium text-slate-900 block">Afternoon Out (Day End)</span>
+                        <span className="text-[11.5px] font-medium text-slate-800 block">Afternoon Out (Day End)</span>
                         <span className="text-[14px] font-semibold text-slate-950">
                           {todayAttendance?.afternoon_out || todayAttendance?.check_out || '--'}
                         </span>
@@ -1177,7 +1237,7 @@ export default function Header({ user, title, onMenuClick, onLogout, onUserUpdat
                         className={`px-3.5 py-1.5 rounded-xl text-[12px] font-medium transition-all cursor-pointer border ${
                           todayAttendance?.afternoon_out || todayAttendance?.check_out
                             ? 'bg-slate-100 text-slate-700 border-slate-300 cursor-not-allowed'
-                            : 'bg-white hover:bg-orange-100 text-orange-950 border-slate-300 hover:border-orange-400 shadow-2xs'
+                            : 'bg-white hover:bg-orange-50 text-orange-950 border-slate-350 hover:border-orange-400 shadow-2xs'
                         }`}
                       >
                         {todayAttendance?.afternoon_out || todayAttendance?.check_out ? 'Day Closed' : 'Stamp Out'}

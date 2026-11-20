@@ -31,34 +31,34 @@ const STATUS_ORDER = ['initiated', 'inprogress', 'budgetary', 'proposal', 'lead'
 
 const STATUS_THEMES = {
   initiated: {
-    bg: 'bg-sky-50 border-sky-300',
-    headerBg: 'bg-sky-100 text-sky-950 border-sky-300',
-    badge: 'bg-sky-200/80 text-sky-950 border-sky-400'
+    bg: 'bg-slate-100/70 border border-slate-300',
+    headerBg: 'bg-white text-sky-850 border-b border-slate-200 border-t-2 border-t-sky-500',
+    badge: 'bg-sky-50 text-sky-700 border border-sky-200 font-semibold'
   },
   inprogress: {
-    bg: 'bg-amber-50/60 border-amber-300',
-    headerBg: 'bg-amber-100 text-amber-950 border-amber-300',
-    badge: 'bg-amber-200/80 text-amber-950 border-amber-400'
+    bg: 'bg-slate-100/70 border border-slate-300',
+    headerBg: 'bg-white text-amber-850 border-b border-slate-200 border-t-2 border-t-amber-500',
+    badge: 'bg-amber-50 text-amber-700 border border-amber-200 font-semibold'
   },
   budgetary: {
-    bg: 'bg-violet-50 border-violet-300',
-    headerBg: 'bg-violet-100 text-violet-950 border-violet-300',
-    badge: 'bg-violet-200/80 text-violet-950 border-violet-400'
+    bg: 'bg-slate-100/70 border border-slate-300',
+    headerBg: 'bg-white text-violet-850 border-b border-slate-200 border-t-2 border-t-violet-500',
+    badge: 'bg-violet-50 text-violet-700 border border-violet-200 font-semibold'
   },
   proposal: {
-    bg: 'bg-rose-50 border-rose-300',
-    headerBg: 'bg-rose-100 text-rose-950 border-rose-300',
-    badge: 'bg-rose-200/80 text-rose-950 border-rose-400'
+    bg: 'bg-slate-100/70 border border-slate-300',
+    headerBg: 'bg-white text-rose-850 border-b border-slate-200 border-t-2 border-t-rose-500',
+    badge: 'bg-rose-50 text-rose-700 border border-rose-200 font-semibold'
   },
   lead: {
-    bg: 'bg-teal-50 border-teal-300',
-    headerBg: 'bg-teal-100 text-teal-950 border-teal-300',
-    badge: 'bg-teal-200/80 text-teal-950 border-teal-400'
+    bg: 'bg-slate-100/70 border border-slate-300',
+    headerBg: 'bg-white text-teal-850 border-b border-slate-200 border-t-2 border-t-teal-500',
+    badge: 'bg-teal-50 text-teal-700 border border-teal-200 font-semibold'
   },
   onboard: {
-    bg: 'bg-emerald-50 border-emerald-300',
-    headerBg: 'bg-emerald-100 text-emerald-950 border-emerald-300',
-    badge: 'bg-emerald-200/80 text-emerald-950 border-emerald-400'
+    bg: 'bg-slate-100/70 border border-slate-300',
+    headerBg: 'bg-white text-emerald-850 border-b border-slate-200 border-t-2 border-t-emerald-500',
+    badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold'
   }
 };
 
@@ -970,13 +970,13 @@ export default function ClientManagement() {
 
       {/* CREATE & EDIT CLIENT MODAL */}
       {isClientModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in-fast">
-          <div className="w-full max-w-lg bg-white border border-slate-400 rounded-2xl p-6 space-y-6 shadow-2xl animate-scale-up text-slate-950">
-            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-              <h3 className="text-[17px] font-semibold text-orange-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in-fast">
+          <div className="w-full max-w-lg bg-white border-2 border-slate-400 rounded-2xl p-6 space-y-6 shadow-2xl animate-scale-up text-slate-950">
+            <div className="flex justify-between items-center border-b-2 border-slate-200 pb-3">
+              <h3 className="text-[17px] font-semibold text-orange-700">
                 {isEditingClient ? 'Edit Lead/Client Details' : 'Add New Sales Lead'}
               </h3>
-              <button onClick={() => setIsClientModalOpen(false)} className="text-slate-900 hover:text-black transition-colors cursor-pointer">
+              <button onClick={() => setIsClientModalOpen(false)} className="text-slate-900 hover:text-black p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
                 <X size={20} />
               </button>
             </div>
@@ -1064,19 +1064,19 @@ export default function ClientManagement() {
 
       {/* RICH FOLLOW UP AND CONTEXT POPUP */}
       {isFollowupModalOpen && selectedClient && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in-fast">
-          <div className="w-full max-w-4xl bg-white border border-slate-400 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[80vh] text-slate-950 relative animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in-fast">
+          <div className="w-full max-w-4xl bg-white border-2 border-slate-400 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[80vh] text-slate-950 relative animate-scale-up">
 
             {/* CLOSE BUTTON TOP RIGHT */}
             <button
               onClick={() => setIsFollowupModalOpen(false)}
-              className="absolute top-4 right-4 z-10 text-slate-900 hover:text-black bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 z-10 text-slate-900 hover:text-black bg-slate-100 hover:bg-slate-200 p-1.5 rounded-lg border-2 border-slate-400 transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
 
             {/* LEFT SIDE: CLIENT PROFILE SUMMARY */}
-            <div className="md:w-1/3 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-400 p-5 flex flex-col justify-between overflow-y-auto">
+            <div className="md:w-1/3 bg-slate-100 border-b md:border-b-0 md:border-r-2 border-slate-350 p-5 flex flex-col justify-between overflow-y-auto">
               <div className="space-y-4">
                 <div>
                   <span className="block text-[11px] font-semibold text-slate-900 uppercase tracking-widest mb-1.5">Pipeline Stage</span>

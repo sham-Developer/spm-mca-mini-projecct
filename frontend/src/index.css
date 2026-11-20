@@ -11,8 +11,8 @@
   }
 
   body {
-    background-color: #f1f5f9;
-    color: #0f172a;
+    background-color: #e2e8f0;
+    color: #020617;
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -22,13 +22,16 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     letter-spacing: -0.02em;
+    color: #020617;
   }
 
-  /* Accessible, modern form elements */
+  /* Accessible, modern form elements with high contrast */
   input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]):not(.border-none),
   select,
   textarea {
-    border: 1px solid #cbd5e1 !important;
+    border: 1.5px solid #94a3b8 !important;
+    background-color: #ffffff;
+    color: #020617;
     border-radius: 0.5rem;
     transition: all 0.15s ease-in-out;
   }
@@ -36,26 +39,27 @@
   input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]):not(.border-none):focus,
   select:focus,
   textarea:focus {
-    border-color: #2563eb !important;
+    border-color: #1d4ed8 !important;
     outline: none !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.25) !important;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - high visibility on TN/VA panels */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #e2e8f0;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #94a3b8;
   border-radius: 9999px;
+  border: 1px solid #64748b;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #64748b;
 }
 
 /* Subtle micro-animations */

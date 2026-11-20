@@ -40,22 +40,22 @@ export default function Sidebar({ user, onLogout, isOpen, setIsOpen }) {
   const links = getLinksByRole();
 
   return (
-    <aside className={`w-64 bg-white/95 backdrop-blur-md border-r border-slate-200/90 flex flex-col h-screen fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto ${
+    <aside className={`w-64 bg-white border-r-2 border-slate-300 flex flex-col h-screen fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto ${
       isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
     }`}>
       {/* Brand Header */}
-      <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div className="p-5 border-b-2 border-slate-200 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-semibold text-lg text-white shadow-md shadow-blue-500/20">
+          <div className="w-10 h-10 bg-gradient-to-tr from-blue-700 to-indigo-700 rounded-xl flex items-center justify-center font-semibold text-lg text-white shadow-md shadow-blue-600/30">
             N
           </div>
           <div>
-            <h1 className="font-semibold text-[17px] text-slate-900 tracking-tight leading-none">NexTask</h1>
-            <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider bg-blue-50 px-1.5 py-0.5 rounded-full inline-block mt-1">Enterprise Suite</span>
+            <h1 className="font-semibold text-[17px] text-slate-950 tracking-tight leading-none">NexTask</h1>
+            <span className="text-[10px] font-semibold text-blue-800 uppercase tracking-wider bg-blue-100 border border-blue-300 px-1.5 py-0.5 rounded-md inline-block mt-1">Enterprise Suite</span>
           </div>
         </div>
         <button 
-          className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer" 
+          className="lg:hidden p-1.5 rounded-lg text-slate-600 hover:bg-slate-200 hover:text-slate-950 transition-colors cursor-pointer" 
           onClick={() => setIsOpen(false)}
           aria-label="Close sidebar"
         >
@@ -64,8 +64,8 @@ export default function Sidebar({ user, onLogout, isOpen, setIsOpen }) {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
-        <div className="px-3 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Navigation</div>
+      <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto">
+        <div className="px-3 pb-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Navigation</div>
         {links.map((link) => (
           <NavLink
             key={link.path}
@@ -75,17 +75,17 @@ export default function Sidebar({ user, onLogout, isOpen, setIsOpen }) {
             className={({ isActive }) => 
               `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150 cursor-pointer ${
                 isActive 
-                  ? 'bg-blue-50 text-blue-700 font-semibold shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-blue-100 text-blue-900 font-semibold border-2 border-blue-400 shadow-sm' 
+                  : 'text-slate-800 hover:bg-slate-100 hover:text-slate-950 border border-transparent'
               }`
             }
           >
             {({ isActive }) => (
               <>
                 <link.icon 
-                  size={18} 
+                  size={19} 
                   className={`shrink-0 transition-colors ${
-                    isActive ? 'text-blue-600 stroke-[2.2]' : 'text-slate-400 group-hover:text-slate-600 stroke-[1.8]'
+                    isActive ? 'text-blue-700 stroke-[2.4]' : 'text-slate-600 group-hover:text-slate-900 stroke-[2]'
                   }`} 
                 />
                 <span>{link.name}</span>

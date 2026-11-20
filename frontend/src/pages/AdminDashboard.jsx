@@ -163,58 +163,58 @@ export default function AdminDashboard() {
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
         {/* Total Clients */}
-        <div className="bg-white border border-slate-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm hover:border-slate-400 transition-all flex flex-col justify-between">
+        <div className="bg-white border border-slate-300 hover:border-blue-400 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-slate-600 uppercase tracking-wider">Total Clients</span>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center border border-blue-200/80">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-700 uppercase tracking-wider">Total Clients</span>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-200">
               <UserCheck size={18} className="stroke-[2.2]" />
             </div>
           </div>
           <div className="mt-2.5 sm:mt-3 flex items-baseline justify-between">
             <h3 className="text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight">{stats.totalClients}</h3>
             <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-              <TrendingUp size={11} /> +12% MoM
+              <TrendingUp size={11} className="stroke-[2.2]" /> +12% MoM
             </span>
           </div>
         </div>
 
         {/* Active Projects */}
-        <div className="bg-white border border-slate-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm hover:border-slate-400 transition-all flex flex-col justify-between">
+        <div className="bg-white border border-slate-300 hover:border-orange-400 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-slate-600 uppercase tracking-wider">Active Projects</span>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center border border-orange-200/80">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-700 uppercase tracking-wider">Active Projects</span>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-orange-50 text-orange-700 flex items-center justify-center border border-orange-200">
               <FolderKanban size={18} className="stroke-[2.2]" />
             </div>
           </div>
           <div className="mt-2.5 sm:mt-3 flex items-baseline justify-between">
             <h3 className="text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight">{stats.activeProjects}</h3>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-blue-800 bg-blue-100 border border-blue-300 px-2.5 py-0.5 rounded-full">
               On Schedule
             </span>
           </div>
         </div>
 
         {/* Total Headcount */}
-        <div className="bg-white border border-slate-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm hover:border-slate-400 transition-all flex flex-col justify-between">
+        <div className="bg-white border border-slate-300 hover:border-emerald-400 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-slate-600 uppercase tracking-wider">HR Headcount</span>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200/80">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-700 uppercase tracking-wider">HR Headcount</span>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
               <Users size={18} className="stroke-[2.2]" />
             </div>
           </div>
           <div className="mt-2.5 sm:mt-3 flex items-baseline justify-between">
             <h3 className="text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight">{stats.totalEmployees}</h3>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-800 bg-slate-200/80 border border-slate-300 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-700 bg-slate-100 border border-slate-300 px-2.5 py-0.5 rounded-full">
               Full Team
             </span>
           </div>
         </div>
 
         {/* Portfolio Budget */}
-        <div className="bg-white border border-slate-300 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm hover:border-slate-400 transition-all flex flex-col justify-between">
+        <div className="bg-white border border-slate-300 hover:border-indigo-400 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-slate-600 uppercase tracking-wider">Allocated Budget</span>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center border border-indigo-200/80">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-700 uppercase tracking-wider">Allocated Budget</span>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-200">
               <DollarSign size={18} className="stroke-[2.2]" />
             </div>
           </div>
@@ -222,7 +222,7 @@ export default function AdminDashboard() {
             <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
               {formatRupee(stats.totalBudget)}
             </h3>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-indigo-800 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-indigo-800 bg-indigo-100 border border-indigo-300 px-2.5 py-0.5 rounded-full">
               Committed
             </span>
           </div>
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
               <h3 className="text-sm sm:text-base font-semibold text-slate-900">Portfolio Budget Evolution</h3>
               <p className="text-[11px] sm:text-xs text-slate-600">Historical trajectory of capital committed to client projects</p>
             </div>
-            <span className="text-[11px] font-semibold text-blue-700 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-full">FY 2026-27</span>
+            <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">FY 2026-27</span>
           </div>
 
           <div className="w-full flex-1 min-h-[180px]">
@@ -270,7 +270,7 @@ export default function AdminDashboard() {
                     backgroundColor: '#ffffff', 
                     borderColor: '#cbd5e1', 
                     borderRadius: '10px', 
-                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.12)' 
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' 
                   }}
                   labelStyle={{ color: '#0f172a', fontWeight: '700', fontSize: '12px' }}
                   itemStyle={{ color: '#2563eb', fontWeight: '600', fontSize: '12px' }}
